@@ -2,27 +2,27 @@
 // Created by dgmuller on 5/24/25.
 //
 
-#include "../include/app.hpp"
+#include "../include/engine.hpp"
 #include <cassert>
 #include <fstream>
 
-farcical::Application::Application():
-    status{farcical::Application::Status::Uninitialized},
+farcical::Engine::Engine():
+    status{farcical::Engine::Status::Uninitialized},
     window{nullptr},
     renderSystem{nullptr} {
 
 }
 
-farcical::Application::Status farcical::Application::GetStatus() const {
+farcical::Engine::Status farcical::Engine::GetStatus() const {
     return status;
 }
 
-const farcical::WindowProperties& farcical::Application::GetWindowProperties() const {
+const farcical::WindowProperties& farcical::Engine::GetWindowProperties() const {
   return windowConfig;
 }
 
-std::optional<farcical::Error> farcical::Application::Init() {
-  if(status == Application::Status::Uninitialized) {
+std::optional<farcical::Error> farcical::Engine::Init() {
+  if(status == Engine::Status::Uninitialized) {
     const std::string cfgPath{"dat/farcical.json"};
     auto result{LoadConfig(cfgPath)};
     if(!result.has_value()) {
@@ -85,90 +85,39 @@ std::optional<farcical::Error> farcical::Application::Init() {
 
     uiManager.Init(resourceManager);
 
-    status = Application::Status::IsRunning;
+    status = Engine::Status::IsRunning;
   }
   return std::nullopt;
 }
 
-void farcical::Application::Update() {
+void farcical::Engine::Update() {
   while(const std::optional event = window->pollEvent()) {
     if(event->is<sf::Event::Closed>()) {
       window->close();
-      status = Application::Status::StoppedSuccessfully;
+      status = Engine::Status::StoppedSuccessfully;
     }
   }
-  if(status == Application::Status::IsRunning) {
+  if(status == Engine::Status::IsRunning) {
     renderSystem->Update();
   }
 }
 
-void farcical::Application::Stop() { renderSystem->Stop(); }
+void farcical::Engine::Stop() { renderSystem->Stop(); }
 
-sf::RenderWindow& farcical::Application::GetWindow() const {
+sf::RenderWindow& farcical::Engine::GetWindow() const {
   assert(window != nullptr && "Unexpected nullptr: application window");
   return *window;
 }
 
-farcical::ResourceManager & farcical::Application::GetResourceManager() const {
+farcical::ResourceManager & farcical::Engine::GetResourceManager() const {
   return const_cast<ResourceManager&>(resourceManager);
 }
 
-farcical::ui::Manager& farcical::Application::GetUIManager() const {
+farcical::ui::Manager& farcical::Engine::GetUIManager() const {
   return const_cast<farcical::ui::Manager&>(uiManager);
 }
 
-farcical::RenderSystem& farcical::Application::GetRenderSystem() const {
-  assert(renderSystem != nullptr && "Unexpected nullptr: application rendersystem");
+farcical::RenderSystem& farcical::Engine::GetRenderSystem() const {
+  assert(renderSystem != nullptr && "Unexpected nullptr: rendersystem");
   return *renderSystem;
 }
-
-/*
-std::expected<farcical::Application::Config, farcical::Error> farcical::Application::LoadConfig(std::string_view path) {
-  std::ifstream cfgInput{std::string{path}, std::ios_base::in};
-  if (!cfgInput.good()) {
-    std::string failMsg{"Failed to load config file from " + std::string{path} + "."};
-    return std::unexpected{Error{Error::Signal::InvalidPath, failMsg}};
-  }
-  while(cfgInput.good())
-  {
-    std::string line;
-    std::getline(cfgInput, line);
-    if(line.empty()) {
-      break;
-    }
-    std::string varName{ExtractVariableName(line)};
-    std::string value{ExtractValue(line)};
-    if (value.find('"') != std::string::npos) {
-      value = StripQuotes(value);
-    }
-
-    if(varName == "window_width") {
-      config.windowCfg.displayMode.x = std::stoi(value);
-    }
-    else if(varName == "window_height") {
-      config.windowCfg.displayMode.y = std::stoi(value);
-    }
-    else if(varName == "window_title") {
-      config.windowCfg.title = value;
-    }
-    else if(varName == "window_position_x") {
-      config.windowCfg.position.x = std::stoi(value);
-    }
-    else if(varName == "window_position_y") {
-      config.windowCfg.position.y = std::stoi(value);
-    }
-    else if(varName == "window_fullscreen") {
-      if(value == "true") {
-        config.windowCfg.fullscreen = true;
-      }
-      else {
-        config.windowCfg.fullscreen = false;
-      }
-    }
-  }
-  if (cfgInput.is_open()) {
-    cfgInput.close();
-  }
-  return config;
-}
-*/

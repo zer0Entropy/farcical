@@ -14,17 +14,17 @@ FetchContent_Declare(SFML
     SYSTEM)
 FetchContent_MakeAvailable(SFML)
 
-add_executable(main
-                    src/app.cpp
-                    src/render.cpp
-                    src/main.cpp
-                    src/ui/manager.cpp
-                    src/ui/menu.cpp
-                    src/ui/label.cpp
-                    src/ui/button.cpp
-                    src/resource/config.cpp
-                    src/resource/manager.cpp
-                    src/color.cpp
+add_executable( main
+                src/engine.cpp
+                src/render.cpp
+                src/main.cpp
+                src/ui/manager.cpp
+                src/ui/menu.cpp
+                src/ui/label.cpp
+                src/ui/button.cpp
+                src/resource/config.cpp
+                src/resource/manager.cpp
+                src/color.cpp
 )
 target_compile_features(main PRIVATE cxx_std_23)
 target_link_libraries(main PRIVATE SFML::Graphics)

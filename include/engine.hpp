@@ -20,7 +20,7 @@
 
 namespace farcical {
 
-    class Application {
+    class Engine {
     public:
 
         enum class Status {
@@ -30,11 +30,11 @@ namespace farcical {
             IsRunning           =   1
         };
 
-        Application();
-        Application(Application& app) = delete;
-        Application(const Application& app) = delete;
-        Application& operator=(const Application& app) = delete;
-        ~Application() = default;
+        Engine();
+        Engine(Engine& copy) = delete;
+        Engine(const Engine& copy) = delete;
+        Engine& operator=(const Engine& copy) = delete;
+        ~Engine() = default;
 
         /* Returns a Status code to the caller.
          * Used by the main game loop to detect when to exit,

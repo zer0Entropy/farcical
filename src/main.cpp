@@ -2,12 +2,12 @@
 #include <cmath>
 #include <string>
 
-#include "../include/app.hpp"
+#include "../include/engine.hpp"
 #include "../include/ui/menu.hpp"
 
 int main()
 {
-    farcical::Application app;
+    farcical::Engine app;
     app.Init();
 
     auto windowSize{app.GetWindow().getSize()};
@@ -15,7 +15,7 @@ int main()
     menu->SetSize(windowSize);
     menu->CreateMenuItem("New Game");
 
-    while(app.GetStatus() == farcical::Application::Status::IsRunning) {
+    while(app.GetStatus() == farcical::Engine::Status::IsRunning) {
       app.Update();
     };
     return 0;
