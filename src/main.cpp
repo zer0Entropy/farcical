@@ -1,21 +1,22 @@
-#include <SFML/Graphics.hpp>
+
+#include <cmath>
+#include <string>
+
+#include "../include/app.hpp"
+#include "../include/ui/menu.hpp"
 
 int main()
 {
-    auto window = sf::RenderWindow(sf::VideoMode({1920u, 1080u}), "CMake SFML Project");
-    window.setFramerateLimit(144);
+    farcical::Application app;
+    app.Init();
 
-    while (window.isOpen())
-    {
-        while (const std::optional event = window.pollEvent())
-        {
-            if (event->is<sf::Event::Closed>())
-            {
-                window.close();
-            }
-        }
+    auto windowSize{app.GetWindow().getSize()};
+    auto menu{app.GetUIManager().CreateMenu("MainMenu", app.GetResourceManager())};
+    menu->SetSize(windowSize);
+    menu->CreateMenuItem("New Game");
 
-        window.clear();
-        window.display();
-    }
+    while(app.GetStatus() == farcical::Application::Status::IsRunning) {
+      app.Update();
+    };
+    return 0;
 }
