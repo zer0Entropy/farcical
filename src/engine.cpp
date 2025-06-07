@@ -12,7 +12,6 @@ farcical::Engine::Engine():
     window{nullptr},
     renderSystem{nullptr},
     game{nullptr} {
-
 }
 
 farcical::Engine::Status farcical::Engine::GetStatus() const {
@@ -23,7 +22,7 @@ const farcical::WindowProperties& farcical::Engine::GetWindowProperties() const 
   return windowConfig;
 }
 
-std::optional<farcical::Error> farcical::Engine::Init(game::Game* game) {
+std::optional<farcical::Error> farcical::Engine::Init(game::Game *game) {
   if(status == Engine::Status::Uninitialized) {
     this->game = game;
     const std::string cfgPath{"dat/farcical.json"};
