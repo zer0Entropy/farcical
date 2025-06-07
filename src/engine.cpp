@@ -3,13 +3,15 @@
 //
 
 #include "../include/engine.hpp"
+#include "../include/game/game.hpp"
 #include <cassert>
 #include <fstream>
 
 farcical::Engine::Engine():
     status{farcical::Engine::Status::Uninitialized},
     window{nullptr},
-    renderSystem{nullptr} {
+    renderSystem{nullptr},
+    game{nullptr} {
 
 }
 
@@ -21,8 +23,9 @@ const farcical::WindowProperties& farcical::Engine::GetWindowProperties() const 
   return windowConfig;
 }
 
-std::optional<farcical::Error> farcical::Engine::Init() {
+std::optional<farcical::Error> farcical::Engine::Init(game::Game* game) {
   if(status == Engine::Status::Uninitialized) {
+    this->game = game;
     const std::string cfgPath{"dat/farcical.json"};
     auto result{LoadConfig(cfgPath)};
     if(!result.has_value()) {
@@ -68,9 +71,8 @@ std::optional<farcical::Error> farcical::Engine::Init() {
       }
     }
 
-
+    // Init window
     window = std::make_unique<sf::RenderWindow>();
-
     if(windowConfig.fullscreen) {
       window->create(sf::VideoMode{windowConfig.displayMode}, windowConfig.title, sf::State::Fullscreen);
     }
@@ -78,15 +80,17 @@ std::optional<farcical::Error> farcical::Engine::Init() {
       window->create(sf::VideoMode{windowConfig.displayMode}, windowConfig.title, sf::Style::None);
       window->setPosition(windowConfig.position);
     }
-
     windowConfig.sizeInPixels = window->getSize();
+
+    // Init systems
     renderSystem = std::make_unique<RenderSystem>(*window, uiManager);
     renderSystem->Init();
 
+    // Loads UI configuration from "dat/ui.json"
     uiManager.Init(resourceManager);
 
     status = Engine::Status::IsRunning;
-  }
+  } // if Uninitialized
   return std::nullopt;
 }
 
@@ -99,6 +103,7 @@ void farcical::Engine::Update() {
   }
   if(status == Engine::Status::IsRunning) {
     renderSystem->Update();
+    game->Update();
   }
 }
 

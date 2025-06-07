@@ -20,6 +20,10 @@
 
 namespace farcical {
 
+    namespace game {
+        class Game;
+    }
+
     class Engine {
     public:
 
@@ -45,7 +49,7 @@ namespace farcical {
         [[nodiscard]]   const WindowProperties&     GetWindowProperties() const;
 
         /* Loads Config from file & initializes all members */
-        std::optional<Error>                        Init();
+        std::optional<Error>                        Init(game::Game* game);
 
         /* Updates all Systems */
         void                                        Update();
@@ -76,6 +80,8 @@ namespace farcical {
         ui::Manager                                 uiManager;
 
         std::unique_ptr<RenderSystem>               renderSystem;
+
+        game::Game*                                 game;
     };
 
 };

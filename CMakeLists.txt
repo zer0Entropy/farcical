@@ -25,6 +25,7 @@ add_executable( main
                 src/resource/config.cpp
                 src/resource/manager.cpp
                 src/color.cpp
+        src/game/game.cpp
 )
 target_compile_features(main PRIVATE cxx_std_23)
 target_link_libraries(main PRIVATE SFML::Graphics)

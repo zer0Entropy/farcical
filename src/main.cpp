@@ -2,21 +2,21 @@
 #include <cmath>
 #include <string>
 
-#include "../include/engine.hpp"
-#include "../include/ui/menu.hpp"
+#include "../include/game/game.hpp"
 
 int main()
 {
-    farcical::Engine app;
-    app.Init();
+    farcical::Engine        engine;
+    farcical::game::Game    game(engine);
 
-    auto windowSize{app.GetWindow().getSize()};
-    auto menu{app.GetUIManager().CreateMenu("MainMenu", app.GetResourceManager())};
-    menu->SetSize(windowSize);
-    menu->CreateMenuItem("New Game");
+    // Loads engine configuration from "dat/farcical.json"
+    engine.Init(&game);
 
-    while(app.GetStatus() == farcical::Engine::Status::IsRunning) {
-      app.Update();
+    // Initializes game
+    game.Init();
+
+    while(engine.GetStatus() == farcical::Engine::Status::IsRunning) {
+      engine.Update();
     };
     return 0;
 }
