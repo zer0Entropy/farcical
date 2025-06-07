@@ -22,9 +22,9 @@ add_executable(main
                     src/ui/menu.cpp
                     src/ui/label.cpp
                     src/ui/button.cpp
-        src/resource/config.cpp
-        src/resource/manager.cpp
-        src/color.cpp
+                    src/resource/config.cpp
+                    src/resource/manager.cpp
+                    src/color.cpp
 )
 target_compile_features(main PRIVATE cxx_std_23)
 target_link_libraries(main PRIVATE SFML::Graphics)
