@@ -29,7 +29,14 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
   }
   config = result.value();
   for(auto& [key, value]: config.data.items()) {
-    if(key == "button") {
+    if(key == "menu") {
+      for(auto& [menuKey, menuValue]: value.items()) {
+        if(menuKey == "defaultButtonSpacing") {
+          defaultButtonSpacing = menuValue.template get<float>();
+        }
+      } // for each key-value pair in menu
+    } // if menu
+    else if(key == "button") {
       for(auto& [buttonKey, buttonValue]: value.items()) {
         if(buttonKey == "font") {
           ResourceID fontID;
@@ -98,7 +105,7 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
             if(loadResult.has_value()) {
               return loadResult;
             }
-          }
+          } // for each texture in textures
         } // if texture
       } // for each key-value pair in Button
     } // if button
@@ -116,6 +123,7 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
 farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, ResourceManager& resourceManager) {
   widgets.emplace_back(std::make_unique<Menu>(name, nullptr));
   Menu* menu{dynamic_cast<Menu*>(widgets.rbegin()->get())};
+  menu->SetButtonSpacing(defaultButtonSpacing);
   auto textureRequest{resourceManager.GetTexture(static_cast<ResourceID>(Manager::buttonTextureID))};
   if(!textureRequest.has_value()) {
     return nullptr;

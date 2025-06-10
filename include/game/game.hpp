@@ -12,13 +12,13 @@ namespace farcical::game {
     public:
         Game() = delete;
 
-        Game(Game const &) = delete;
+        Game(Game const&) = delete;
 
         Game(Game &&) = delete;
 
-        Game &operator=(Game const &) = delete;
+        Game& operator=(Game const&) = delete;
 
-        Game(Engine &engine);
+        Game(Engine& engine);
 
         ~Game() = default;
 
@@ -27,7 +27,7 @@ namespace farcical::game {
         std::optional<Error> Update();
 
     private:
-        Engine &engine;
+        Engine& engine;
 
         static constexpr std::string_view mainMenuID = "MainMenu";
         static constexpr std::string_view newGameText = "New Game";

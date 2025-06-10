@@ -9,55 +9,62 @@
 #include "widget.hpp"
 
 namespace farcical::ui {
+    class Button;
+    class Label;
 
-  class Button;
-  class Label;
+    class MenuItem final : public Widget {
+    public:
+        explicit MenuItem(std::string_view name, Widget* parent = nullptr);
 
-  class MenuItem final :  public Widget {
-  public:
-    explicit MenuItem(std::string_view name, Widget* parent = nullptr);
-    ~MenuItem() override = default;
+        ~MenuItem() override = default;
 
-    Button* CreateButton(std::string_view name, sf::Texture& texture);
-    Label* CreateLabel(std::string_view name, sf::Font& font);
+        Button* CreateButton(std::string_view name, sf::Texture& texture);
 
-    Button* GetButton() const;
-    Label* GetLabel() const;
+        Label* CreateLabel(std::string_view name, sf::Font& font);
 
-    void Draw(sf::RenderTarget& target) const override;
+        Button* GetButton() const;
 
-  private:
+        Label* GetLabel() const;
 
-    Button* button;
-    Label* label;
+        void Draw(sf::RenderTarget& target) const override;
 
-    static int fontSize;
-    static sf::Color fontColor;
-    static sf::Color outlineColor;
+    private:
+        Button* button;
+        Label* label;
 
-  };
+        static int fontSize;
+        static sf::Color fontColor;
+        static sf::Color outlineColor;
+    };
 
-  class Menu final : public Widget {
-  public:
-    explicit Menu(std::string_view name, Widget* parent = nullptr);
-    ~Menu() override = default;
+    class Menu final : public Widget {
+    public:
+        explicit Menu(std::string_view name, Widget* parent = nullptr);
 
-    [[nodiscard]] MenuItem*     CreateMenuItem(std::string_view name, float buttonSpacing);
-    [[nodiscard]] MenuItem*     GetMenuItemByName(std::string_view name) const;
-    [[nodiscard]] MenuItem*     GetMenuItemByIndex(int index) const;
+        ~Menu() override = default;
 
-    void                        SetButtonTexture(sf::Texture& texture);
-    void                        SetLabelFont(sf::Font& font);
+        [[nodiscard]] MenuItem* CreateMenuItem(std::string_view name);
 
-    void                        SetSelectedIndex(int index);
+        [[nodiscard]] MenuItem* GetMenuItemByName(std::string_view name) const;
 
-    void                        Draw(sf::RenderTarget& target) const override;
+        [[nodiscard]] MenuItem* GetMenuItemByIndex(int index) const;
 
-  private:
-    sf::Texture* buttonTexture;
-    sf::Font* labelFont;
-    int selectedIndex;
-  };
+        void SetButtonTexture(sf::Texture& texture);
+
+        void SetLabelFont(sf::Font& font);
+
+        void SetSelectedIndex(int index);
+
+        void SetButtonSpacing(float spacing);
+
+        void Draw(sf::RenderTarget& target) const override;
+
+    private:
+        sf::Texture* buttonTexture;
+        sf::Font* labelFont;
+        int selectedIndex;
+        float buttonSpacing;
+    };
 }
 
 #endif //MENU_HPP

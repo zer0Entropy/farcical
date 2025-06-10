@@ -54,6 +54,7 @@ namespace farcical::ui {
     sf::Color                                           defaultFontColor;
     sf::Color                                           defaultOutlineColor;
     float                                               defaultOutlineThickness;
+    float                                               defaultButtonSpacing;
   };
 }
 
