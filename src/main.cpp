@@ -6,8 +6,8 @@
 
 int main()
 {
-    farcical::Engine        engine;
-    farcical::game::Game    game(engine);
+    farcical::Engine engine;
+    farcical::game::Game game(engine);
 
     // Loads engine configuration from "dat/farcical.json"
     engine.Init(&game);
@@ -16,7 +16,7 @@ int main()
     game.Init();
 
     while(engine.GetStatus() == farcical::Engine::Status::IsRunning) {
-      engine.Update();
+        engine.Update();
     };
     return 0;
 }

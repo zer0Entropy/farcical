@@ -8,27 +8,33 @@
 #include "../engine.hpp"
 
 namespace farcical::game {
-
     class Game {
     public:
         Game() = delete;
-        Game(Game const&) = delete;
-        Game(Game &&) = delete;
-        Game& operator=(Game const&) = delete;
 
-        Game(Engine& engine);
+        Game(Game const &) = delete;
+
+        Game(Game &&) = delete;
+
+        Game &operator=(Game const &) = delete;
+
+        Game(Engine &engine);
+
         ~Game() = default;
 
-        std::optional<Error>        Init();
-        std::optional<Error>        Update();
+        std::optional<Error> Init();
+
+        std::optional<Error> Update();
 
     private:
-        Engine&                                 engine;
+        Engine &engine;
 
-        static constexpr std::string_view       mainMenuID = "MainMenu";
-        static constexpr std::string_view       newGameText = "New Game";
+        static constexpr std::string_view mainMenuID = "MainMenu";
+        static constexpr std::string_view newGameText = "New Game";
+        static constexpr std::string_view loadGameText = "Load Game";
+        static constexpr std::string_view optionsText = "Options";
+        static constexpr std::string_view quitGameText = "Quit Game";
     };
-
 }
 
 #endif //GAME_HPP

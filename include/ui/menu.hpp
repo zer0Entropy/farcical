@@ -42,16 +42,21 @@ namespace farcical::ui {
     explicit Menu(std::string_view name, Widget* parent = nullptr);
     ~Menu() override = default;
 
-    MenuItem*   CreateMenuItem(std::string_view name);
+    [[nodiscard]] MenuItem*     CreateMenuItem(std::string_view name, float buttonSpacing);
+    [[nodiscard]] MenuItem*     GetMenuItemByName(std::string_view name) const;
+    [[nodiscard]] MenuItem*     GetMenuItemByIndex(int index) const;
 
-    void        SetButtonTexture(sf::Texture& texture);
-    void        SetLabelFont(sf::Font& font);
+    void                        SetButtonTexture(sf::Texture& texture);
+    void                        SetLabelFont(sf::Font& font);
 
-    void        Draw(sf::RenderTarget& target) const override;
+    void                        SetSelectedIndex(int index);
+
+    void                        Draw(sf::RenderTarget& target) const override;
 
   private:
     sf::Texture* buttonTexture;
     sf::Font* labelFont;
+    int selectedIndex;
   };
 }
 

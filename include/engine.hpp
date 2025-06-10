@@ -19,7 +19,6 @@
 #include "resource/manager.hpp"
 
 namespace farcical {
-
     namespace game {
         class Game;
     }
@@ -49,7 +48,7 @@ namespace farcical {
         [[nodiscard]]   const WindowProperties&     GetWindowProperties() const;
 
         /* Loads Config from file & initializes all members */
-        std::optional<Error>                        Init(game::Game* game);
+        std::optional<Error> Init(game::Game *game);
 
         /* Updates all Systems */
         void                                        Update();
@@ -81,9 +80,8 @@ namespace farcical {
 
         std::unique_ptr<RenderSystem>               renderSystem;
 
-        game::Game*                                 game;
+        game::Game*game;
     };
-
 };
 
 #endif //APP_HPP
