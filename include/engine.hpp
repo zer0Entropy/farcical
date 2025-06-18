@@ -47,7 +47,15 @@ namespace farcical {
 
         [[nodiscard]]   const WindowProperties&     GetWindowProperties() const;
 
-        /* Loads Config from file & initializes all members */
+        /* Init(Game* game) - Returns Error (optionally)
+         * Called exactly once per Engine lifetime, *BEFORE* calling Update() for the first time!
+         *      (Update() will not function correctly if status != IsRunning)
+         * 1. Loads a Config file (as defined in Resources/config.hpp) from $configPath
+         *      (hardcoded into this class as "dat/farcical.json")
+         * 2. Parses Window properties from that Config and uses them to initialize the window
+         * 3. Calls Init() on all Systems
+         * 4. Sets status to Engine::Status::IsRunning
+         */
         std::optional<Error> Init(game::Game* game);
 
         /* Updates all Systems */
@@ -68,6 +76,7 @@ namespace farcical {
 
         Status                                      status;
 
+        static constexpr const std::string_view     configPath{"dat/farcical.json"};
         Config                                      config;
 
         WindowProperties                            windowConfig;

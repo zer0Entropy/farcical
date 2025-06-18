@@ -13,16 +13,17 @@ namespace farcical::ui {
   class Button final : public Widget {
   public:
     enum class Status {
-      Normal,
+      Normal = 0,
       Highlighted,
       Pressed,
-      Disabled
+      Disabled,
+      NumStates
     };
 
     explicit Button(std::string_view name, Widget* parent);
     ~Button() override = default;
 
-    void SetTexture(sf::Texture& texture);
+    void SetTexture(Status state, sf::Texture& texture);
 
     [[nodiscard]] sf::Vector2u GetSize() const override;
 
@@ -33,7 +34,7 @@ namespace farcical::ui {
     void Draw(sf::RenderTarget& target) const override;
 
   private:
-    sf::Texture* texture;
+    sf::Texture* textures[static_cast<int>(Status::NumStates)];
     Status status;
   };
 

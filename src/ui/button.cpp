@@ -9,16 +9,17 @@
 
 farcical::ui::Button::Button(std::string_view name, Widget* parent)
     : Widget(name, Widget::Type::Button, parent),
-      texture{nullptr},
+      textures{nullptr},
       status{Status::Normal} {
 }
 
-void farcical::ui::Button::SetTexture(sf::Texture& texture) {
-  this->texture = &texture;
+void farcical::ui::Button::SetTexture(Status state, sf::Texture& texture) {
+  this->textures[static_cast<int>(state)] = &texture;
 }
 
 sf::Vector2u farcical::ui::Button::GetSize() const {
-  sf::Vector2u textureSize{this->texture->getSize()};
+  sf::Texture& texture = *this->textures[static_cast<int>(Status::Normal)];
+  sf::Vector2u textureSize{texture.getSize()};
   return sf::Vector2u{textureSize.x * static_cast<unsigned int>(this->scale.x), textureSize.y * static_cast<unsigned int>(this->scale.y)};
 }
 
@@ -31,7 +32,8 @@ void farcical::ui::Button::SetStatus(Status status) {
 }
 
 void farcical::ui::Button::Draw(sf::RenderTarget& target) const {
-  sf::Sprite sprite{*texture};
+  sf::Texture& texture = *this->textures[static_cast<int>(this->status)];
+  sf::Sprite sprite{texture};
   sprite.setPosition(position);
   sprite.setScale(scale);
   target.draw(sprite);

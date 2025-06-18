@@ -20,7 +20,7 @@ farcical::ui::MenuItem::MenuItem(std::string_view name, Widget* parent):
 farcical::ui::Button* farcical::ui::MenuItem::CreateButton(std::string_view name, sf::Texture& texture) {
   children.emplace_back(std::make_unique<Button>(name, this));
   button = dynamic_cast<Button*>(children.rbegin()->get());
-  button->SetTexture(texture);
+  button->SetTexture(Button::Status::Normal, texture);
   return button;
 }
 
@@ -53,6 +53,7 @@ farcical::ui::Menu::Menu(std::string_view name, Widget* parent):
   Widget(name, Widget::Type::Menu, parent),
   buttonTexture{nullptr},
   labelFont{nullptr},
+  titleFont{nullptr},
   selectedIndex{-1},
   buttonSpacing{0.0f} {
 }
@@ -111,6 +112,10 @@ void farcical::ui::Menu::SetButtonTexture(sf::Texture& texture) {
 
 void farcical::ui::Menu::SetLabelFont(sf::Font& font) {
   labelFont = &font;
+}
+
+void farcical::ui::Menu::SetTitleFont(sf::Font& font) {
+  titleFont = &font;
 }
 
 void farcical::ui::Menu::SetSelectedIndex(int index) {

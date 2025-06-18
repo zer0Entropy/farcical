@@ -53,6 +53,8 @@ namespace farcical::ui {
 
         void SetLabelFont(sf::Font& font);
 
+        void SetTitleFont(sf::Font& font);
+
         void SetSelectedIndex(int index);
 
         void SetButtonSpacing(float spacing);
@@ -62,6 +64,7 @@ namespace farcical::ui {
     private:
         sf::Texture* buttonTexture;
         sf::Font* labelFont;
+        sf::Font* titleFont;
         int selectedIndex;
         float buttonSpacing;
     };

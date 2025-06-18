@@ -25,8 +25,7 @@ const farcical::WindowProperties& farcical::Engine::GetWindowProperties() const 
 std::optional<farcical::Error> farcical::Engine::Init(game::Game *game) {
   if(status == Engine::Status::Uninitialized) {
     this->game = game;
-    const std::string cfgPath{"dat/farcical.json"};
-    auto result{LoadConfig(cfgPath)};
+    auto result{LoadConfig(Engine::configPath)};
     if(!result.has_value()) {
       return result.error();
     }
