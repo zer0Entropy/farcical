@@ -13,6 +13,7 @@
 
 #include "../resource/config.hpp"
 #include "widget.hpp"
+#include "../keyboard.hpp"
 
 namespace farcical {
   struct Resource;
@@ -22,32 +23,37 @@ namespace farcical {
 namespace farcical::ui {
   class Menu;
 
-  class Manager final {
+  class Manager: public KeyboardInterface {
   public:
-    Manager();
+    explicit Manager();
     Manager(const Manager&) = delete;
     Manager(Manager&) = delete;
     Manager(Manager&&) = delete;
-    ~Manager() = default;
+    ~Manager() override = default;
 
     std::optional<Error>  Init(farcical::ResourceManager& resourceManager);
 
     Menu*                 CreateMenu(std::string_view name, ResourceManager& resourceManager);
 
     [[nodiscard]] Widget* GetWidget(std::string_view name) const;
+    [[nodiscard]] Widget* GetFocusedWidget() const;
+    void                  SetFocusedWidget(Widget* widget);
 
     void                  Update(sf::RenderWindow& window) const;
+
+    void                  ReceiveKeyboardInput(sf::Keyboard::Key input) override;
 
   private:
 
     Config                                              config;
 
     std::vector<std::unique_ptr<Widget>>                widgets;
+    Widget*                                             focusedWidget;
 
     Resource*                                           buttonTexture;
     Resource*                                           buttonFont;
 
-    static constexpr std::string_view                   buttonTextureID{"buttonTexture"};
+    static constexpr std::string_view                   buttonTextureID{"buttonNormalTexture"};
     static constexpr std::string_view                   buttonFontID{"buttonFont"};
 
     unsigned int                                        defaultFontSize;

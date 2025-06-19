@@ -49,6 +49,8 @@ namespace farcical::ui {
 
         [[nodiscard]] MenuItem* GetMenuItemByIndex(int index) const;
 
+        [[nodiscard]] int GetSelectedIndex() const;
+
         void SetButtonTexture(sf::Texture& texture);
 
         void SetLabelFont(sf::Font& font);

@@ -16,6 +16,7 @@ FetchContent_MakeAvailable(SFML)
 
 add_executable( main
                 src/engine.cpp
+        src/input.cpp
                 src/render.cpp
                 src/main.cpp
                 src/ui/manager.cpp
@@ -26,7 +27,6 @@ add_executable( main
                 src/resource/manager.cpp
                 src/color.cpp
         src/game/game.cpp
-        src/input.cpp
 )
 target_compile_features(main PRIVATE cxx_std_23)
 target_link_libraries(main PRIVATE SFML::Graphics)

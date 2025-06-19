@@ -6,17 +6,26 @@
 #define INPUT_HPP
 
 #include "system.hpp"
+#include "ui/manager.hpp"
 
 namespace farcical {
-    class InputSystem final: public System {
+    class InputSystem final : public System {
     public:
-        InputSystem();
-        ~InputSystem();
+        InputSystem() = delete;
+        InputSystem(InputSystem&) = delete;
+        InputSystem(const InputSystem&) = delete;
+        explicit InputSystem(sf::RenderWindow& window, ui::Manager& manager);
+        ~InputSystem() override = default;
 
         void Init() override;
+
         void Update() override;
+
         void Stop() override;
+
     private:
+        sf::RenderWindow&     window;
+        ui::Manager&          uiManager;
     };
 }
 

@@ -106,6 +106,10 @@ farcical::ui::MenuItem* farcical::ui::Menu::GetMenuItemByIndex(int index) const 
   return dynamic_cast<MenuItem*>(children[index].get());
 }
 
+int farcical::ui::Menu::GetSelectedIndex() const {
+  return selectedIndex;
+}
+
 void farcical::ui::Menu::SetButtonTexture(sf::Texture& texture) {
   buttonTexture = &texture;
 }

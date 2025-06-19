@@ -3,6 +3,7 @@
 //
 #include "../../include/resource/manager.hpp"
 
+#include <cctype>
 #include <fstream>
 #include "../../include/ui/manager.hpp"
 #include "../../include/ui/button.hpp"
@@ -10,10 +11,11 @@
 #include "../../include/resource/manager.hpp"
 #include "../../include/color.hpp"
 
-farcical::ui::Manager::Manager():
+farcical::ui::Manager::Manager(): KeyboardInterface(),
   config{},
   buttonTexture{nullptr},
   buttonFont{nullptr},
+  focusedWidget{nullptr},
   defaultFontSize{0},
   defaultFontColor{sf::Color::Black},
   defaultOutlineColor{sf::Color::Black},
@@ -66,47 +68,70 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
             return loadFontResult.value();
           }
         } // if font
-        else if(buttonKey == "texture") {
-          constexpr unsigned int numTextures{3};
-          Resource textures[numTextures];
-          unsigned int textureIndex{0};
-          for(auto segmentConfig: buttonValue) {
-            for(auto& [segmentKey, segmentValue]: segmentConfig.items()) {
+        else if(buttonKey == "segmentedTextures") {
+          std::vector<Resource> segmentedTextures;
+          Resource* currentTexture{nullptr};
+          for(auto textureDescription: buttonValue) {
+            segmentedTextures.push_back(Resource{});
+            currentTexture = &segmentedTextures.back();
+            for(auto& [textureKey, textureValue]: textureDescription.items()) {
+              if(textureKey == "id") {
+                currentTexture->id = textureValue.template get<std::string>();
+                currentTexture->id.append("Texture");
+              } // if textureID
+              else if(textureKey == "path") {
+                currentTexture->path = textureValue.template get<std::string>();
+              } // else if path
+              else if(textureKey == "segments") {
+                // We're assuming our segments are a set of 3: left, center, right
+                constexpr unsigned int numSegments{3};
+                Resource segments[numSegments];
+                unsigned int segmentIndex{0};
+                for(auto& segmentDescription: textureValue) {
+                  for(auto& [segmentKey, segmentValue]: segmentDescription.items()) {
+                    if(segmentKey == "id") {
+                      segments[segmentIndex].id = currentTexture->id;
+                      std::string idString{segmentValue.template get<std::string>()};
+                      idString[0] = static_cast<char>(std::toupper(idString[0]));
+                      segments[segmentIndex].id.append(idString);
+                    } // if segmentID
+                    else if(segmentKey == "position") {
+                      segments[segmentIndex].rect.position.x = segmentValue.at("x").template get<int>();
+                      segments[segmentIndex].rect.position.y = segmentValue.at("y").template get<int>();
+                    } // else if position
+                    else if(segmentKey == "size") {
+                      segments[segmentIndex].rect.size.x = segmentValue.at("width").template get<int>();
+                      segments[segmentIndex].rect.size.y = segmentValue.at("height").template get<int>();
+                    } // else if size
+                  } // for each key-value pair in segmentDescription
+                  segments[segmentIndex].path = currentTexture->path;
+                  ++segmentIndex;
+                } // for each segmentDescription in texture
+                for(auto& segment: segments) {
+                  auto loadResult{resourceManager.LoadResource(segment.id, Resource::Type::Texture, segment.path, segment.rect)};
+                  if(loadResult.has_value()) {
+                    return loadResult;
+                  }
+                } // for each segment in segments
+              } // else if segments
 
-              if(segmentKey == "segment") {
-                if(segmentValue == "left") {
-                  textures[textureIndex].id = "buttonTextureLeft";
-                } // if left
-                else if(segmentValue == "center") {
-                  textures[textureIndex].id = "buttonTextureCenter";
-                } // else if center
-                else if(segmentValue == "right") {
-                  textures[textureIndex].id = "buttonTextureRight";
-                } // else if right
-              } // if segment
-
-              else if(segmentKey == "path") {
-                textures[textureIndex].path = segmentValue.template get<std::string>();
-              } // if path
-              else if(segmentKey == "position") {
-                textures[textureIndex].rect.position.x = segmentValue.at("x").template get<int>();
-                textures[textureIndex].rect.position.y = segmentValue.at("y").template get<int>();
-              } // if position
-              else if(segmentKey == "size") {
-                textures[textureIndex].rect.size.x = segmentValue.at("width").template get<int>();
-                textures[textureIndex].rect.size.y = segmentValue.at("height").template get<int>();
-              } // if size
-
-            } // for each key-value pair in segmentConfig
-            ++textureIndex;
-          } // for each segmentConfig in Button
-          for(auto& texture: textures) {
-            auto loadResult{resourceManager.LoadResource(texture.id, Resource::Type::Texture, texture.path, texture.rect)};
-            if(loadResult.has_value()) {
-              return loadResult;
+            } // for each key-value pair in textureDescription
+          } // for each textureDescription in Button
+          for(auto& texture: segmentedTextures) {
+            std::string leftTextureID{texture.id + "Left"};
+            std::string centerTextureID{texture.id + "Center"};
+            std::string rightTextureID{texture.id + "Right"};
+            std::vector<ResourceID> textureIDs{
+              static_cast<ResourceID>(leftTextureID),
+              static_cast<ResourceID>(centerTextureID),
+              static_cast<ResourceID>(rightTextureID)
+            };
+            auto spliceResult{resourceManager.SpliceTextures(textureIDs, texture.id)};
+            if(spliceResult.has_value()) {
+              return spliceResult;
             }
           } // for each texture in textures
-        } // if texture
+        } // if segmentedTextures
       } // for each key-value pair in Button
     } // if button
   } // for each top-level key-value pair
@@ -123,6 +148,7 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
 farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, ResourceManager& resourceManager) {
   widgets.emplace_back(std::make_unique<Menu>(name, nullptr));
   Menu* menu{dynamic_cast<Menu*>(widgets.rbegin()->get())};
+  SetFocusedWidget(menu);
   menu->SetButtonSpacing(defaultButtonSpacing);
   auto textureRequest{resourceManager.GetTexture(static_cast<ResourceID>(Manager::buttonTextureID))};
   if(!textureRequest.has_value()) {
@@ -148,29 +174,35 @@ farcical::ui::Widget* farcical::ui::Manager::GetWidget(
   }
   return nullptr;
 }
+
+farcical::ui::Widget* farcical::ui::Manager::GetFocusedWidget() const {
+  return focusedWidget;
+}
+
+void farcical::ui::Manager::SetFocusedWidget(Widget* widget) {
+  focusedWidget = widget;
+}
+
 void farcical::ui::Manager::Update(sf::RenderWindow& window) const {
   for(const auto& widget : widgets) {
     widget->Draw(window);
   }
 }
-/*
-std::expected<farcical::ui::Config, farcical::Error> farcical::ui::Manager::LoadConfig(std::string_view path) {
-  std::ifstream configFile(std::string{path}, std::ios_base::in);
-  if(!configFile.good()) {
-    std::string failMsg{"Failed to load config file from " + std::string{path} + "."};
-    return std::unexpected(Error{Error::Signal::InvalidPath, failMsg});
-  }
-  while(configFile.good()) {
-    std::string line;
-    std::getline(cfgInput, line);
-    if(line.empty()) {
-      break;
-    }
-    std::string varName{ExtractVariableName(line)};
-    std::string value{ExtractValue(line)};
-    if (value.find('"') != std::string::npos) {
-      value = StripQuotes(value);
-    }
-  }
+
+void farcical::ui::Manager::ReceiveKeyboardInput(sf::Keyboard::Key input) {
+  if(input == sf::Keyboard::Key::Escape) {
+
+  } // if(input == Escape)
+  else if(input == sf::Keyboard::Key::Up) {
+
+  } // else if(input == Up)
+  else if(input == sf::Keyboard::Key::Down) {
+
+  } // else if(input == Down)
+  else if(input == sf::Keyboard::Key::Left) {
+
+  } // else if(input == Left)
+  else if(input == sf::Keyboard::Key::Right) {
+
+  } // else if(input == Right)
 }
-*/

@@ -123,7 +123,9 @@ std::optional<farcical::Error> farcical::ResourceManager::SpliceTextures(const s
         }
         sf::Texture& texture{*requestTexture.value()};
         totalSize.x += texture.getSize().x;
-        totalSize.y = texture.getSize().y;
+        if(totalSize.y < texture.getSize().y) {
+            totalSize.y = texture.getSize().y;
+        }
     }
     // Create a new texture of the appropriate size
     sf::Texture splicedTexture{totalSize};
