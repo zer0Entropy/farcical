@@ -5,6 +5,7 @@
 #ifndef MENU_HPP
 #define MENU_HPP
 
+#include <functional>
 #include <SFML/Graphics/Font.hpp>
 #include "widget.hpp"
 
@@ -27,6 +28,8 @@ namespace farcical::ui {
         Label* GetLabel() const;
 
         void Draw(sf::RenderTarget& target) const override;
+
+        void DoAction(Action action) override;
 
     private:
         Button* button;
@@ -62,6 +65,8 @@ namespace farcical::ui {
         void SetButtonSpacing(float spacing);
 
         void Draw(sf::RenderTarget& target) const override;
+
+        void DoAction(Action action) override;
 
     private:
         sf::Texture* buttonTexture;

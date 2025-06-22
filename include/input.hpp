@@ -7,6 +7,8 @@
 
 #include "system.hpp"
 #include "ui/manager.hpp"
+#include "keyboard.hpp"
+#include "mouse.hpp"
 
 namespace farcical {
     class InputSystem final : public System {
@@ -24,8 +26,10 @@ namespace farcical {
         void Stop() override;
 
     private:
-        sf::RenderWindow&     window;
-        ui::Manager&          uiManager;
+        sf::RenderWindow& window;
+        ui::Manager& uiManager;
+        std::vector<KeyboardInterface*> keyListeners;
+        std::vector<MouseInterface*> mouseListeners;
     };
 }
 

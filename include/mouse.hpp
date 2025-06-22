@@ -18,6 +18,7 @@ namespace farcical {
         MouseInterface& operator=(const MouseInterface&) = delete;
 
         virtual void ReceiveMouseMovement(sf::Vector2i position) = 0;
+
         virtual void ReceiveMouseButtonClick(sf::Mouse::Button button, sf::Vector2i position) = 0;
     };
 }

@@ -13,7 +13,8 @@ namespace farcical
 
         enum class ID {
             RenderSystem,
-            InputSystem
+            InputSystem,
+            EventSystem
         };
 
         System() = delete;

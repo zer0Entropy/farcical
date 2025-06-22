@@ -26,6 +26,7 @@ namespace farcical::ui {
     sf::Vector2u GetSize() const override;
 
     void Draw(sf::RenderTarget& target) const override;
+    void DoAction(Action action) override;
 
   private:
     sf::Font*     font;

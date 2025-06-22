@@ -22,6 +22,8 @@ namespace farcical::ui {
 
     void          Draw(sf::RenderTarget& target) const override;
 
+    void DoAction(Action action) override;
+
   private:
     sf::Texture*  cornerTextures[static_cast<int>(farcical::Rectangle::Corner::NumCorners)];
     sf::Texture*  edgeTextures[static_cast<int>(farcical::Rectangle::Edge::NumEdges)];

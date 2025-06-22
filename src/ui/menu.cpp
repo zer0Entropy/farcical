@@ -2,6 +2,8 @@
 // Created by dgmuller on 5/30/25.
 //
 
+#include <utility>
+
 #include "../../include/ui/menu.hpp"
 #include "../../include/ui/button.hpp"
 #include "../../include/ui/label.hpp"
@@ -48,6 +50,13 @@ void farcical::ui::MenuItem::Draw(sf::RenderTarget& target) const {
     child->Draw(target);
   }
 }
+
+void farcical::ui::MenuItem::DoAction(Action action) {
+  if(action.type == Action::Type::ConfirmSelection) {
+
+  }
+}
+
 
 farcical::ui::Menu::Menu(std::string_view name, Widget* parent):
   Widget(name, Widget::Type::Menu, parent),
@@ -133,5 +142,20 @@ void farcical::ui::Menu::SetButtonSpacing(float spacing) {
 void farcical::ui::Menu::Draw(sf::RenderTarget& target) const {
   for(const auto& child : children) {
     child->Draw(target);
+  }
+}
+
+void farcical::ui::Menu::DoAction(Action action) {
+  if(action.type == Action::Type::MoveSelectionUp) {
+    --selectedIndex;
+    if(selectedIndex < 0) {
+      selectedIndex = static_cast<int>(children.size()) - 1;
+    }
+  }
+  else if(action.type == Action::Type::MoveSelectionDown) {
+    ++selectedIndex;
+    if(selectedIndex >= children.size()) {
+      selectedIndex = 0;
+    }
   }
 }

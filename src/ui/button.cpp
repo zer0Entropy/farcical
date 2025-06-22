@@ -38,3 +38,7 @@ void farcical::ui::Button::Draw(sf::RenderTarget& target) const {
   sprite.setScale(scale);
   target.draw(sprite);
 }
+
+void farcical::ui::Button::DoAction(Action action) {
+
+}

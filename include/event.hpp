@@ -1,0 +1,53 @@
+//
+// Created by dgmuller on 6/22/25.
+//
+
+#ifndef EVENT_HPP
+#define EVENT_HPP
+
+#include <deque>
+#include "system.hpp"
+
+namespace farcical {
+
+    struct Event {
+        enum class Type {
+            TransitionMainMenu,
+            TransitionNewGame,
+            TransitionLoadGame,
+            TransitionOptions
+        };
+
+        Type type;
+    };
+
+    namespace game {
+        class Game;
+    }
+
+    class Engine;
+
+    class EventSystem final: public System {
+    public:
+        EventSystem() = delete;
+        EventSystem(EventSystem&) = delete;
+        EventSystem(const EventSystem&) = delete;
+        explicit EventSystem(game::Game& game, Engine& engine);
+        ~EventSystem() override = default;
+
+        void                Enqueue(const Event& event);
+
+        void                Init() override;
+
+        void                Update() override;
+
+        void                Stop() override;
+    private:
+        game::Game&         game;
+        Engine&             engine;
+        std::deque<Event>   eventQueue;
+    };
+
+}
+
+#endif //EVENT_HPP

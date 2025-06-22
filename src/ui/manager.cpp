@@ -11,15 +11,18 @@
 #include "../../include/resource/manager.hpp"
 #include "../../include/color.hpp"
 
-farcical::ui::Manager::Manager(): KeyboardInterface(),
-  config{},
-  buttonTexture{nullptr},
-  buttonFont{nullptr},
-  focusedWidget{nullptr},
-  defaultFontSize{0},
-  defaultFontColor{sf::Color::Black},
-  defaultOutlineColor{sf::Color::Black},
-  defaultOutlineThickness{0.0f} {
+farcical::ui::Manager::Manager():
+                                  KeyboardInterface(),
+                                  MouseInterface(),
+                                  ActionHandler(),
+                                  config{},
+                                  buttonTexture{nullptr},
+                                  buttonFont{nullptr},
+                                  focusedWidget{nullptr},
+                                  defaultFontSize{0},
+                                  defaultFontColor{sf::Color::Black},
+                                  defaultOutlineColor{sf::Color::Black},
+                                  defaultOutlineThickness{0.0f} {
 
 }
 
@@ -108,13 +111,14 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
                   ++segmentIndex;
                 } // for each segmentDescription in texture
                 for(auto& segment: segments) {
-                  auto loadResult{resourceManager.LoadResource(segment.id, Resource::Type::Texture, segment.path, segment.rect)};
+                  auto loadResult{
+                    resourceManager.LoadResource(segment.id, Resource::Type::Texture, segment.path, segment.rect)
+                  };
                   if(loadResult.has_value()) {
                     return loadResult;
                   }
                 } // for each segment in segments
               } // else if segments
-
             } // for each key-value pair in textureDescription
           } // for each textureDescription in Button
           for(auto& texture: segmentedTextures) {
@@ -166,8 +170,8 @@ farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, Res
 }
 
 farcical::ui::Widget* farcical::ui::Manager::GetWidget(
-    std::string_view name) const {
-  for(const auto& widget : widgets) {
+  std::string_view name) const {
+  for(const auto& widget: widgets) {
     if (widget->GetName() == name) {
       return widget.get();
     }
@@ -184,14 +188,13 @@ void farcical::ui::Manager::SetFocusedWidget(Widget* widget) {
 }
 
 void farcical::ui::Manager::Update(sf::RenderWindow& window) const {
-  for(const auto& widget : widgets) {
+  for(const auto& widget: widgets) {
     widget->Draw(window);
   }
 }
 
 void farcical::ui::Manager::ReceiveKeyboardInput(sf::Keyboard::Key input) {
   if(input == sf::Keyboard::Key::Escape) {
-
   } // if(input == Escape)
   else if(input == sf::Keyboard::Key::Up) {
 
@@ -205,4 +208,16 @@ void farcical::ui::Manager::ReceiveKeyboardInput(sf::Keyboard::Key input) {
   else if(input == sf::Keyboard::Key::Right) {
 
   } // else if(input == Right)
+}
+
+void farcical::ui::Manager::ReceiveMouseMovement(sf::Vector2i position) {
+
+}
+
+void farcical::ui::Manager::ReceiveMouseButtonClick(sf::Mouse::Button button, sf::Vector2i position) {
+
+}
+
+void farcical::ui::Manager::DoAction(Action action) {
+
 }

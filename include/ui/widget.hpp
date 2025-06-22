@@ -12,8 +12,10 @@
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/System/Vector2.hpp>
 
+#include "action.hpp"
+
 namespace farcical::ui {
-  class Widget {
+  class Widget: public ActionHandler {
    public:
 
     enum class Type {
@@ -32,6 +34,7 @@ namespace farcical::ui {
     Widget& operator=(const Widget&) = delete;
 
     explicit Widget(std::string_view name, Type type, Widget* parent = nullptr):
+      ActionHandler(),
       name{name}, type{type}, parent{parent},
       size{0,0}, scale{1.0f, 1.0f}, position{0.0f, 0.0f} {}
 
@@ -51,6 +54,8 @@ namespace farcical::ui {
     void AddChild(std::unique_ptr<Widget> child) { children.push_back(std::move(child)); }
 
     virtual void Draw(sf::RenderTarget& target) const = 0;
+
+    virtual void DoAction(Action action) = 0;
 
    protected:
     std::string name;

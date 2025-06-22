@@ -33,6 +33,8 @@ namespace farcical::ui {
 
     void Draw(sf::RenderTarget& target) const override;
 
+    void DoAction(Action action) override;
+
   private:
     sf::Texture* textures[static_cast<int>(Status::NumStates)];
     Status status;

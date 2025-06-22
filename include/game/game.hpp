@@ -10,24 +10,32 @@
 namespace farcical::game {
     class Game {
     public:
+
+        struct State {
+            enum class ID {
+                MainMenu,
+                StartNewGame,
+                LoadSavedGame,
+                OptionsMenu
+            };
+        };
+
         Game() = delete;
-
         Game(Game const&) = delete;
-
         Game(Game &&) = delete;
-
         Game& operator=(Game const&) = delete;
-
-        Game(Engine& engine);
-
+        explicit Game(Engine& engine);
         ~Game() = default;
 
         std::optional<Error> Init();
 
         std::optional<Error> Update();
 
+        void TransitionToState(State::ID stateID);
+
     private:
         Engine& engine;
+        State currentState;
 
         static constexpr std::string_view mainMenuID = "MainMenu";
         static constexpr std::string_view newGameText = "New Game";

@@ -14,6 +14,7 @@
 #include "../resource/config.hpp"
 #include "widget.hpp"
 #include "../keyboard.hpp"
+#include "../mouse.hpp"
 
 namespace farcical {
   struct Resource;
@@ -23,12 +24,14 @@ namespace farcical {
 namespace farcical::ui {
   class Menu;
 
-  class Manager: public KeyboardInterface {
+  class Manager final : public KeyboardInterface, public MouseInterface, public ActionHandler {
   public:
     explicit Manager();
+
     Manager(const Manager&) = delete;
     Manager(Manager&) = delete;
     Manager(Manager&&) = delete;
+
     ~Manager() override = default;
 
     std::optional<Error>  Init(farcical::ResourceManager& resourceManager);
@@ -36,15 +39,22 @@ namespace farcical::ui {
     Menu*                 CreateMenu(std::string_view name, ResourceManager& resourceManager);
 
     [[nodiscard]] Widget* GetWidget(std::string_view name) const;
+
     [[nodiscard]] Widget* GetFocusedWidget() const;
+
     void                  SetFocusedWidget(Widget* widget);
 
     void                  Update(sf::RenderWindow& window) const;
 
     void                  ReceiveKeyboardInput(sf::Keyboard::Key input) override;
 
-  private:
+    void                  ReceiveMouseMovement(sf::Vector2i position) override;
 
+    void                  ReceiveMouseButtonClick(sf::Mouse::Button button, sf::Vector2i position) override;
+
+    void                  DoAction(Action action) override;
+
+  private:
     Config                                              config;
 
     std::vector<std::unique_ptr<Widget>>                widgets;
@@ -65,4 +75,4 @@ namespace farcical::ui {
 }
 
 
-#endif //MANAGER_HPP
+#endif // UI_MANAGER_HPP

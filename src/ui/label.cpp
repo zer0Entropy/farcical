@@ -57,3 +57,7 @@ void farcical::ui::Label::Draw(sf::RenderTarget& target) const {
   text.setPosition(position);
   target.draw(text);
 }
+
+void farcical::ui::Label::DoAction(Action action) {
+
+}

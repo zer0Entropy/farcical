@@ -13,6 +13,8 @@
 #include "error.hpp"
 #include "window.hpp"
 #include "render.hpp"
+#include "input.hpp"
+#include "event.hpp"
 #include "resource/config.hpp"
 #include "resource/manager.hpp"
 #include "ui/manager.hpp"
@@ -88,6 +90,10 @@ namespace farcical {
         ui::Manager                                 uiManager;
 
         std::unique_ptr<RenderSystem>               renderSystem;
+
+        std::unique_ptr<InputSystem>                inputSystem;
+
+        std::unique_ptr<EventSystem>                eventSystem;
 
         game::Game* game;
     };

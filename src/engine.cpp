@@ -11,6 +11,8 @@ farcical::Engine::Engine():
     status{farcical::Engine::Status::Uninitialized},
     window{nullptr},
     renderSystem{nullptr},
+    inputSystem{nullptr},
+    eventSystem{nullptr},
     game{nullptr} {
 }
 
@@ -83,6 +85,12 @@ std::optional<farcical::Error> farcical::Engine::Init(game::Game *game) {
     // Init systems
     renderSystem = std::make_unique<RenderSystem>(*window, uiManager);
     renderSystem->Init();
+
+    inputSystem = std::make_unique<InputSystem>(*window, uiManager);
+    inputSystem->Init();
+
+    eventSystem = std::make_unique<EventSystem>(*game, *this);
+    eventSystem->Init();
 
     // Loads UI configuration from "dat/ui.json"
     uiManager.Init(resourceManager);
