@@ -87,13 +87,13 @@ namespace farcical {
 
         ResourceManager                             resourceManager;
 
-        ui::Manager                                 uiManager;
-
         std::unique_ptr<RenderSystem>               renderSystem;
 
         std::unique_ptr<InputSystem>                inputSystem;
 
         std::unique_ptr<EventSystem>                eventSystem;
+
+        std::unique_ptr<ui::Manager> uiManager;
 
         game::Game* game;
     };

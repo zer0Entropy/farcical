@@ -10,7 +10,6 @@
 namespace farcical::game {
     class Game {
     public:
-
         struct State {
             enum class ID {
                 MainMenu,
@@ -24,7 +23,9 @@ namespace farcical::game {
         Game(Game const&) = delete;
         Game(Game &&) = delete;
         Game& operator=(Game const&) = delete;
+
         explicit Game(Engine& engine);
+
         ~Game() = default;
 
         std::optional<Error> Init();

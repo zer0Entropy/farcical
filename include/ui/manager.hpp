@@ -17,61 +17,78 @@
 #include "../mouse.hpp"
 
 namespace farcical {
-  struct Resource;
-  class ResourceManager;
+    struct Resource;
+    class ResourceManager;
 }
 
 namespace farcical::ui {
-  class Menu;
+    class Menu;
 
-  class Manager final : public KeyboardInterface, public MouseInterface, public ActionHandler {
-  public:
-    explicit Manager();
+    /* ui::Manager creates and stores all ui::Widgets.
+     *  Widgets are stored in a hierarchy, with one Widget (whichever was created first)
+     *  designated as the root node.
+    */
 
-    Manager(const Manager&) = delete;
-    Manager(Manager&) = delete;
-    Manager(Manager&&) = delete;
+    class Manager final :
+            public KeyboardInterface,
+            public MouseInterface,
+            public ActionHandler,
+            public EventPropagator {
+    public:
+        explicit Manager(EventSystem& eventSystem);
 
-    ~Manager() override = default;
+        Manager(const Manager&) = delete;
 
-    std::optional<Error>  Init(farcical::ResourceManager& resourceManager);
+        Manager(Manager&) = delete;
 
-    Menu*                 CreateMenu(std::string_view name, ResourceManager& resourceManager);
+        Manager(Manager&&) = delete;
 
-    [[nodiscard]] Widget* GetWidget(std::string_view name) const;
+        ~Manager() override = default;
 
-    [[nodiscard]] Widget* GetFocusedWidget() const;
+        std::optional<Error> Init(farcical::ResourceManager& resourceManager);
 
-    void                  SetFocusedWidget(Widget* widget);
+        Menu* CreateMenu(std::string_view name, ResourceManager& resourceManager, Widget* parent = nullptr);
 
-    void                  Update(sf::RenderWindow& window) const;
+        [[nodiscard]] Widget* GetRootWidget() const;
 
-    void                  ReceiveKeyboardInput(sf::Keyboard::Key input) override;
+        [[nodiscard]] Widget* GetFocusedWidget() const;
 
-    void                  ReceiveMouseMovement(sf::Vector2i position) override;
+        [[nodiscard]] Widget* FindWidget(std::string_view name, Widget* parent = nullptr) const;
 
-    void                  ReceiveMouseButtonClick(sf::Mouse::Button button, sf::Vector2i position) override;
+        void SetFocusedWidget(Widget* widget);
 
-    void                  DoAction(Action action) override;
+        void Update(sf::RenderWindow& window) const;
 
-  private:
-    Config                                              config;
+        void ReceiveKeyboardInput(sf::Keyboard::Key input) override;
 
-    std::vector<std::unique_ptr<Widget>>                widgets;
-    Widget*                                             focusedWidget;
+        void ReceiveMouseMovement(sf::Vector2i position) override;
 
-    Resource*                                           buttonTexture;
-    Resource*                                           buttonFont;
+        void ReceiveMouseButtonClick(sf::Mouse::Button button, sf::Vector2i position) override;
 
-    static constexpr std::string_view                   buttonTextureID{"buttonNormalTexture"};
-    static constexpr std::string_view                   buttonFontID{"buttonFont"};
+        void DoAction(Action action) override;
 
-    unsigned int                                        defaultFontSize;
-    sf::Color                                           defaultFontColor;
-    sf::Color                                           defaultOutlineColor;
-    float                                               defaultOutlineThickness;
-    float                                               defaultButtonSpacing;
-  };
+        void ReceiveEvent(const Event& event) override;
+
+    private:
+        EventSystem& eventSystem;
+
+        Config config;
+
+        std::unique_ptr<Widget> rootWidget;
+        Widget* focusedWidget;
+
+        Resource* buttonTexture;
+        Resource* buttonFont;
+
+        static constexpr std::string_view buttonTextureID{"buttonNormalTexture"};
+        static constexpr std::string_view   buttonFontID{"buttonFont"};
+
+        unsigned int                        defaultFontSize;
+        sf::Color                           defaultFontColor;
+        sf::Color                           defaultOutlineColor;
+        float                               defaultOutlineThickness;
+        float                               defaultButtonSpacing;
+    };
 }
 
 

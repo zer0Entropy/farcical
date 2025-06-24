@@ -7,13 +7,13 @@
 
 #include <functional>
 #include <SFML/Graphics/Font.hpp>
-#include "widget.hpp"
+#include "container.hpp"
 
 namespace farcical::ui {
     class Button;
     class Label;
 
-    class MenuItem final : public Widget {
+    class MenuItem final : public Container {
     public:
         explicit MenuItem(std::string_view name, Widget* parent = nullptr);
 
@@ -27,8 +27,6 @@ namespace farcical::ui {
 
         Label* GetLabel() const;
 
-        void Draw(sf::RenderTarget& target) const override;
-
         void DoAction(Action action) override;
 
     private:
@@ -40,7 +38,7 @@ namespace farcical::ui {
         static sf::Color outlineColor;
     };
 
-    class Menu final : public Widget {
+    class Menu final : public Container {
     public:
         explicit Menu(std::string_view name, Widget* parent = nullptr);
 
@@ -63,8 +61,6 @@ namespace farcical::ui {
         void SetSelectedIndex(int index);
 
         void SetButtonSpacing(float spacing);
-
-        void Draw(sf::RenderTarget& target) const override;
 
         void DoAction(Action action) override;
 

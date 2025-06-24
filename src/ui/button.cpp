@@ -40,5 +40,4 @@ void farcical::ui::Button::Draw(sf::RenderTarget& target) const {
 }
 
 void farcical::ui::Button::DoAction(Action action) {
-
 }

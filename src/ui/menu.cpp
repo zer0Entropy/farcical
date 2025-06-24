@@ -13,7 +13,7 @@ sf::Color farcical::ui::MenuItem::fontColor = sf::Color::White;
 sf::Color farcical::ui::MenuItem::outlineColor = sf::Color::Red;
 
 farcical::ui::MenuItem::MenuItem(std::string_view name, Widget* parent):
-  Widget(name, Widget::Type::MenuItem, parent),
+  Container(name, Widget::Type::MenuItem, parent),
   button{nullptr},
   label{nullptr} {
 
@@ -45,21 +45,14 @@ farcical::ui::Label* farcical::ui::MenuItem::GetLabel() const {
   return label;
 }
 
-void farcical::ui::MenuItem::Draw(sf::RenderTarget& target) const {
-  for(const auto& child : children) {
-    child->Draw(target);
-  }
-}
-
 void farcical::ui::MenuItem::DoAction(Action action) {
   if(action.type == Action::Type::ConfirmSelection) {
-
   }
 }
 
 
 farcical::ui::Menu::Menu(std::string_view name, Widget* parent):
-  Widget(name, Widget::Type::Menu, parent),
+  Container(name, Widget::Type::Menu, parent),
   buttonTexture{nullptr},
   labelFont{nullptr},
   titleFont{nullptr},
@@ -139,20 +132,13 @@ void farcical::ui::Menu::SetButtonSpacing(float spacing) {
   buttonSpacing = spacing;
 }
 
-void farcical::ui::Menu::Draw(sf::RenderTarget& target) const {
-  for(const auto& child : children) {
-    child->Draw(target);
-  }
-}
-
 void farcical::ui::Menu::DoAction(Action action) {
   if(action.type == Action::Type::MoveSelectionUp) {
     --selectedIndex;
     if(selectedIndex < 0) {
       selectedIndex = static_cast<int>(children.size()) - 1;
     }
-  }
-  else if(action.type == Action::Type::MoveSelectionDown) {
+  } else if(action.type == Action::Type::MoveSelectionDown) {
     ++selectedIndex;
     if(selectedIndex >= children.size()) {
       selectedIndex = 0;

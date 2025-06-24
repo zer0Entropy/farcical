@@ -59,5 +59,4 @@ void farcical::ui::Label::Draw(sf::RenderTarget& target) const {
 }
 
 void farcical::ui::Label::DoAction(Action action) {
-
 }

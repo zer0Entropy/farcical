@@ -13,10 +13,11 @@
 #include <SFML/System/Vector2.hpp>
 
 #include "action.hpp"
+#include "../event.hpp"
 
 namespace farcical::ui {
-  class Widget: public ActionHandler {
-   public:
+  class Widget : public ActionHandler, public EventPropagator {
+  public:
 
     enum class Type {
       Border,
@@ -35,6 +36,7 @@ namespace farcical::ui {
 
     explicit Widget(std::string_view name, Type type, Widget* parent = nullptr):
       ActionHandler(),
+      EventPropagator(parent),
       name{name}, type{type}, parent{parent},
       size{0,0}, scale{1.0f, 1.0f}, position{0.0f, 0.0f} {}
 
@@ -49,19 +51,17 @@ namespace farcical::ui {
     void SetScale(sf::Vector2f scale) { this->scale = scale; }
     void SetPosition(sf::Vector2f position) { this->position = position; }
 
-    [[nodiscard]] std::size_t GetNumChildren() const { return children.size(); }
-    [[nodiscard]] Widget* GetChild(std::size_t index) const { return children[index].get(); }
-    void AddChild(std::unique_ptr<Widget> child) { children.push_back(std::move(child)); }
+    [[nodiscard]] virtual bool IsContainer() const { return false; }
 
     virtual void Draw(sf::RenderTarget& target) const = 0;
 
     virtual void DoAction(Action action) = 0;
 
-   protected:
+  protected:
     std::string name;
     Type type;
     Widget* parent;
-    std::vector<std::unique_ptr<Widget>> children;
+
     sf::Vector2u size;
     sf::Vector2f scale;
     sf::Vector2f position;

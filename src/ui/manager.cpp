@@ -11,19 +11,20 @@
 #include "../../include/resource/manager.hpp"
 #include "../../include/color.hpp"
 
-farcical::ui::Manager::Manager():
-                                  KeyboardInterface(),
-                                  MouseInterface(),
-                                  ActionHandler(),
-                                  config{},
-                                  buttonTexture{nullptr},
-                                  buttonFont{nullptr},
-                                  focusedWidget{nullptr},
-                                  defaultFontSize{0},
-                                  defaultFontColor{sf::Color::Black},
-                                  defaultOutlineColor{sf::Color::Black},
-                                  defaultOutlineThickness{0.0f} {
-
+farcical::ui::Manager::Manager(EventSystem& eventSystem): KeyboardInterface(),
+                                                          MouseInterface(),
+                                                          ActionHandler(),
+                                                          EventPropagator(nullptr),
+                                                          eventSystem{eventSystem},
+                                                          config{},
+                                                          buttonTexture{nullptr},
+                                                          buttonFont{nullptr},
+                                                          rootWidget{nullptr},
+                                                          focusedWidget{nullptr},
+                                                          defaultFontSize{0},
+                                                          defaultFontColor{sf::Color::Black},
+                                                          defaultOutlineColor{sf::Color::Black},
+                                                          defaultOutlineThickness{0.0f} {
 }
 
 std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceManager& resourceManager) {
@@ -149,48 +150,79 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
   return std::nullopt;
 }
 
-farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, ResourceManager& resourceManager) {
-  widgets.emplace_back(std::make_unique<Menu>(name, nullptr));
-  Menu* menu{dynamic_cast<Menu*>(widgets.rbegin()->get())};
-  SetFocusedWidget(menu);
-  menu->SetButtonSpacing(defaultButtonSpacing);
-  auto textureRequest{resourceManager.GetTexture(static_cast<ResourceID>(Manager::buttonTextureID))};
-  if(!textureRequest.has_value()) {
-    return nullptr;
-  }
-  sf::Texture* buttonTexture{textureRequest.value()};
-  menu->SetButtonTexture(*buttonTexture);
-  auto fontRequest{resourceManager.GetFont(static_cast<ResourceID>(Manager::buttonFontID))};
-  if(!fontRequest.has_value()) {
-    return nullptr;
-  }
-  sf::Font* font{fontRequest.value()};
-  menu->SetLabelFont(*font);
+farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, ResourceManager& resourceManager,
+                                                      Widget* parent) {
+  Menu* menu{nullptr};
+  if(!parent) {
+    if(rootWidget) {
+      rootWidget.reset(nullptr);
+    }
+    rootWidget = std::make_unique<Menu>(name, nullptr);
+    menu = dynamic_cast<Menu*>(rootWidget.get());
+  } // if(!parent)
+  else if(parent->IsContainer()) {
+    Container* container{dynamic_cast<Container*>(parent)};
+    const int childIndex{static_cast<int>(container->GetNumChildren())};
+    container->AddChild(std::make_unique<Menu>(name, parent));
+    menu = dynamic_cast<Menu*>(container->GetChild(childIndex));
+  } // else(parent)
+  if(menu) {
+    SetFocusedWidget(menu);
+    menu->SetButtonSpacing(defaultButtonSpacing);
+    auto textureRequest{resourceManager.GetTexture(static_cast<ResourceID>(Manager::buttonTextureID))};
+    if(!textureRequest.has_value()) {
+      return nullptr;
+    }
+    sf::Texture* buttonTexture{textureRequest.value()};
+    menu->SetButtonTexture(*buttonTexture);
+    auto fontRequest{resourceManager.GetFont(static_cast<ResourceID>(Manager::buttonFontID))};
+    if(!fontRequest.has_value()) {
+      return nullptr;
+    }
+    sf::Font* font{fontRequest.value()};
+    menu->SetLabelFont(*font);
+  } // if(menu)
   return menu;
 }
 
-farcical::ui::Widget* farcical::ui::Manager::GetWidget(
-  std::string_view name) const {
-  for(const auto& widget: widgets) {
-    if (widget->GetName() == name) {
-      return widget.get();
-    }
-  }
-  return nullptr;
+farcical::ui::Widget* farcical::ui::Manager::GetRootWidget() const {
+  return rootWidget.get();
 }
 
 farcical::ui::Widget* farcical::ui::Manager::GetFocusedWidget() const {
   return focusedWidget;
 }
 
+farcical::ui::Widget* farcical::ui::Manager::FindWidget(std::string_view name, Widget* parent) const {
+  if(!parent) {
+    if(!rootWidget) {
+      return nullptr;
+    }
+    parent = rootWidget.get();
+  }
+  if(parent->GetName() == name) {
+    return parent;
+  } else if(parent->IsContainer()) {
+    Container* container{dynamic_cast<Container*>(parent)};
+    Widget* widget{nullptr};
+    for(int n = 0; n < container->GetNumChildren(); ++n) {
+      Widget* child{container->GetChild(n)};
+      widget = FindWidget(name, child);
+      if(widget) {
+        return widget;
+      } // if widget found
+    } // for each child in parent
+  } // else recurse
+  return nullptr;
+}
+
+
 void farcical::ui::Manager::SetFocusedWidget(Widget* widget) {
   focusedWidget = widget;
 }
 
 void farcical::ui::Manager::Update(sf::RenderWindow& window) const {
-  for(const auto& widget: widgets) {
-    widget->Draw(window);
-  }
+  rootWidget->Draw(window);
 }
 
 void farcical::ui::Manager::ReceiveKeyboardInput(sf::Keyboard::Key input) {
@@ -203,21 +235,20 @@ void farcical::ui::Manager::ReceiveKeyboardInput(sf::Keyboard::Key input) {
 
   } // else if(input == Down)
   else if(input == sf::Keyboard::Key::Left) {
-
   } // else if(input == Left)
   else if(input == sf::Keyboard::Key::Right) {
-
   } // else if(input == Right)
 }
 
 void farcical::ui::Manager::ReceiveMouseMovement(sf::Vector2i position) {
-
 }
 
 void farcical::ui::Manager::ReceiveMouseButtonClick(sf::Mouse::Button button, sf::Vector2i position) {
-
 }
 
 void farcical::ui::Manager::DoAction(Action action) {
+}
 
+void farcical::ui::Manager::ReceiveEvent(const farcical::Event& event) {
+  eventSystem.Enqueue(event);
 }

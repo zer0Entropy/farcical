@@ -28,15 +28,15 @@ void farcical::game::Game::TransitionToState(State::ID stateID) {
             ui::MenuItem* loadGame{menu->CreateMenuItem(Game::loadGameText)};
             ui::MenuItem* options{menu->CreateMenuItem(Game::optionsText)};
             ui::MenuItem* quitGame{menu->CreateMenuItem(Game::quitGameText)};
-        } break;
+        }
+        break;
         case State::ID::StartNewGame: {
-
-        } break;
+        }
+        break;
         case State::ID::LoadSavedGame: {
-
-        } break;
+        }
+        break;
         case State::ID::OptionsMenu: {
-
         } break;
     }
 }

@@ -13,6 +13,7 @@ farcical::Engine::Engine():
     renderSystem{nullptr},
     inputSystem{nullptr},
     eventSystem{nullptr},
+    uiManager{nullptr},
     game{nullptr} {
 }
 
@@ -83,17 +84,17 @@ std::optional<farcical::Error> farcical::Engine::Init(game::Game *game) {
     windowConfig.sizeInPixels = window->getSize();
 
     // Init systems
-    renderSystem = std::make_unique<RenderSystem>(*window, uiManager);
-    renderSystem->Init();
-
-    inputSystem = std::make_unique<InputSystem>(*window, uiManager);
-    inputSystem->Init();
-
     eventSystem = std::make_unique<EventSystem>(*game, *this);
+    uiManager = std::make_unique<ui::Manager>(*eventSystem);
+    renderSystem = std::make_unique<RenderSystem>(*window, *uiManager);
+    inputSystem = std::make_unique<InputSystem>(*window, *uiManager);
+
+    renderSystem->Init();
+    inputSystem->Init();
     eventSystem->Init();
 
     // Loads UI configuration from "dat/ui.json"
-    uiManager.Init(resourceManager);
+    uiManager->Init(resourceManager);
 
     status = Engine::Status::IsRunning;
   } // if Uninitialized
@@ -120,12 +121,13 @@ sf::RenderWindow& farcical::Engine::GetWindow() const {
   return *window;
 }
 
-farcical::ResourceManager & farcical::Engine::GetResourceManager() const {
+farcical::ResourceManager& farcical::Engine::GetResourceManager() const {
   return const_cast<ResourceManager&>(resourceManager);
 }
 
 farcical::ui::Manager& farcical::Engine::GetUIManager() const {
-  return const_cast<farcical::ui::Manager&>(uiManager);
+  assert(uiManager && "Unexpected nullptr: uiManager");
+  return *uiManager;
 }
 
 farcical::RenderSystem& farcical::Engine::GetRenderSystem() const {

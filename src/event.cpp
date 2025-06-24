@@ -5,9 +5,8 @@
 
 #include "../include/game/game.hpp"
 
-farcical::EventSystem::EventSystem(game::Game& game, Engine& engine):
-    System(System::ID::EventSystem),
-    game{game}, engine{engine} {
+farcical::EventSystem::EventSystem(game::Game& game, Engine& engine): System(System::ID::EventSystem),
+                                                                      game{game}, engine{engine} {
 }
 
 void farcical::EventSystem::Enqueue(const Event& event) {
@@ -15,27 +14,30 @@ void farcical::EventSystem::Enqueue(const Event& event) {
 }
 
 void farcical::EventSystem::Init() {
-
 }
 
 void farcical::EventSystem::Update() {
     // Iterate through a copy of the eventQueue, to prevent changes to the queue from messing up our iteration
     const auto queueCopy{eventQueue};
     eventQueue.clear();
-    for(const auto& event : queueCopy) {
+    for(const auto& event: queueCopy) {
         switch(event.type) {
             case Event::Type::TransitionMainMenu: {
                 game.TransitionToState(game::Game::State::ID::MainMenu);
-            } break;
+            }
+            break;
             case Event::Type::TransitionNewGame: {
                 game.TransitionToState(game::Game::State::ID::StartNewGame);
-            } break;
+            }
+            break;
             case Event::Type::TransitionLoadGame: {
                 game.TransitionToState(game::Game::State::ID::LoadSavedGame);
-            } break;
+            }
+            break;
             case Event::Type::TransitionOptions: {
                 game.TransitionToState(game::Game::State::ID::OptionsMenu);
-            } break;
+            }
+            break;
         }
     }
 }
