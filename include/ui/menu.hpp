@@ -10,14 +10,16 @@
 
 #include "button.hpp"
 #include "container.hpp"
+#include "../event.hpp"
 
 namespace farcical::ui {
     class Button;
     class Label;
+    class Manager;
 
-    class MenuItem final : public Container {
+    class MenuItem final : public Container, public EventPropagator {
     public:
-        explicit MenuItem(std::string_view name, Widget* parent = nullptr);
+        explicit MenuItem(std::string_view name, Event::Type onSelection, Widget* parent = nullptr);
 
         ~MenuItem() override = default;
 
@@ -34,19 +36,20 @@ namespace farcical::ui {
     private:
         Button* button;
         Label* label;
+        Event::Type triggeredOnSelection;
 
         static int fontSize;
         static sf::Color fontColor;
         static sf::Color outlineColor;
     };
 
-    class Menu final : public Container {
+    class Menu final : public Container, public EventPropagator {
     public:
-        explicit Menu(std::string_view name, Widget* parent = nullptr);
+        explicit Menu(std::string_view name, Manager& uiManager, Widget* parent = nullptr);
 
         ~Menu() override = default;
 
-        [[nodiscard]] MenuItem* CreateMenuItem(std::string_view name);
+        [[nodiscard]] MenuItem* CreateMenuItem(std::string_view name, Event::Type onSelection);
 
         [[nodiscard]] MenuItem* GetMenuItemByName(std::string_view name) const;
 
@@ -69,6 +72,7 @@ namespace farcical::ui {
         void DoAction(Action action) override;
 
     private:
+        Manager& uiManager;
         sf::Texture* buttonTextureNormal;
         sf::Texture* buttonTextureHighlighted;
         sf::Texture* buttonTexturePressed;

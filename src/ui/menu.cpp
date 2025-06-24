@@ -2,20 +2,22 @@
 // Created by dgmuller on 5/30/25.
 //
 
-#include <utility>
-
 #include "../../include/ui/menu.hpp"
 #include "../../include/ui/button.hpp"
 #include "../../include/ui/label.hpp"
+#include "../../include/ui/manager.hpp"
 
 int farcical::ui::MenuItem::fontSize = 24;
 sf::Color farcical::ui::MenuItem::fontColor = sf::Color::White;
 sf::Color farcical::ui::MenuItem::outlineColor = sf::Color::Red;
 
-farcical::ui::MenuItem::MenuItem(std::string_view name, Widget* parent): Container(name, Widget::Type::MenuItem,
-                                                                           parent),
-                                                                         button{nullptr},
-                                                                         label{nullptr} {
+farcical::ui::MenuItem::MenuItem(std::string_view name, Event::Type onSelection, Widget* parent):
+  Container(name, Widget::Type::MenuItem, parent),
+  EventPropagator(dynamic_cast<EventPropagator*>(parent)),
+  button{nullptr},
+  label{nullptr},
+  triggeredOnSelection{onSelection} {
+
 }
 
 farcical::ui::Button* farcical::ui::MenuItem::CreateButton(std::string_view name, std::vector<sf::Texture*> textures) {
@@ -48,6 +50,7 @@ farcical::ui::Label* farcical::ui::MenuItem::GetLabel() const {
 
 void farcical::ui::MenuItem::DoAction(Action action) {
   if(action.type == Action::Type::ConfirmSelection) {
+    dynamic_cast<EventPropagator*>(parent)->ReceiveEvent(Event{triggeredOnSelection});
   } // if action == ConfirmSelection
   else if(action.type == Action::Type::SetHoverTrue) {
     button->SetStatus(Button::Status::Highlighted);
@@ -64,8 +67,10 @@ void farcical::ui::MenuItem::DoAction(Action action) {
 }
 
 
-farcical::ui::Menu::Menu(std::string_view name, Widget* parent):
+farcical::ui::Menu::Menu(std::string_view name, Manager& uiManager, Widget* parent):
   Container(name, Widget::Type::Menu, parent),
+  EventPropagator(dynamic_cast<EventPropagator*>(&uiManager)),
+  uiManager{uiManager},
   buttonTextureNormal{nullptr},
   buttonTextureHighlighted{nullptr},
   buttonTexturePressed{nullptr},
@@ -75,8 +80,8 @@ farcical::ui::Menu::Menu(std::string_view name, Widget* parent):
   buttonSpacing{0.0f} {
 }
 
-farcical::ui::MenuItem* farcical::ui::Menu::CreateMenuItem(std::string_view name) {
-  children.emplace_back(std::make_unique<MenuItem>(name, this));
+farcical::ui::MenuItem* farcical::ui::Menu::CreateMenuItem(std::string_view name, Event::Type onSelection) {
+  children.emplace_back(std::make_unique<MenuItem>(name, onSelection, this));
   MenuItem* item{dynamic_cast<MenuItem*>(children.rbegin()->get())};
   std::string buttonName{std::string{name} + "Button"};
   std::string labelName{std::string{name}};

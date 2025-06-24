@@ -24,10 +24,10 @@ void farcical::game::Game::TransitionToState(State::ID stateID) {
             const sf::Vector2u windowSize{engine.GetWindow().getSize()};
             menu->SetSize(windowSize);
             const float buttonSpacing{64.0f};
-            ui::MenuItem* newGame{menu->CreateMenuItem(Game::newGameText)};
-            ui::MenuItem* loadGame{menu->CreateMenuItem(Game::loadGameText)};
-            ui::MenuItem* options{menu->CreateMenuItem(Game::optionsText)};
-            ui::MenuItem* quitGame{menu->CreateMenuItem(Game::quitGameText)};
+            ui::MenuItem* newGame{menu->CreateMenuItem(Game::newGameText, Event::Type::TransitionNewGame)};
+            ui::MenuItem* loadGame{menu->CreateMenuItem(Game::loadGameText, Event::Type::TransitionLoadGame)};
+            ui::MenuItem* options{menu->CreateMenuItem(Game::optionsText, Event::Type::TransitionOptions)};
+            ui::MenuItem* quitGame{menu->CreateMenuItem(Game::quitGameText, Event::Type::QuitGame)};
         }
         break;
         case State::ID::StartNewGame: {

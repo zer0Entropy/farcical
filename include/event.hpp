@@ -30,7 +30,7 @@ namespace farcical {
 
         virtual void ReceiveEvent(const Event& event) { next->ReceiveEvent(event); }
 
-    private:
+    protected:
         EventPropagator* next;
     };
 

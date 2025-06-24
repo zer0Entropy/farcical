@@ -24,7 +24,8 @@ void farcical::EventSystem::Update() {
         switch(event.type) {
             case Event::Type::QuitGame: {
                 engine.Stop();
-            } break;
+            }
+            break;
             case Event::Type::TransitionMainMenu: {
                 game.TransitionToState(game::Game::State::ID::MainMenu);
             }

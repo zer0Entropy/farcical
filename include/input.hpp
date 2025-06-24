@@ -26,8 +26,11 @@ namespace farcical {
         void Stop() override;
 
         void AddMouseListener(MouseInterface* listener);
+
         void AddKeyListener(KeyboardInterface* listener);
+
         void RemoveMouseListener(MouseInterface* listener);
+
         void RemoveKeyListener(KeyboardInterface* listener);
 
     private:

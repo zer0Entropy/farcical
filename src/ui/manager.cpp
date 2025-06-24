@@ -132,16 +132,18 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
             auto spliceResult{resourceManager.SpliceTextures(textureIDs, currentTexture->id)};
             if(spliceResult.has_value()) {
               return spliceResult;
-            }
-            else {
+            } else {
               if(currentTexture->id == "buttonNormalTexture") {
-                buttonTextures[static_cast<int>(Button::Status::Normal)] = resourceManager.GetResource(currentTexture->id);
+                buttonTextures[static_cast<int>(Button::Status::Normal)] = resourceManager.GetResource(
+                  currentTexture->id);
               } // if(buttonNormalTexture)
               else if(currentTexture->id == "buttonHighlightedTexture") {
-                buttonTextures[static_cast<int>(Button::Status::Highlighted)] = resourceManager.GetResource(currentTexture->id);
+                buttonTextures[static_cast<int>(Button::Status::Highlighted)] = resourceManager.GetResource(
+                  currentTexture->id);
               } // else if(buttonHighlightedTexture)
               else if(currentTexture->id == "buttonPressedTexture") {
-                buttonTextures[static_cast<int>(Button::Status::Pressed)] = resourceManager.GetResource(currentTexture->id);
+                buttonTextures[static_cast<int>(Button::Status::Pressed)] = resourceManager.GetResource(
+                  currentTexture->id);
               } // else if(buttonPressedTexture)
             }
           } // for each textureDescription in Button
@@ -165,13 +167,13 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
       } // for each key-value pair in Button
     } // if button
   } // for each top-level key-value pair
-/*
-  const std::vector<ResourceID> textureIDList{"buttonTextureLeft", "buttonTextureCenter", "buttonTextureRight"};
-  auto requestSplice(resourceManager.SpliceTextures(textureIDList, std::string{Manager::buttonTextureID}));
-  if(requestSplice.has_value()) {
-    return requestSplice;
-  }
-*/
+  /*
+    const std::vector<ResourceID> textureIDList{"buttonTextureLeft", "buttonTextureCenter", "buttonTextureRight"};
+    auto requestSplice(resourceManager.SpliceTextures(textureIDList, std::string{Manager::buttonTextureID}));
+    if(requestSplice.has_value()) {
+      return requestSplice;
+    }
+  */
   return std::nullopt;
 }
 
@@ -182,22 +184,25 @@ farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, Res
     if(rootWidget) {
       rootWidget.reset(nullptr);
     }
-    rootWidget = std::make_unique<Menu>(name, nullptr);
+    rootWidget = std::make_unique<Menu>(name, *this, nullptr);
     menu = dynamic_cast<Menu*>(rootWidget.get());
   } // if(!parent)
   else if(parent->IsContainer()) {
     Container* container{dynamic_cast<Container*>(parent)};
     const int childIndex{static_cast<int>(container->GetNumChildren())};
-    container->AddChild(std::make_unique<Menu>(name, parent));
+    container->AddChild(std::make_unique<Menu>(name, *this, parent));
     menu = dynamic_cast<Menu*>(container->GetChild(childIndex));
   } // else(parent)
   if(menu) {
     SetFocusedWidget(menu);
     menu->SetButtonSpacing(defaultButtonSpacing);
     auto normalTextureRequest{resourceManager.GetTexture(static_cast<ResourceID>(Manager::buttonTextureNormalID))};
-    auto highlightedTextureRequest{resourceManager.GetTexture(static_cast<ResourceID>(Manager::buttonTextureHighlightedID))};
+    auto highlightedTextureRequest{
+      resourceManager.GetTexture(static_cast<ResourceID>(Manager::buttonTextureHighlightedID))
+    };
     auto pressedTextureRequest{resourceManager.GetTexture(static_cast<ResourceID>(Manager::buttonTexturePressedID))};
-    if(!normalTextureRequest.has_value() || !highlightedTextureRequest.has_value() || !pressedTextureRequest.has_value()) {
+    if(!normalTextureRequest.has_value() || !highlightedTextureRequest.has_value() || !pressedTextureRequest.
+       has_value()) {
       return nullptr;
     }
     sf::Texture* buttonNormalTexture{normalTextureRequest.value()};
@@ -302,6 +307,7 @@ void farcical::ui::Manager::ReceiveMouseButtonClick(sf::Mouse::Button button, sf
           MenuItem* item{menu->GetMenuItemByIndex(n)};
           if(item == hoverItem) {
             item->DoAction(Action{Action::Type::SetPressedTrue});
+            item->DoAction(Action{Action::Type::ConfirmSelection});
           } // if item == hoverItem
           else {
             item->DoAction(Action{Action::Type::SetPressedFalse});

@@ -16,7 +16,7 @@
 #include "../event.hpp"
 
 namespace farcical::ui {
-  class Widget : public ActionHandler, public EventPropagator {
+  class Widget : public ActionHandler {
   public:
     enum class Type {
       Border,
@@ -35,7 +35,6 @@ namespace farcical::ui {
 
     explicit Widget(std::string_view name, Type type, Widget* parent = nullptr):
       ActionHandler(),
-      EventPropagator(parent),
       name{name}, type{type}, parent{parent},
       size{0,0}, scale{1.0f, 1.0f}, position{0.0f, 0.0f} {}
 
