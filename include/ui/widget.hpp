@@ -18,7 +18,6 @@
 namespace farcical::ui {
   class Widget : public ActionHandler, public EventPropagator {
   public:
-
     enum class Type {
       Border,
       Menu,

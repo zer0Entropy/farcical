@@ -12,17 +12,19 @@ int farcical::ui::MenuItem::fontSize = 24;
 sf::Color farcical::ui::MenuItem::fontColor = sf::Color::White;
 sf::Color farcical::ui::MenuItem::outlineColor = sf::Color::Red;
 
-farcical::ui::MenuItem::MenuItem(std::string_view name, Widget* parent):
-  Container(name, Widget::Type::MenuItem, parent),
-  button{nullptr},
-  label{nullptr} {
+farcical::ui::MenuItem::MenuItem(std::string_view name, Widget* parent): Container(name, Widget::Type::MenuItem,
+                                                                           parent),
+                                                                         button{nullptr},
+                                                                         label{nullptr} {
 
 }
 
-farcical::ui::Button* farcical::ui::MenuItem::CreateButton(std::string_view name, sf::Texture& texture) {
+farcical::ui::Button* farcical::ui::MenuItem::CreateButton(std::string_view name, std::vector<sf::Texture*> textures) {
   children.emplace_back(std::make_unique<Button>(name, this));
   button = dynamic_cast<Button*>(children.rbegin()->get());
-  button->SetTexture(Button::Status::Normal, texture);
+  button->SetTexture(Button::Status::Normal, *textures[static_cast<int>(Button::Status::Normal)]);
+  button->SetTexture(Button::Status::Highlighted, *textures[static_cast<int>(Button::Status::Highlighted)]);
+  button->SetTexture(Button::Status::Pressed, *textures[static_cast<int>(Button::Status::Pressed)]);
   return button;
 }
 
@@ -47,13 +49,22 @@ farcical::ui::Label* farcical::ui::MenuItem::GetLabel() const {
 
 void farcical::ui::MenuItem::DoAction(Action action) {
   if(action.type == Action::Type::ConfirmSelection) {
-  }
+
+  } // if action == ConfirmSelection
+  else if(action.type == Action::Type::SetHoverTrue) {
+    button->SetStatus(Button::Status::Highlighted);
+  } // else if action == SetHoverTrue
+  else if(action.type == Action::Type::SetHoverFalse) {
+    button->SetStatus(Button::Status::Normal);
+  } // else if action == SetHoverFalse
 }
 
 
 farcical::ui::Menu::Menu(std::string_view name, Widget* parent):
   Container(name, Widget::Type::Menu, parent),
-  buttonTexture{nullptr},
+  buttonTextureNormal{nullptr},
+  buttonTextureHighlighted{nullptr},
+  buttonTexturePressed{nullptr},
   labelFont{nullptr},
   titleFont{nullptr},
   selectedIndex{-1},
@@ -66,7 +77,8 @@ farcical::ui::MenuItem* farcical::ui::Menu::CreateMenuItem(std::string_view name
   std::string buttonName{std::string{name} + "Button"};
   std::string labelName{std::string{name}};
 
-  Button* button{item->CreateButton(buttonName, *buttonTexture)};
+  std::vector textureList{buttonTextureNormal, buttonTextureHighlighted, buttonTexturePressed};
+  Button* button{item->CreateButton(buttonName, textureList)};
   Label* label{item->CreateLabel(labelName, *labelFont)};
 
   button->SetScale(sf::Vector2f{3.0f, 3.0f});
@@ -108,12 +120,36 @@ farcical::ui::MenuItem* farcical::ui::Menu::GetMenuItemByIndex(int index) const 
   return dynamic_cast<MenuItem*>(children[index].get());
 }
 
+farcical::ui::MenuItem* farcical::ui::Menu::GetMenuItemUnderCursor(sf::Vector2i position) const {
+  for(const auto& child: children) {
+    MenuItem* item{dynamic_cast<MenuItem*>(child.get())};
+    const Button* button{item->GetButton()};
+    if(   position.x >= static_cast<int>(button->GetPosition().x)
+      &&  position.y >= static_cast<int>(button->GetPosition().y)
+      &&  position.x < static_cast<int>(button->GetPosition().x) + button->GetSize().x
+      &&  position.y < static_cast<int>(button->GetPosition().y) + button->GetSize().y) {
+      return item;
+    }
+  } // for each child
+  return nullptr;
+}
+
 int farcical::ui::Menu::GetSelectedIndex() const {
   return selectedIndex;
 }
 
-void farcical::ui::Menu::SetButtonTexture(sf::Texture& texture) {
-  buttonTexture = &texture;
+void farcical::ui::Menu::SetButtonTexture(Button::Status state, sf::Texture& texture) {
+  switch(state) {
+    case Button::Status::Normal: {
+      buttonTextureNormal = &texture;
+    } break;
+    case Button::Status::Highlighted: {
+      buttonTextureHighlighted = &texture;
+    } break;
+    case Button::Status::Pressed: {
+      buttonTexturePressed = &texture;
+    } break;
+  }
 }
 
 void farcical::ui::Menu::SetLabelFont(sf::Font& font) {
