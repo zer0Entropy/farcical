@@ -16,7 +16,6 @@ farcical::ui::MenuItem::MenuItem(std::string_view name, Widget* parent): Contain
                                                                            parent),
                                                                          button{nullptr},
                                                                          label{nullptr} {
-
 }
 
 farcical::ui::Button* farcical::ui::MenuItem::CreateButton(std::string_view name, std::vector<sf::Texture*> textures) {
@@ -49,11 +48,16 @@ farcical::ui::Label* farcical::ui::MenuItem::GetLabel() const {
 
 void farcical::ui::MenuItem::DoAction(Action action) {
   if(action.type == Action::Type::ConfirmSelection) {
-
   } // if action == ConfirmSelection
   else if(action.type == Action::Type::SetHoverTrue) {
     button->SetStatus(Button::Status::Highlighted);
   } // else if action == SetHoverTrue
+  else if(action.type == Action::Type::SetPressedTrue) {
+    button->SetStatus(Button::Status::Pressed);
+  } // else if action == SetPressedTrue
+  else if(action.type == Action::Type::SetPressedFalse) {
+    button->SetStatus(Button::Status::Normal);
+  } // else if action == SetPressedFalse
   else if(action.type == Action::Type::SetHoverFalse) {
     button->SetStatus(Button::Status::Normal);
   } // else if action == SetHoverFalse
@@ -124,10 +128,10 @@ farcical::ui::MenuItem* farcical::ui::Menu::GetMenuItemUnderCursor(sf::Vector2i 
   for(const auto& child: children) {
     MenuItem* item{dynamic_cast<MenuItem*>(child.get())};
     const Button* button{item->GetButton()};
-    if(   position.x >= static_cast<int>(button->GetPosition().x)
-      &&  position.y >= static_cast<int>(button->GetPosition().y)
-      &&  position.x < static_cast<int>(button->GetPosition().x) + button->GetSize().x
-      &&  position.y < static_cast<int>(button->GetPosition().y) + button->GetSize().y) {
+    if(position.x >= static_cast<int>(button->GetPosition().x)
+       && position.y >= static_cast<int>(button->GetPosition().y)
+       && position.x < static_cast<int>(button->GetPosition().x) + button->GetSize().x
+       && position.y < static_cast<int>(button->GetPosition().y) + button->GetSize().y) {
       return item;
     }
   } // for each child
@@ -142,13 +146,16 @@ void farcical::ui::Menu::SetButtonTexture(Button::Status state, sf::Texture& tex
   switch(state) {
     case Button::Status::Normal: {
       buttonTextureNormal = &texture;
-    } break;
+    }
+    break;
     case Button::Status::Highlighted: {
       buttonTextureHighlighted = &texture;
-    } break;
+    }
+    break;
     case Button::Status::Pressed: {
       buttonTexturePressed = &texture;
-    } break;
+    }
+    break;
   }
 }
 

@@ -22,6 +22,9 @@ void farcical::EventSystem::Update() {
     eventQueue.clear();
     for(const auto& event: queueCopy) {
         switch(event.type) {
+            case Event::Type::QuitGame: {
+                engine.Stop();
+            } break;
             case Event::Type::TransitionMainMenu: {
                 game.TransitionToState(game::Game::State::ID::MainMenu);
             }

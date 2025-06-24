@@ -95,6 +95,8 @@ std::optional<farcical::Error> farcical::Engine::Init(game::Game *game) {
 
     // Loads UI configuration from "dat/ui.json"
     uiManager->Init(resourceManager);
+    inputSystem->AddKeyListener(uiManager.get());
+    inputSystem->AddMouseListener(uiManager.get());
 
     status = Engine::Status::IsRunning;
   } // if Uninitialized
@@ -110,11 +112,20 @@ void farcical::Engine::Update() {
   }
   if(status == Engine::Status::IsRunning) {
     renderSystem->Update();
+    inputSystem->Update();
+    eventSystem->Update();
     game->Update();
   }
 }
 
-void farcical::Engine::Stop() { renderSystem->Stop(); }
+void farcical::Engine::Stop() {
+  eventSystem->Stop();
+  inputSystem->Stop();
+  renderSystem->Stop();
+  if(status == Engine::Status::IsRunning) {
+    status = Engine::Status::StoppedSuccessfully;
+  }
+}
 
 sf::RenderWindow& farcical::Engine::GetWindow() const {
   assert(window != nullptr && "Unexpected nullptr: application window");

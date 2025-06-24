@@ -80,9 +80,9 @@ namespace farcical::ui {
         Resource* buttonTextures[3];
         Resource* buttonFont;
 
-        static constexpr std::string_view   buttonTextureNormalID{"buttonNormalTexture"};
-        static constexpr std::string_view   buttonTextureHighlightedID{"buttonHighlightedTexture"};
-        static constexpr std::string_view   buttonTexturePressedID{"buttonPressedTexture"};
+        static constexpr std::string_view buttonTextureNormalID{"buttonNormalTexture"};
+        static constexpr std::string_view buttonTextureHighlightedID{"buttonHighlightedTexture"};
+        static constexpr std::string_view buttonTexturePressedID{"buttonPressedTexture"};
         static constexpr std::string_view   buttonFontID{"buttonFont"};
 
         unsigned int defaultFontSize;

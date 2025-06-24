@@ -7,6 +7,8 @@
 
 #include <functional>
 #include <SFML/Graphics/Font.hpp>
+
+#include "button.hpp"
 #include "container.hpp"
 
 namespace farcical::ui {
@@ -19,7 +21,7 @@ namespace farcical::ui {
 
         ~MenuItem() override = default;
 
-        Button* CreateButton(std::string_view name, sf::Texture& texture);
+        Button* CreateButton(std::string_view name, std::vector<sf::Texture*> textures);
 
         Label* CreateLabel(std::string_view name, sf::Font& font);
 
@@ -50,9 +52,11 @@ namespace farcical::ui {
 
         [[nodiscard]] MenuItem* GetMenuItemByIndex(int index) const;
 
+        [[nodiscard]] MenuItem* GetMenuItemUnderCursor(sf::Vector2i position) const;
+
         [[nodiscard]] int GetSelectedIndex() const;
 
-        void SetButtonTexture(sf::Texture& texture);
+        void SetButtonTexture(Button::Status state, sf::Texture& texture);
 
         void SetLabelFont(sf::Font& font);
 
@@ -65,7 +69,9 @@ namespace farcical::ui {
         void DoAction(Action action) override;
 
     private:
-        sf::Texture* buttonTexture;
+        sf::Texture* buttonTextureNormal;
+        sf::Texture* buttonTextureHighlighted;
+        sf::Texture* buttonTexturePressed;
         sf::Font* labelFont;
         sf::Font* titleFont;
         int selectedIndex;

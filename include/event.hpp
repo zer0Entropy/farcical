@@ -11,6 +11,7 @@
 namespace farcical {
     struct Event {
         enum class Type {
+            QuitGame,
             TransitionMainMenu,
             TransitionNewGame,
             TransitionLoadGame,

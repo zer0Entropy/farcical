@@ -17,7 +17,7 @@ farcical::ui::Manager::Manager(EventSystem& eventSystem): KeyboardInterface(),
                                                           EventPropagator(nullptr),
                                                           eventSystem{eventSystem},
                                                           config{},
-                                                          buttonTexture{nullptr},
+                                                          buttonTextures{nullptr},
                                                           buttonFont{nullptr},
                                                           rootWidget{nullptr},
                                                           focusedWidget{nullptr},
@@ -121,7 +121,31 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
                 } // for each segment in segments
               } // else if segments
             } // for each key-value pair in textureDescription
+            std::string leftTextureID{currentTexture->id + "Left"};
+            std::string centerTextureID{currentTexture->id + "Center"};
+            std::string rightTextureID{currentTexture->id + "Right"};
+            std::vector<ResourceID> textureIDs{
+              static_cast<ResourceID>(leftTextureID),
+              static_cast<ResourceID>(centerTextureID),
+              static_cast<ResourceID>(rightTextureID)
+            };
+            auto spliceResult{resourceManager.SpliceTextures(textureIDs, currentTexture->id)};
+            if(spliceResult.has_value()) {
+              return spliceResult;
+            }
+            else {
+              if(currentTexture->id == "buttonNormalTexture") {
+                buttonTextures[static_cast<int>(Button::Status::Normal)] = resourceManager.GetResource(currentTexture->id);
+              } // if(buttonNormalTexture)
+              else if(currentTexture->id == "buttonHighlightedTexture") {
+                buttonTextures[static_cast<int>(Button::Status::Highlighted)] = resourceManager.GetResource(currentTexture->id);
+              } // else if(buttonHighlightedTexture)
+              else if(currentTexture->id == "buttonPressedTexture") {
+                buttonTextures[static_cast<int>(Button::Status::Pressed)] = resourceManager.GetResource(currentTexture->id);
+              } // else if(buttonPressedTexture)
+            }
           } // for each textureDescription in Button
+          /*
           for(auto& texture: segmentedTextures) {
             std::string leftTextureID{texture.id + "Left"};
             std::string centerTextureID{texture.id + "Center"};
@@ -136,17 +160,18 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
               return spliceResult;
             }
           } // for each texture in textures
+          */
         } // if segmentedTextures
       } // for each key-value pair in Button
     } // if button
   } // for each top-level key-value pair
-
+/*
   const std::vector<ResourceID> textureIDList{"buttonTextureLeft", "buttonTextureCenter", "buttonTextureRight"};
   auto requestSplice(resourceManager.SpliceTextures(textureIDList, std::string{Manager::buttonTextureID}));
   if(requestSplice.has_value()) {
     return requestSplice;
   }
-
+*/
   return std::nullopt;
 }
 
@@ -169,12 +194,18 @@ farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, Res
   if(menu) {
     SetFocusedWidget(menu);
     menu->SetButtonSpacing(defaultButtonSpacing);
-    auto textureRequest{resourceManager.GetTexture(static_cast<ResourceID>(Manager::buttonTextureID))};
-    if(!textureRequest.has_value()) {
+    auto normalTextureRequest{resourceManager.GetTexture(static_cast<ResourceID>(Manager::buttonTextureNormalID))};
+    auto highlightedTextureRequest{resourceManager.GetTexture(static_cast<ResourceID>(Manager::buttonTextureHighlightedID))};
+    auto pressedTextureRequest{resourceManager.GetTexture(static_cast<ResourceID>(Manager::buttonTexturePressedID))};
+    if(!normalTextureRequest.has_value() || !highlightedTextureRequest.has_value() || !pressedTextureRequest.has_value()) {
       return nullptr;
     }
-    sf::Texture* buttonTexture{textureRequest.value()};
-    menu->SetButtonTexture(*buttonTexture);
+    sf::Texture* buttonNormalTexture{normalTextureRequest.value()};
+    sf::Texture* buttonHighlightedTexture{highlightedTextureRequest.value()};
+    sf::Texture* buttonPressedTexture{pressedTextureRequest.value()};
+    menu->SetButtonTexture(Button::Status::Normal, *buttonNormalTexture);
+    menu->SetButtonTexture(Button::Status::Highlighted, *buttonHighlightedTexture);
+    menu->SetButtonTexture(Button::Status::Pressed, *buttonPressedTexture);
     auto fontRequest{resourceManager.GetFont(static_cast<ResourceID>(Manager::buttonFontID))};
     if(!fontRequest.has_value()) {
       return nullptr;
@@ -227,6 +258,7 @@ void farcical::ui::Manager::Update(sf::RenderWindow& window) const {
 
 void farcical::ui::Manager::ReceiveKeyboardInput(sf::Keyboard::Key input) {
   if(input == sf::Keyboard::Key::Escape) {
+    eventSystem.Enqueue(Event{Event::Type::QuitGame});
   } // if(input == Escape)
   else if(input == sf::Keyboard::Key::Up) {
 
@@ -241,9 +273,43 @@ void farcical::ui::Manager::ReceiveKeyboardInput(sf::Keyboard::Key input) {
 }
 
 void farcical::ui::Manager::ReceiveMouseMovement(sf::Vector2i position) {
+  if(focusedWidget) {
+    if(focusedWidget->GetType() == Widget::Type::Menu) {
+      Menu* menu{dynamic_cast<Menu*>(focusedWidget)};
+      MenuItem* hoverItem{menu->GetMenuItemUnderCursor(position)};
+      if(hoverItem) {
+        for(unsigned int n = 0; n < menu->GetNumChildren(); ++n) {
+          MenuItem* item{menu->GetMenuItemByIndex(n)};
+          if(item == hoverItem) {
+            item->DoAction(Action{Action::Type::SetHoverTrue});
+          } // if item == hoverItem
+          else {
+            item->DoAction(Action{Action::Type::SetHoverFalse});
+          } // else item != hoverItem
+        } // for each menuItem in menu
+      } // if menuItem
+    } // if focusedWidget == Menu
+  } // if focusedWidget
 }
 
 void farcical::ui::Manager::ReceiveMouseButtonClick(sf::Mouse::Button button, sf::Vector2i position) {
+  if(focusedWidget && button == sf::Mouse::Button::Left) {
+    if(focusedWidget->GetType() == Widget::Type::Menu) {
+      Menu* menu{dynamic_cast<Menu*>(focusedWidget)};
+      MenuItem* hoverItem{menu->GetMenuItemUnderCursor(position)};
+      if(hoverItem) {
+        for(unsigned int n = 0; n < menu->GetNumChildren(); ++n) {
+          MenuItem* item{menu->GetMenuItemByIndex(n)};
+          if(item == hoverItem) {
+            item->DoAction(Action{Action::Type::SetPressedTrue});
+          } // if item == hoverItem
+          else {
+            item->DoAction(Action{Action::Type::SetPressedFalse});
+          } // else item != hoverItem
+        } // for each menuItem in menu
+      } // if menuItem
+    } // if focusedWidget == Menu
+  } // if focusedWidget
 }
 
 void farcical::ui::Manager::DoAction(Action action) {
