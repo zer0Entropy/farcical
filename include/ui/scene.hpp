@@ -11,14 +11,21 @@ namespace farcical::ui {
     class Scene final : public Container {
     public:
         Scene() = delete;
+
         Scene(const Scene&) = delete;
+
         Scene(Scene&) = delete;
+
         Scene(Scene&&) = delete;
+
         Scene& operator=(const Scene&) = delete;
+
         explicit Scene(std::string_view name, Widget* parent);
+
         ~Scene() override = default;
 
         void DoAction(Action action) override;
+
     private:
     };
 }

@@ -53,7 +53,8 @@ namespace farcical::ui {
 
         Menu* CreateMenu(std::string_view name, ResourceManager& resourceManager, Widget* parent = nullptr);
 
-        Decoration* CreateDecoration(std::string_view name, std::string_view textureID, ResourceManager& resourceManager, Widget* parent = nullptr);
+        Decoration* CreateDecoration(std::string_view name, std::string_view textureID,
+                                     ResourceManager& resourceManager, Widget* parent = nullptr);
 
         [[nodiscard]] Widget* GetRootWidget() const;
 

@@ -16,20 +16,19 @@ FetchContent_MakeAvailable(SFML)
 
 add_executable( main
                 src/engine.cpp
+        src/color.cpp
+        src/event.cpp
         src/input.cpp
                 src/render.cpp
-                src/main.cpp
+        src/resource/manager.cpp
                 src/ui/manager.cpp
                 src/ui/menu.cpp
                 src/ui/label.cpp
                 src/ui/button.cpp
-                src/resource/config.cpp
-                src/resource/manager.cpp
-                src/color.cpp
-        src/game/game.cpp
-        src/event.cpp
         src/ui/decoration.cpp
         src/ui/scene.cpp
+        src/game/game.cpp
+        src/main.cpp
 )
 target_compile_features(main PRIVATE cxx_std_23)
 target_link_libraries(main PRIVATE SFML::Graphics)

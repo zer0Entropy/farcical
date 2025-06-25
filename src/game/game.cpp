@@ -8,10 +8,9 @@
 #include "../../include/ui/menu.hpp"
 #include "../../include/ui/decoration.hpp"
 
-farcical::game::Game::Game(Engine& engine):
-    engine{engine},
-    currentScene{nullptr},
-    currentState{State::ID::MainMenu} {
+farcical::game::Game::Game(Engine& engine): engine{engine},
+                                            currentScene{nullptr},
+                                            currentState{State::ID::MainMenu} {
 }
 
 std::optional<farcical::Error> farcical::game::Game::Init() {
@@ -51,7 +50,8 @@ void farcical::game::Game::TransitionToState(State::ID stateID) {
         }
         break;
         case State::ID::OptionsMenu: {
-        } break;
+        }
+        break;
     }
 }
 
@@ -67,7 +67,7 @@ farcical::ui::Scene* farcical::game::Game::LoadScene(std::string_view path) {
 
         if(sceneJSON.contains("decorations")) {
             const auto& decorationsJSON{sceneJSON.at("decorations")};
-            for(const auto& decoration : decorationsJSON) {
+            for(const auto& decoration: decorationsJSON) {
                 const std::string decorationID{decoration.at("id").template get<std::string>()};
                 const auto& textureJSON{decoration.at("texture")};
                 const std::string texturePath{textureJSON.at("path").template get<std::string>()};
@@ -78,7 +78,7 @@ farcical::ui::Scene* farcical::game::Game::LoadScene(std::string_view path) {
                         textureID,
                         Resource::Type::Texture,
                         texturePath,
-                        sf::IntRect{{0, 0},{static_cast<int>(windowSize.x), static_cast<int>(windowSize.y)}},
+                        sf::IntRect{{0, 0}, {static_cast<int>(windowSize.x), static_cast<int>(windowSize.y)}},
                         textureIsRepeated)
                 };
                 const auto& positionJSON{decoration.at("position")};
@@ -86,7 +86,8 @@ farcical::ui::Scene* farcical::game::Game::LoadScene(std::string_view path) {
                     static_cast<float>(positionJSON.at("x").template get<int>()),
                     static_cast<float>(positionJSON.at("y").template get<int>())
                 };
-                ui::Decoration* dec = engine.GetUIManager().CreateDecoration(decorationID, textureID, engine.GetResourceManager(), scene);
+                ui::Decoration* dec = engine.GetUIManager().CreateDecoration(
+                    decorationID, textureID, engine.GetResourceManager(), scene);
                 sf::Texture* texture{engine.GetResourceManager().GetTexture(textureID).value()};
                 dec->SetTexture(texture);
                 dec->SetPosition(position);

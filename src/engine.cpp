@@ -28,11 +28,13 @@ const farcical::WindowProperties& farcical::Engine::GetWindowProperties() const 
 std::optional<farcical::Error> farcical::Engine::Init(game::Game *game) {
   if(status == Engine::Status::Uninitialized) {
     this->game = game;
-    auto result{LoadConfig(Engine::configPath)};
-    if(!result.has_value()) {
-      return result.error();
+    //auto result{LoadConfig(Engine::configPath)};
+    ResourceID engineConfigID{"farcicalConfig"};
+    auto result{resourceManager.LoadResource(engineConfigID, Resource::Type::Config, Engine::configPath)};
+    if(result.has_value()) {
+      return result;
     }
-    config = result.value();
+    config = *resourceManager.GetConfig(engineConfigID).value();
     // Load config data from JSON
     for(auto& [key, value] : config.data.items()) {
       // Parses ConfigType, returns error if != "application"

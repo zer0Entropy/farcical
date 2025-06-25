@@ -31,11 +31,13 @@ farcical::ui::Manager::Manager(EventSystem& eventSystem): KeyboardInterface(),
 
 std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceManager& resourceManager) {
   const std::string cfgPath{"dat/ui.json"};
-  auto result{LoadConfig(cfgPath)};
-  if(!result.has_value()) {
-    return result.error();
+  ResourceID configID{"uiConfig"};
+  auto result{resourceManager.LoadResource(configID, Resource::Type::Config, cfgPath)};
+  //auto result{LoadConfig(cfgPath)};
+  if(result.has_value()) {
+    return result;
   }
-  config = result.value();
+  config = *resourceManager.GetConfig(configID).value();
   for(auto& [key, value]: config.data.items()) {
     if(key == "menu") {
       for(auto& [menuKey, menuValue]: value.items()) {
@@ -209,7 +211,8 @@ farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, Res
   return menu;
 }
 
-farcical::ui::Decoration* farcical::ui::Manager::CreateDecoration(std::string_view name, std::string_view textureID, ResourceManager& resourceManager, Widget* parent) {
+farcical::ui::Decoration* farcical::ui::Manager::CreateDecoration(std::string_view name, std::string_view textureID,
+                                                                  ResourceManager& resourceManager, Widget* parent) {
   Decoration* decoration{nullptr};
   if(parent->IsContainer()) {
     Container* container{dynamic_cast<Container*>(parent)};

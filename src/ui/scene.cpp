@@ -3,8 +3,7 @@
 //
 #include "../../include/ui/scene.hpp"
 
-farcical::ui::Scene::Scene(std::string_view name, Widget* parent):
-    Container(name, Widget::Type::Scene, parent) {
+farcical::ui::Scene::Scene(std::string_view name, Widget* parent): Container(name, Widget::Type::Scene, parent) {
 }
 
 void farcical::ui::Scene::DoAction(Action action) {
