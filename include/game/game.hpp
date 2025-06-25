@@ -6,6 +6,7 @@
 #define GAME_HPP
 
 #include "../engine.hpp"
+#include "../ui/scene.hpp"
 
 namespace farcical::game {
     class Game {
@@ -17,6 +18,7 @@ namespace farcical::game {
                 LoadSavedGame,
                 OptionsMenu
             };
+            ID  id;
         };
 
         Game() = delete;
@@ -34,15 +36,20 @@ namespace farcical::game {
 
         void TransitionToState(State::ID stateID);
 
+        ui::Scene*  LoadScene(std::string_view path);
+
     private:
         Engine& engine;
         State currentState;
+        ui::Scene* currentScene;
 
-        static constexpr std::string_view mainMenuID = "MainMenu";
+        static constexpr std::string_view mainMenuID = "mainMenu";
         static constexpr std::string_view newGameText = "New Game";
         static constexpr std::string_view loadGameText = "Load Game";
         static constexpr std::string_view optionsText = "Options";
         static constexpr std::string_view quitGameText = "Quit Game";
+
+        static constexpr std::string_view mainMenuPath = "dat/mainMenu.json";
     };
 }
 

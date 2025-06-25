@@ -22,7 +22,9 @@ namespace farcical {
 }
 
 namespace farcical::ui {
+    class Scene;
     class Menu;
+    class Decoration;
 
     /* ui::Manager creates and stores all ui::Widgets.
      *  Widgets are stored in a hierarchy, with one Widget (whichever was created first)
@@ -47,7 +49,11 @@ namespace farcical::ui {
 
         std::optional<Error> Init(farcical::ResourceManager& resourceManager);
 
+        Scene* CreateScene(std::string_view name);
+
         Menu* CreateMenu(std::string_view name, ResourceManager& resourceManager, Widget* parent = nullptr);
+
+        Decoration* CreateDecoration(std::string_view name, std::string_view textureID, ResourceManager& resourceManager, Widget* parent = nullptr);
 
         [[nodiscard]] Widget* GetRootWidget() const;
 

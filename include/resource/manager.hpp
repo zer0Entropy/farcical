@@ -17,7 +17,11 @@ namespace farcical {
     class ResourceManager final {
     public:
         Resource*                                   GetResource(ResourceID id) const;
-        std::optional<Error>                        LoadResource(ResourceID id, Resource::Type type, std::string_view path, sf::IntRect rect = {{0, 0}, {0, 0}});
+        std::optional<Error>                        LoadResource(   ResourceID id,
+                                                                    Resource::Type type,
+                                                                    std::string_view path,
+                                                                    sf::IntRect rect = {{0, 0}, {0, 0}},
+                                                                    bool isRepeating = false);
         std::optional<Error>                        UnloadResource(ResourceID id);
 
         std::optional<Error>                        SpliceTextures(const std::vector<ResourceID> inputTextureIDs, ResourceID splicedTextureID);

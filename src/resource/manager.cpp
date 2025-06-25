@@ -2,6 +2,7 @@
 // Created by dgmuller on 6/4/25.
 //
 
+#include <SFML/Graphics/Image.hpp>
 #include "../../include/resource/manager.hpp"
 
 farcical::Resource* farcical::ResourceManager::GetResource(ResourceID id) const {
@@ -16,7 +17,8 @@ std::optional<farcical::Error> farcical::ResourceManager::LoadResource(
     ResourceID id,
     Resource::Type type,
     std::string_view path,
-    sf::IntRect rect ) {
+    sf::IntRect rect,
+    bool isRepeating) {
     Resource resource{
         .id = id,
         .status = Resource::Status::Uninitialized,
@@ -59,9 +61,9 @@ std::optional<farcical::Error> farcical::ResourceManager::LoadResource(
             }
         } break;
         case Resource::Type::Texture: {
-            bool success{std::filesystem::exists(path)};
-            if(!success) {
-                std::string failMsg{"Failed to load font file: " + std::string{path} + "."};
+            bool exists{std::filesystem::exists(path)};
+            if(!exists) {
+                std::string failMsg{"Failed to load texture file: " + std::string{path} + "."};
                 return Error{Error::Signal::InvalidPath, failMsg};
             }
             auto registerResult{registry.emplace(id, std::move(resource))};
@@ -69,11 +71,107 @@ std::optional<farcical::Error> farcical::ResourceManager::LoadResource(
                 std::string failMsg{"Invalid configuration (file: " + std::string{path} + "."};
                 return Error{Error::Signal::InvalidConfiguration, failMsg};
             }
-            auto textureResult{textures.emplace(id, sf::Texture{path, false, rect})};
-            if(!textureResult.second) {
-                std::string failMsg{"Invalid configuration (file: " + std::string{path} + "."};
-                return Error{Error::Signal::InvalidConfiguration, failMsg};
-            }
+            if(isRepeating) {
+                auto textureResult{
+                    textures.emplace(id, sf::Texture{
+                        sf::Vector2u{
+                            static_cast<unsigned int>(rect.size.x),
+                            static_cast<unsigned int>(rect.size.y)},
+                    false})};
+                if(textureResult.second) {
+                    sf::Texture* bigTexture{GetTexture(id).value()};
+                    sf::Texture smallTexture{path, false};
+                    unsigned int widthInTiles{bigTexture->getSize().x / smallTexture.getSize().x};
+                    unsigned int heightInTiles{bigTexture->getSize().y / smallTexture.getSize().y};
+
+                    for(unsigned int y = 0; y < heightInTiles; y++) {
+                        for(unsigned int x = 0; x < widthInTiles; x++) {
+                            bigTexture->update(smallTexture, sf::Vector2u{
+                                x * smallTexture.getSize().x,
+                                y * smallTexture.getSize().y});
+                        } // for x
+                    } // for y
+
+                    if(smallTexture.getSize().x * widthInTiles < bigTexture->getSize().x) {
+                        sf::Vector2u horizontalSliceSize{
+                            bigTexture->getSize().x - (smallTexture.getSize().x * widthInTiles),
+                            smallTexture.getSize().y
+                        };
+                        sf::Image fullTexture{path};
+                        sf::Image horizontalSlice{horizontalSliceSize};
+                        sf::IntRect sourceRect{
+                            {0, 0},
+                            {static_cast<int>(horizontalSliceSize.x), static_cast<int>(horizontalSliceSize.y)},
+                        };
+                        bool copySuccess{horizontalSlice.copy(fullTexture, sf::Vector2u{0, 0}, sourceRect)};
+                        if(copySuccess) {
+                            sf::Texture hSliceTexture{horizontalSlice};
+                            for(unsigned int y = 0; y < heightInTiles; y++) {
+                                sf::Vector2u dest{
+                                    smallTexture.getSize().x * widthInTiles,
+                                    y * smallTexture.getSize().y
+                                };
+                                bigTexture->update(hSliceTexture, dest);
+                            }
+                        }
+                    } // if smallTexture.width * widthInTiles < bigTexture->width
+                    if(smallTexture.getSize().y * heightInTiles < bigTexture->getSize().y) {
+                        sf::Vector2u verticalSliceSize{
+                            smallTexture.getSize().x,
+                            bigTexture->getSize().y - (smallTexture.getSize().y * heightInTiles)
+                        };
+                        sf::Image fullTexture{path};
+                        sf::Image verticalSlice{verticalSliceSize};
+                        sf::IntRect sourceRect{
+                            {0, 0},
+                            {static_cast<int>(verticalSliceSize.x), static_cast<int>(verticalSliceSize.y)},
+                        };
+                        bool copySuccess{verticalSlice.copy(fullTexture, sf::Vector2u{0, 0}, sourceRect)};
+                        if(copySuccess) {
+                            sf::Texture vSliceTexture{verticalSlice};
+                            for(unsigned int x = 0; x < widthInTiles; x++) {
+                                sf::Vector2u dest{
+                                    x * smallTexture.getSize().x,
+                                    smallTexture.getSize().y * heightInTiles,
+                                };
+                                bigTexture->update(vSliceTexture, dest);
+                            }
+                        }
+                    } // if smallTexture.height * heightInTiles < bigTexture->height
+                    if(smallTexture.getSize().x * widthInTiles < bigTexture->getSize().x
+                    && smallTexture.getSize().y * heightInTiles < bigTexture->getSize().y) {
+                        sf::Vector2u sliceSize{
+                            bigTexture->getSize().x - (smallTexture.getSize().x * widthInTiles),
+                            bigTexture->getSize().y - (smallTexture.getSize().y * heightInTiles)
+                        };
+                        sf::Image fullTexture{path};
+                        sf::Image slice{sliceSize};
+                        sf::IntRect sourceRect{
+                                {0, 0},
+                                {static_cast<int>(sliceSize.x), static_cast<int>(sliceSize.y)},
+                        };
+                        bool copySuccess{slice.copy(fullTexture, sf::Vector2u{0, 0}, sourceRect)};
+                        if(copySuccess) {
+                            sf::Texture sliceTexture{slice};
+                            sf::Vector2u dest{
+                                smallTexture.getSize().x * widthInTiles,
+                                smallTexture.getSize().y * heightInTiles,
+                            };
+                            bigTexture->update(sliceTexture, dest);
+                        }
+                    } // if smallTexture.width * widthInTiles < bigTexture->width &&
+                    //      smallTexture.height * heightInTiles < bigTexture->height
+
+
+                } // if creating texture succeeded
+            } // isRepeating
+            else {
+                auto textureResult{textures.emplace(id, sf::Texture{path, false, rect})};
+                if(!textureResult.second) {
+                    std::string failMsg{"Invalid configuration (file: " + std::string{path} + "."};
+                    return Error{Error::Signal::InvalidConfiguration, failMsg};
+                } // if loading texture failed
+            } // !isRepeating
         } break;
         case Resource::Type::Sound:
             break;

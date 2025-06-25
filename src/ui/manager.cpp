@@ -8,8 +8,10 @@
 #include "../../include/ui/manager.hpp"
 #include "../../include/ui/button.hpp"
 #include "../../include/ui/menu.hpp"
+#include "../../include/ui/scene.hpp"
 #include "../../include/resource/manager.hpp"
 #include "../../include/color.hpp"
+#include "../../include/ui/decoration.hpp"
 
 farcical::ui::Manager::Manager(EventSystem& eventSystem): KeyboardInterface(),
                                                           MouseInterface(),
@@ -147,35 +149,21 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
               } // else if(buttonPressedTexture)
             }
           } // for each textureDescription in Button
-          /*
-          for(auto& texture: segmentedTextures) {
-            std::string leftTextureID{texture.id + "Left"};
-            std::string centerTextureID{texture.id + "Center"};
-            std::string rightTextureID{texture.id + "Right"};
-            std::vector<ResourceID> textureIDs{
-              static_cast<ResourceID>(leftTextureID),
-              static_cast<ResourceID>(centerTextureID),
-              static_cast<ResourceID>(rightTextureID)
-            };
-            auto spliceResult{resourceManager.SpliceTextures(textureIDs, texture.id)};
-            if(spliceResult.has_value()) {
-              return spliceResult;
-            }
-          } // for each texture in textures
-          */
         } // if segmentedTextures
       } // for each key-value pair in Button
     } // if button
   } // for each top-level key-value pair
-  /*
-    const std::vector<ResourceID> textureIDList{"buttonTextureLeft", "buttonTextureCenter", "buttonTextureRight"};
-    auto requestSplice(resourceManager.SpliceTextures(textureIDList, std::string{Manager::buttonTextureID}));
-    if(requestSplice.has_value()) {
-      return requestSplice;
-    }
-  */
   return std::nullopt;
 }
+
+farcical::ui::Scene* farcical::ui::Manager::CreateScene(std::string_view name) {
+  if(rootWidget) {
+    rootWidget.reset(nullptr);
+  }
+  rootWidget = std::make_unique<Scene>(name, nullptr);
+  return dynamic_cast<Scene*>(rootWidget.get());
+}
+
 
 farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, ResourceManager& resourceManager,
                                                       Widget* parent) {
@@ -220,6 +208,20 @@ farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, Res
   } // if(menu)
   return menu;
 }
+
+farcical::ui::Decoration* farcical::ui::Manager::CreateDecoration(std::string_view name, std::string_view textureID, ResourceManager& resourceManager, Widget* parent) {
+  Decoration* decoration{nullptr};
+  if(parent->IsContainer()) {
+    Container* container{dynamic_cast<Container*>(parent)};
+    unsigned int childIndex{container->GetNumChildren()};
+    container->AddChild(std::make_unique<Decoration>(name, parent));
+    decoration = dynamic_cast<Decoration*>(container->GetChild(childIndex));
+    sf::Texture* texture{resourceManager.GetTexture(std::string{textureID}).value()};
+    decoration->SetTexture(texture);
+  }
+  return decoration;
+}
+
 
 farcical::ui::Widget* farcical::ui::Manager::GetRootWidget() const {
   return rootWidget.get();

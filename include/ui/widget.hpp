@@ -19,7 +19,9 @@ namespace farcical::ui {
   class Widget : public ActionHandler {
   public:
     enum class Type {
+      Scene,
       Border,
+      Decoration,
       Menu,
       MenuItem,
       Button,
