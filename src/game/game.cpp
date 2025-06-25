@@ -94,6 +94,52 @@ farcical::ui::Scene* farcical::game::Game::LoadScene(std::string_view path) {
             } // for each decoration
         } // if sceneJSON contains decorations
 
+        if(sceneJSON.contains("menu")) {
+            const auto& menuJSON{sceneJSON.at("menu")};
+            const auto& menuItemsJSON{menuJSON.at("items")};
+            const auto& menuAlignmentJSON{menuJSON.at("alignment")};
+
+            const auto& menuID{menuJSON.at("id").template get<std::string>()};
+            ui::Menu* menu{engine.GetUIManager().CreateMenu(menuID, engine.GetResourceManager(), scene)};
+            const auto& buttonSize{menu->GetButtonTexture(ui::Button::Status::Normal)->getSize()};
+            menu->SetSize(sf::Vector2u{buttonSize.x, static_cast<unsigned int>(menuItemsJSON.size()) * buttonSize.y});
+            const auto& vAlignmentJSON{menuAlignmentJSON.at("vertical")};
+            const auto& hAlignmentJSON{menuAlignmentJSON.at("horizontal")};
+            const std::string hAlignmentString{hAlignmentJSON.template get<std::string>()};
+            const std::string vAlignmentString{vAlignmentJSON.template get<std::string>()};
+            if(hAlignmentString == "centered") {
+                sf::Vector2f position{
+                    (static_cast<float>(windowSize.x) / 2.0f) - (static_cast<float>(menu->GetSize().x) / 2.0f),
+                    menu->GetPosition().y
+                };
+                menu->SetPosition(position);
+            } // if alignment.horizontal == "centered"
+            if(vAlignmentString == "centered") {
+                sf::Vector2f position{
+                    menu->GetPosition().x,
+                    (static_cast<float>(windowSize.y) / 2.0f) - (static_cast<float>(menu->GetSize().y) / 2.0f)
+                };
+                menu->SetPosition(position);
+            } // if alignment.vertical == "centered
+            for(const auto& item: menuItemsJSON) {
+                const std::string itemID{item.at("id").template get<std::string>()};
+                const std::string itemLabel{item.at("label").template get<std::string>()};
+                const std::string onSelectionString{item.at("onSelection").template get<std::string>()};
+                Event onSelectionEvent{Event::Type::TransitionMainMenu};
+                if(onSelectionString == "QuitGame") {
+                    onSelectionEvent.type = Event::Type::QuitGame;
+                } else if(onSelectionString == "TransitionNewGame") {
+                    onSelectionEvent.type = Event::Type::TransitionNewGame;
+                } else if(onSelectionString == "TransitionLoadGame") {
+                    onSelectionEvent.type = Event::Type::TransitionLoadGame;
+                } else if(onSelectionString == "TransitionOptions") {
+                    onSelectionEvent.type = Event::Type::TransitionOptions;
+                } else if(onSelectionString == "TransitionMainMenu") {
+                    onSelectionEvent.type = Event::Type::TransitionMainMenu;
+                }
+                ui::MenuItem* menuItem{menu->CreateMenuItem(itemID, onSelectionEvent.type)};
+            }
+        }
     } // if json contains scene
 
     return scene;

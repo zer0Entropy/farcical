@@ -59,6 +59,8 @@ namespace farcical::ui {
 
         [[nodiscard]] int GetSelectedIndex() const;
 
+        [[nodiscard]] sf::Texture* GetButtonTexture(Button::Status state) const;
+
         void SetButtonTexture(Button::Status state, sf::Texture& texture);
 
         void SetLabelFont(sf::Font& font);

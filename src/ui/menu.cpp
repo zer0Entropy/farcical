@@ -146,6 +146,17 @@ int farcical::ui::Menu::GetSelectedIndex() const {
   return selectedIndex;
 }
 
+sf::Texture* farcical::ui::Menu::GetButtonTexture(Button::Status state) const {
+  if(state == Button::Status::Normal) {
+    return buttonTextureNormal;
+  } else if(state == Button::Status::Highlighted) {
+    return buttonTextureHighlighted;
+  } else if(state == Button::Status::Pressed) {
+    return buttonTexturePressed;
+  }
+  return nullptr;
+}
+
 void farcical::ui::Menu::SetButtonTexture(Button::Status state, sf::Texture& texture) {
   switch(state) {
     case Button::Status::Normal: {
