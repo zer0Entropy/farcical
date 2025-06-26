@@ -29,6 +29,12 @@ sf::Color farcical::GetColorByName(std::string_view name) {
     }
     else if(name == "cyan") {
         color = sf::Color::Cyan;
+    } else if(name == "darkGray") {
+        color = sf::Color{32, 32, 32};
+    } else if(name == "gray") {
+        color = sf::Color{64, 64, 64};
+    } else if(name == "lightGray") {
+        color = sf::Color{128, 128, 128};
     }
     return color;
 }

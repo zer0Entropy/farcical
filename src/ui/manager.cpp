@@ -5,6 +5,7 @@
 
 #include <cctype>
 #include <fstream>
+#include <unistd.h>
 #include "../../include/ui/manager.hpp"
 #include "../../include/ui/button.hpp"
 #include "../../include/ui/menu.hpp"
@@ -13,26 +14,24 @@
 #include "../../include/color.hpp"
 #include "../../include/ui/decoration.hpp"
 
-farcical::ui::Manager::Manager(EventSystem& eventSystem):
-  KeyboardInterface(),
-  MouseInterface(),
-  ActionHandler(),
-  EventPropagator(nullptr),
-  eventSystem{eventSystem},
-  config{},
-  buttonTextures{nullptr},
-  buttonFont{nullptr},
-  rootWidget{nullptr},
-  focusedWidget{nullptr},
-  buttonTextProperties{
-    .contents = "",
-    .fontID = "",
-    .fontSize = 0,
-    .fontColor = sf::Color::White,
-    .outlineColor = sf::Color::Black,
-    .outlineThickness = 0.0f
-  } {
-
+farcical::ui::Manager::Manager(EventSystem& eventSystem): KeyboardInterface(),
+                                                          MouseInterface(),
+                                                          ActionHandler(),
+                                                          EventPropagator(nullptr),
+                                                          eventSystem{eventSystem},
+                                                          config{},
+                                                          buttonTextures{nullptr},
+                                                          buttonFont{nullptr},
+                                                          rootWidget{nullptr},
+                                                          focusedWidget{nullptr},
+                                                          buttonTextProperties{
+                                                            .contents = "",
+                                                            .fontID = "",
+                                                            .fontSize = 0,
+                                                            .fontColor = sf::Color::White,
+                                                            .outlineColor = sf::Color::Black,
+                                                            .outlineThickness = 0.0f
+                                                          } {
 }
 
 std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceManager& resourceManager) {
@@ -56,24 +55,22 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
               for(auto& [fontKey, fontValue]: titleValue.items()) {
                 if(fontKey == "id") {
                   menuTitleProperties.fontID = fontValue.template get<std::string>();
-                }
-                else if(fontKey == "path") {
+                } else if(fontKey == "path") {
                   fontPath = fontValue.template get<std::string>();
-                }
-                else if(fontKey == "defaultSize") {
+                } else if(fontKey == "defaultSize") {
                   menuTitleProperties.fontSize = fontValue.template get<int>();
-                }
-                else if(fontKey == "defaultColor") {
+                } else if(fontKey == "defaultColor") {
                   menuTitleProperties.fontColor = GetColorByName(fontValue.template get<std::string>());
                 }
                 else if(fontKey == "defaultOutlineColor") {
                   menuTitleProperties.outlineColor = GetColorByName(fontValue.template get<std::string>());
-                }
-                else if(fontKey == "defaultOutlineThickness") {
+                } else if(fontKey == "defaultOutlineThickness") {
                   menuTitleProperties.outlineThickness = fontValue.template get<float>();
                 }
               } // for each key-value pair in font
-              auto loadFontResult{resourceManager.LoadResource(menuTitleProperties.fontID, Resource::Type::Font, fontPath)};
+              auto loadFontResult{resourceManager.LoadResource(menuTitleProperties.fontID, Resource::Type::Font,
+                                                               fontPath)
+              };
               if(loadFontResult.has_value()) {
                 return loadFontResult.value();
               }
@@ -317,12 +314,14 @@ farcical::ui::Widget* farcical::ui::Manager::FindWidgetByType(Widget::Type type,
 
 
 void farcical::ui::Manager::SetFocusedWidget(Widget* widget) {
-  if(focusedWidget) {
+  if(focusedWidget && focusedWidget != widget) {
     focusedWidget->DoAction(Action{Action::Type::LoseFocus});
   }
   if(widget && widget->CanReceiveFocus()) {
-    focusedWidget = widget;
-    focusedWidget->DoAction(Action{Action::Type::ReceiveFocus});
+    if(focusedWidget != widget) {
+      focusedWidget = widget;
+      focusedWidget->DoAction(Action{Action::Type::ReceiveFocus});
+    }
   } else {
     focusedWidget = nullptr;
   }
@@ -337,19 +336,34 @@ void farcical::ui::Manager::Update(sf::RenderWindow& window) const {
 }
 
 void farcical::ui::Manager::ReceiveKeyboardInput(sf::Keyboard::Key input) {
+  Menu* menu{dynamic_cast<Menu*>(FindWidgetByType(Widget::Type::Menu))};
   if(input == sf::Keyboard::Key::Escape) {
     eventSystem.Enqueue(Event{Event::Type::QuitGame});
   } // if(input == Escape)
   else if(input == sf::Keyboard::Key::Up) {
-
+    if(menu) {
+      menu->DoAction(Action{Action::Type::MoveSelectionUp});
+      SetFocusedWidget(menu->GetMenuItemByIndex(menu->GetSelectedIndex()));
+    }
   } // else if(input == Up)
   else if(input == sf::Keyboard::Key::Down) {
-
+    if(menu) {
+      menu->DoAction(Action{Action::Type::MoveSelectionDown});
+      SetFocusedWidget(menu->GetMenuItemByIndex(menu->GetSelectedIndex()));
+    }
   } // else if(input == Down)
   else if(input == sf::Keyboard::Key::Left) {
   } // else if(input == Left)
   else if(input == sf::Keyboard::Key::Right) {
   } // else if(input == Right)
+  else if(input == sf::Keyboard::Key::Enter) {
+    if(focusedWidget) {
+      focusedWidget->DoAction(Action{Action::Type::SetPressedTrue});
+      focusedWidget->DoAction(Action{Action::Type::ConfirmSelection});
+      focusedWidget->DoAction(Action{Action::Type::SetPressedFalse});
+      focusedWidget->DoAction(Action{Action::Type::ReceiveFocus});
+    } // if focusedWidget
+  } // else if(input == Enter)
 }
 
 void farcical::ui::Manager::ReceiveMouseMovement(sf::Vector2i position) {

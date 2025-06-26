@@ -84,23 +84,23 @@ namespace farcical::ui {
         void ReceiveEvent(const Event& event) override;
 
     private:
-        EventSystem&                            eventSystem;
+        EventSystem& eventSystem;
 
-        Config                                  config;
+        Config config;
 
-        std::unique_ptr<Widget>                 rootWidget;
-        Widget*                                 focusedWidget;
+        std::unique_ptr<Widget> rootWidget;
+        Widget* focusedWidget;
 
-        Resource*                               buttonTextures[3];
+        Resource* buttonTextures[3];
         Resource*                               buttonFont;
 
-        static constexpr std::string_view       buttonTextureNormalID{"buttonNormalTexture"};
-        static constexpr std::string_view       buttonTextureHighlightedID{"buttonHighlightedTexture"};
-        static constexpr std::string_view       buttonTexturePressedID{"buttonPressedTexture"};
+        static constexpr std::string_view buttonTextureNormalID{"buttonNormalTexture"};
+        static constexpr std::string_view buttonTextureHighlightedID{"buttonHighlightedTexture"};
+        static constexpr std::string_view buttonTexturePressedID{"buttonPressedTexture"};
 
-        TextProperties                          menuTitleProperties;
-        TextProperties                          buttonTextProperties;
-        float                                   defaultButtonSpacing;
+        TextProperties menuTitleProperties;
+        TextProperties buttonTextProperties;
+        float defaultButtonSpacing;
     };
 }
 

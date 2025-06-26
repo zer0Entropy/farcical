@@ -3,13 +3,11 @@
 //
 
 #include "../../include/ui/menu.hpp"
+
+#include "../../include/color.hpp"
 #include "../../include/ui/button.hpp"
 #include "../../include/ui/label.hpp"
 #include "../../include/ui/manager.hpp"
-
-int farcical::ui::MenuItem::fontSize = 24;
-sf::Color farcical::ui::MenuItem::fontColor = sf::Color::White;
-sf::Color farcical::ui::MenuItem::outlineColor = sf::Color::Red;
 
 farcical::ui::MenuItem::MenuItem(std::string_view name, Event::Type onSelection,
                                  Widget* parent): Container(name, Widget::Type::MenuItem, parent, true),
@@ -28,14 +26,17 @@ farcical::ui::Button* farcical::ui::MenuItem::CreateButton(std::string_view name
   return button;
 }
 
-farcical::ui::Label* farcical::ui::MenuItem::CreateLabel(std::string_view name,
-                                                         sf::Font& font) {
+farcical::ui::Label* farcical::ui::MenuItem::CreateLabel(
+  std::string_view name, const TextProperties& labelProperties, sf::Font& font) {
   children.emplace_back(std::make_unique<Label>(name, this));
   label = dynamic_cast<Label*>(children.rbegin()->get());
+  this->labelProperties = labelProperties;
   label->SetFont(font);
-  label->SetFontSize(MenuItem::fontSize);
-  label->SetFontColor(MenuItem::fontColor);
-  label->SetOutlineColor(MenuItem::outlineColor);
+  label->SetFontSize(labelProperties.fontSize);
+  label->SetFontColor(labelProperties.fontColor);
+  label->SetOutlineColor(labelProperties.outlineColor);
+  label->SetOutlineThickness(labelProperties.outlineThickness);
+  label->SetContents(labelProperties.contents);
   return label;
 }
 
@@ -54,11 +55,14 @@ void farcical::ui::MenuItem::DoAction(Action action) {
   else if(action.type == Action::Type::ReceiveFocus) {
     if(button->GetStatus() == Button::Status::Normal) {
       button->SetStatus(Button::Status::Highlighted);
+      label->SetOutlineColor(sf::Color::Black);
     }
   } // else if action == ReceiveFocus
   else if(action.type == Action::Type::LoseFocus) {
     if(button->GetStatus() == Button::Status::Highlighted) {
       button->SetStatus(Button::Status::Normal);
+      std::string colorName{"gray"};
+      label->SetOutlineColor(GetColorByName(colorName));
     }
   } // else if action == LoseFocus
   else if(action.type == Action::Type::SetPressedTrue) {
@@ -91,12 +95,7 @@ farcical::ui::MenuItem* farcical::ui::Menu::CreateMenuItem(
   std::string labelName{std::string{name} + "Label"};
   std::vector textureList{buttonTextureNormal, buttonTextureHighlighted, buttonTexturePressed};
   Button* button{item->CreateButton(buttonName, textureList)};
-  Label* label{item->CreateLabel(labelName, *labelFont)};
-  label->SetContents(labelProperties.contents);
-  label->SetFontSize(labelProperties.fontSize);
-  label->SetFontColor(labelProperties.fontColor);
-  label->SetOutlineColor(labelProperties.outlineColor);
-  label->SetOutlineThickness(labelProperties.outlineThickness);
+  Label* label{item->CreateLabel(labelName, labelProperties, *labelFont)};
 
   button->SetScale(sf::Vector2f{3.0f, 3.0f});
   const sf::Vector2f buttonSize{button->GetSize()};

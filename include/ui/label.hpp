@@ -11,14 +11,13 @@
 #include "../resource/resource.hpp"
 
 namespace farcical::ui {
-
   struct TextProperties {
-    std::string   contents;
-    ResourceID    fontID;
-    unsigned int  fontSize;
-    sf::Color     fontColor;
-    sf::Color     outlineColor;
-    float         outlineThickness;
+    std::string contents;
+    ResourceID fontID;
+    unsigned int fontSize;
+    sf::Color fontColor;
+    sf::Color outlineColor;
+    float outlineThickness;
   };
 
   class Label final : public Widget {
@@ -34,6 +33,7 @@ namespace farcical::ui {
     void SetContents(std::string_view contents);
 
     [[nodiscard]] const TextProperties& GetTextProperties() const;
+
     [[nodiscard]] sf::Vector2u GetSize() const override;
 
     void Draw(sf::RenderTarget& target) const override;
@@ -42,9 +42,8 @@ namespace farcical::ui {
 
   private:
     sf::Font*       font;
-    TextProperties  properties;
+    TextProperties properties;
   };
-
 }
 
 #endif //LABEL_HPP

@@ -23,7 +23,7 @@ namespace farcical::ui {
 
         Button* CreateButton(std::string_view name, std::vector<sf::Texture*> textures);
 
-        Label* CreateLabel(std::string_view name, sf::Font& font);
+        Label* CreateLabel(std::string_view name, const TextProperties& labelProperties, sf::Font& font);
 
         Button* GetButton() const;
 
@@ -36,9 +36,7 @@ namespace farcical::ui {
         Label* label;
         Event::Type triggeredOnSelection;
 
-        static int fontSize;
-        static sf::Color fontColor;
-        static sf::Color outlineColor;
+        TextProperties labelProperties;
     };
 
     class Menu final : public Container, public EventPropagator {
@@ -47,9 +45,9 @@ namespace farcical::ui {
 
         ~Menu() override = default;
 
-        [[nodiscard]] MenuItem* CreateMenuItem( std::string_view name,
-                                                const TextProperties& labelProperties,
-                                                Event::Type onSelection);
+        [[nodiscard]] MenuItem* CreateMenuItem(std::string_view name,
+                                               const TextProperties& labelProperties,
+                                               Event::Type onSelection);
 
         [[nodiscard]] MenuItem* GetMenuItemByName(std::string_view name) const;
 

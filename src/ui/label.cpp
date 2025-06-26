@@ -41,6 +41,10 @@ void farcical::ui::Label::SetContents(std::string_view contents) {
   properties.contents = contents;
 }
 
+const farcical::ui::TextProperties& farcical::ui::Label::GetTextProperties() const {
+  return properties;
+}
+
 sf::Vector2u farcical::ui::Label::GetSize() const {
   sf::Text text{*font, properties.contents, properties.fontSize};
   return sf::Vector2u{
