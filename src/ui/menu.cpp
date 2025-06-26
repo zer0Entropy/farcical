@@ -11,12 +11,12 @@ int farcical::ui::MenuItem::fontSize = 24;
 sf::Color farcical::ui::MenuItem::fontColor = sf::Color::White;
 sf::Color farcical::ui::MenuItem::outlineColor = sf::Color::Red;
 
-farcical::ui::MenuItem::MenuItem(std::string_view name, Event::Type onSelection,
-                                 Widget* parent): Container(name, Widget::Type::MenuItem, parent),
-                                                  EventPropagator(dynamic_cast<EventPropagator*>(parent)),
-                                                  button{nullptr},
-                                                  label{nullptr},
-                                                  triggeredOnSelection{onSelection} {
+farcical::ui::MenuItem::MenuItem(std::string_view name, Event::Type onSelection, Widget* parent):
+  Container(name, Widget::Type::MenuItem, parent, true),
+  EventPropagator(dynamic_cast<EventPropagator*>(parent)),
+  button{nullptr},
+  label{nullptr},
+  triggeredOnSelection{onSelection} {
 }
 
 farcical::ui::Button* farcical::ui::MenuItem::CreateButton(std::string_view name, std::vector<sf::Texture*> textures) {
@@ -51,23 +51,28 @@ void farcical::ui::MenuItem::DoAction(Action action) {
   if(action.type == Action::Type::ConfirmSelection) {
     dynamic_cast<EventPropagator*>(parent)->ReceiveEvent(Event{triggeredOnSelection});
   } // if action == ConfirmSelection
-  else if(action.type == Action::Type::SetHoverTrue) {
-    button->SetStatus(Button::Status::Highlighted);
-  } // else if action == SetHoverTrue
+  else if(action.type == Action::Type::ReceiveFocus) {
+    if(button->GetStatus() == Button::Status::Normal) {
+      button->SetStatus(Button::Status::Highlighted);
+    }
+  } // else if action == ReceiveFocus
+  else if(action.type == Action::Type::LoseFocus) {
+    if(button->GetStatus() == Button::Status::Highlighted) {
+      button->SetStatus(Button::Status::Normal);
+    }
+  } // else if action == LoseFocus
   else if(action.type == Action::Type::SetPressedTrue) {
     button->SetStatus(Button::Status::Pressed);
+    this->DoAction(Action{Action::Type::ConfirmSelection});
   } // else if action == SetPressedTrue
   else if(action.type == Action::Type::SetPressedFalse) {
     button->SetStatus(Button::Status::Normal);
   } // else if action == SetPressedFalse
-  else if(action.type == Action::Type::SetHoverFalse) {
-    button->SetStatus(Button::Status::Normal);
-  } // else if action == SetHoverFalse
 }
 
 
 farcical::ui::Menu::Menu(std::string_view name, Manager& uiManager, Widget* parent):
-  Container(name, Widget::Type::Menu, parent),
+  Container(name, Widget::Type::Menu, parent, false),
   EventPropagator(dynamic_cast<EventPropagator*>(&uiManager)),
   uiManager{uiManager},
   buttonTextureNormal{nullptr},
@@ -79,7 +84,8 @@ farcical::ui::Menu::Menu(std::string_view name, Manager& uiManager, Widget* pare
   buttonSpacing{0.0f} {
 }
 
-farcical::ui::MenuItem* farcical::ui::Menu::CreateMenuItem(std::string_view name, std::string_view labelContents, Event::Type onSelection) {
+farcical::ui::MenuItem* farcical::ui::Menu::CreateMenuItem(std::string_view name, std::string_view labelContents,
+                                                           Event::Type onSelection) {
   children.emplace_back(std::make_unique<MenuItem>(name, onSelection, this));
   MenuItem* item{dynamic_cast<MenuItem*>(children.rbegin()->get())};
   std::string buttonName{std::string{name} + "Button"};

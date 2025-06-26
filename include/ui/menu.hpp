@@ -49,7 +49,8 @@ namespace farcical::ui {
 
         ~Menu() override = default;
 
-        [[nodiscard]] MenuItem* CreateMenuItem(std::string_view name, std::string_view labelContents, Event::Type onSelection);
+        [[nodiscard]] MenuItem* CreateMenuItem(std::string_view name, std::string_view labelContents,
+                                               Event::Type onSelection);
 
         [[nodiscard]] MenuItem* GetMenuItemByName(std::string_view name) const;
 

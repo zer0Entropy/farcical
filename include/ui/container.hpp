@@ -20,7 +20,8 @@ namespace farcical::ui {
 
         Container& operator=(const Container&) = delete;
 
-        explicit Container(std::string_view name, Type type, Widget* parent = nullptr): Widget(name, type, parent) {
+        explicit Container(std::string_view name, Type type, Widget* parent = nullptr,
+                           bool receiveFocus = false): Widget(name, type, parent, receiveFocus) {
         }
 
         virtual ~Container() override = default;

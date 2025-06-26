@@ -5,7 +5,7 @@
 #include "../../include/ui/decoration.hpp"
 
 farcical::ui::Decoration::Decoration(std::string_view name, Widget* parent): Widget(name, Widget::Type::Decoration,
-                                                                                 parent),
+                                                                                 parent, false),
                                                                              texture{nullptr} {
 }
 

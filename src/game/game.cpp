@@ -26,21 +26,6 @@ void farcical::game::Game::TransitionToState(State::ID stateID) {
     switch(stateID) {
         case State::ID::MainMenu: {
             ui::Scene* scene{LoadScene(Game::mainMenuPath)};
-            /*
-            ui::Menu* menu{engine.GetUIManager().CreateMenu(Game::mainMenuID, engine.GetResourceManager())};
-
-            std::string backgroundID{"background"};
-            ResourceID bgTextureID{backgroundID + "Texture"};
-            ui::Decoration* background{engine.GetUIManager().CreateDecoration(backgroundID, bgTextureID, engine.GetResourceManager(), menu)};
-
-            const sf::Vector2u windowSize{engine.GetWindow().getSize()};
-            menu->SetSize(windowSize);
-            const float buttonSpacing{64.0f};
-            ui::MenuItem* newGame{menu->CreateMenuItem(Game::newGameText, Event::Type::TransitionNewGame)};
-            ui::MenuItem* loadGame{menu->CreateMenuItem(Game::loadGameText, Event::Type::TransitionLoadGame)};
-            ui::MenuItem* options{menu->CreateMenuItem(Game::optionsText, Event::Type::TransitionOptions)};
-            ui::MenuItem* quitGame{menu->CreateMenuItem(Game::quitGameText, Event::Type::QuitGame)};
-            */
         }
         break;
         case State::ID::StartNewGame: {

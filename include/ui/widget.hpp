@@ -35,9 +35,9 @@ namespace farcical::ui {
     virtual ~Widget() = default;
     Widget& operator=(const Widget&) = delete;
 
-    explicit Widget(std::string_view name, Type type, Widget* parent = nullptr):
+    explicit Widget(std::string_view name, Type type, Widget* parent = nullptr, bool receiveFocus = false):
       ActionHandler(),
-      name{name}, type{type}, parent{parent},
+      name{name}, type{type}, parent{parent}, canReceiveFocus{receiveFocus},
       size{0,0}, scale{1.0f, 1.0f}, position{0.0f, 0.0f} {}
 
     [[nodiscard]] std::string_view GetName() const { return name; }
@@ -51,6 +51,8 @@ namespace farcical::ui {
     void SetScale(sf::Vector2f scale) { this->scale = scale; }
     void SetPosition(sf::Vector2f position) { this->position = position; }
 
+    [[nodiscard]] bool CanReceiveFocus() const { return canReceiveFocus; }
+
     [[nodiscard]] virtual bool IsContainer() const { return false; }
 
     virtual void Draw(sf::RenderTarget& target) const = 0;
@@ -61,6 +63,7 @@ namespace farcical::ui {
     std::string name;
     Type type;
     Widget* parent;
+    bool canReceiveFocus;
 
     sf::Vector2u size;
     sf::Vector2f scale;

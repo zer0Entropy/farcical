@@ -8,9 +8,9 @@
 #include "../../include/ui/button.hpp"
 
 farcical::ui::Button::Button(std::string_view name, Widget* parent)
-    : Widget(name, Widget::Type::Button, parent),
-      textures{nullptr},
-      status{Status::Normal} {
+  : Widget(name, Widget::Type::Button, parent, false),
+    textures{nullptr},
+    status{Status::Normal} {
 }
 
 void farcical::ui::Button::SetTexture(Status state, sf::Texture& texture) {

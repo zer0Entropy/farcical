@@ -5,14 +5,13 @@
 #include <SFML/Graphics/Text.hpp>
 #include "../../include/ui/label.hpp"
 
-farcical::ui::Label::Label(std::string_view name, Widget* parent):
-  Widget(name, Widget::Type::Label, parent),
-  font{nullptr},
-  fontSize{0},
-  outlineThickness{0.1f},
-  contents{name},
-  fontColor{sf::Color::White},
-  outlineColor{sf::Color::Black} {
+farcical::ui::Label::Label(std::string_view name, Widget* parent): Widget(name, Widget::Type::Label, parent, false),
+                                                                   font{nullptr},
+                                                                   fontSize{0},
+                                                                   outlineThickness{0.1f},
+                                                                   contents{name},
+                                                                   fontColor{sf::Color::White},
+                                                                   outlineColor{sf::Color::Black} {
 
 }
 

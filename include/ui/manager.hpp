@@ -60,7 +60,9 @@ namespace farcical::ui {
 
         [[nodiscard]] Widget* GetFocusedWidget() const;
 
-        [[nodiscard]] Widget* FindWidget(std::string_view name, Widget* parent = nullptr) const;
+        [[nodiscard]] Widget* FindWidgetByName(std::string_view name, Widget* parent = nullptr) const;
+
+        [[nodiscard]] Widget* FindWidgetByType(Widget::Type type, Widget* parent = nullptr) const;
 
         void SetFocusedWidget(Widget* widget);
 

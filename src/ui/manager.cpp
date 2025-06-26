@@ -234,7 +234,7 @@ farcical::ui::Widget* farcical::ui::Manager::GetFocusedWidget() const {
   return focusedWidget;
 }
 
-farcical::ui::Widget* farcical::ui::Manager::FindWidget(std::string_view name, Widget* parent) const {
+farcical::ui::Widget* farcical::ui::Manager::FindWidgetByName(std::string_view name, Widget* parent) const {
   if(!parent) {
     if(!rootWidget) {
       return nullptr;
@@ -243,12 +243,37 @@ farcical::ui::Widget* farcical::ui::Manager::FindWidget(std::string_view name, W
   }
   if(parent->GetName() == name) {
     return parent;
-  } else if(parent->IsContainer()) {
+  }
+  else if(parent->IsContainer()) {
     Container* container{dynamic_cast<Container*>(parent)};
     Widget* widget{nullptr};
     for(int n = 0; n < container->GetNumChildren(); ++n) {
       Widget* child{container->GetChild(n)};
-      widget = FindWidget(name, child);
+      widget = FindWidgetByName(name, child);
+      if(widget) {
+        return widget;
+      } // if widget found
+    } // for each child in parent
+  } // else recurse
+  return nullptr;
+}
+
+farcical::ui::Widget* farcical::ui::Manager::FindWidgetByType(Widget::Type type, Widget* parent) const {
+  if(!parent) {
+    if(!rootWidget) {
+      return nullptr;
+    }
+    parent = rootWidget.get();
+  }
+  if(parent->GetType() == type) {
+    return parent;
+  }
+  else if(parent->IsContainer()) {
+    Container* container{dynamic_cast<Container*>(parent)};
+    Widget* widget{nullptr};
+    for(int n = 0; n < container->GetNumChildren(); ++n) {
+      Widget* child{container->GetChild(n)};
+      widget = FindWidgetByType(type, child);
       if(widget) {
         return widget;
       } // if widget found
@@ -258,8 +283,18 @@ farcical::ui::Widget* farcical::ui::Manager::FindWidget(std::string_view name, W
 }
 
 
+
 void farcical::ui::Manager::SetFocusedWidget(Widget* widget) {
-  focusedWidget = widget;
+  if(focusedWidget) {
+    focusedWidget->DoAction(Action{Action::Type::LoseFocus});
+  }
+  if(widget && widget->CanReceiveFocus()) {
+    focusedWidget = widget;
+    focusedWidget->DoAction(Action{Action::Type::ReceiveFocus});
+  }
+  else {
+    focusedWidget = nullptr;
+  }
 }
 
 void farcical::ui::Manager::Update(sf::RenderWindow& window) const {
@@ -283,44 +318,35 @@ void farcical::ui::Manager::ReceiveKeyboardInput(sf::Keyboard::Key input) {
 }
 
 void farcical::ui::Manager::ReceiveMouseMovement(sf::Vector2i position) {
-  if(focusedWidget) {
-    if(focusedWidget->GetType() == Widget::Type::Menu) {
-      Menu* menu{dynamic_cast<Menu*>(focusedWidget)};
-      MenuItem* hoverItem{menu->GetMenuItemUnderCursor(position)};
-      if(hoverItem) {
-        for(unsigned int n = 0; n < menu->GetNumChildren(); ++n) {
-          MenuItem* item{menu->GetMenuItemByIndex(n)};
-          if(item == hoverItem) {
-            item->DoAction(Action{Action::Type::SetHoverTrue});
-          } // if item == hoverItem
-          else {
-            item->DoAction(Action{Action::Type::SetHoverFalse});
-          } // else item != hoverItem
-        } // for each menuItem in menu
-      } // if menuItem
-    } // if focusedWidget == Menu
-  } // if focusedWidget
+  Menu* menu = dynamic_cast<Menu*>(FindWidgetByType(Widget::Type::Menu));
+  if(!menu) {
+    return;
+  }
+  // Check if any of the menu's items are at the cursor's current position
+  MenuItem* hoverItem{menu->GetMenuItemUnderCursor(position)};
+  if(hoverItem) {
+    SetFocusedWidget(hoverItem);
+  } // if hoverItem
+  else {
+    SetFocusedWidget(nullptr);
+  } // else !hoverItem
 }
 
 void farcical::ui::Manager::ReceiveMouseButtonClick(sf::Mouse::Button button, sf::Vector2i position) {
-  if(focusedWidget && button == sf::Mouse::Button::Left) {
-    if(focusedWidget->GetType() == Widget::Type::Menu) {
-      Menu* menu{dynamic_cast<Menu*>(focusedWidget)};
-      MenuItem* hoverItem{menu->GetMenuItemUnderCursor(position)};
-      if(hoverItem) {
-        for(unsigned int n = 0; n < menu->GetNumChildren(); ++n) {
-          MenuItem* item{menu->GetMenuItemByIndex(n)};
-          if(item == hoverItem) {
-            item->DoAction(Action{Action::Type::SetPressedTrue});
-            item->DoAction(Action{Action::Type::ConfirmSelection});
-          } // if item == hoverItem
-          else {
-            item->DoAction(Action{Action::Type::SetPressedFalse});
-          } // else item != hoverItem
-        } // for each menuItem in menu
-      } // if menuItem
-    } // if focusedWidget == Menu
-  } // if focusedWidget
+  Menu* menu{dynamic_cast<Menu*>(FindWidgetByType(Widget::Type::Menu))};
+  if(!menu) {
+    return;
+  }
+  MenuItem* hoverItem{menu->GetMenuItemUnderCursor(position)};
+  for(int n = 0; n < menu->GetNumChildren(); ++n) {
+    MenuItem* menuItem{menu->GetMenuItemByIndex(n)};
+    if(menuItem == hoverItem) {
+      menuItem->DoAction(Action{Action::Type::SetPressedTrue});
+    }
+    else {
+      menuItem->DoAction(Action{Action::Type::SetPressedFalse});
+    }
+  } // for each menuItem in menu
 }
 
 void farcical::ui::Manager::DoAction(Action action) {

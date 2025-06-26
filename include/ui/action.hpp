@@ -13,8 +13,8 @@ namespace farcical::ui {
             MoveSelectionDown,
             ConfirmSelection,
             // Button
-            SetHoverTrue,
-            SetHoverFalse,
+            ReceiveFocus,
+            LoseFocus,
             SetPressedTrue,
             SetPressedFalse
         };
