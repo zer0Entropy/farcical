@@ -7,6 +7,8 @@
 
 #include "../engine.hpp"
 #include "../ui/scene.hpp"
+#include "world.hpp"
+#include "player.hpp"
 
 namespace farcical::game {
     class Game {
@@ -16,9 +18,12 @@ namespace farcical::game {
                 MainMenu,
                 StartNewGame,
                 LoadSavedGame,
-                OptionsMenu
+                OptionsMenu,
+                Gameplay
             };
             ID  id;
+            std::unique_ptr<World> world;
+            std::unique_ptr<Player> player;
         };
 
         Game() = delete;
@@ -30,13 +35,16 @@ namespace farcical::game {
 
         ~Game() = default;
 
-        std::optional<Error> Init();
+        std::optional<Error>    Init();
 
-        std::optional<Error> Update();
+        std::optional<Error>    Update();
 
-        void TransitionToState(State::ID stateID);
+        void                    TransitionToState(State::ID stateID);
 
-        ui::Scene*  LoadScene(std::string_view path);
+        ui::Scene*              LoadScene(std::string_view path);
+
+        std::unique_ptr<World>  CreateWorld();
+        std::unique_ptr<Player> CreatePlayer();
 
     private:
         Engine& engine;
@@ -50,6 +58,7 @@ namespace farcical::game {
         static constexpr std::string_view quitGameText = "Quit Game";
 
         static constexpr std::string_view mainMenuPath = "dat/mainMenu.json";
+        static constexpr std::string_view gameplayPath = "dat/gameplay.json";
     };
 }
 

@@ -12,10 +12,8 @@ FetchContent_Declare(SFML
     GIT_SHALLOW ON
     EXCLUDE_FROM_ALL
     SYSTEM)
-FetchContent_MakeAvailable(SFML)
-
 FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz)
-FetchContent_MakeAvailable(json)
+FetchContent_MakeAvailable(SFML json)
 
 add_executable( main
                 src/engine.cpp
@@ -31,6 +29,7 @@ add_executable( main
         src/ui/decoration.cpp
         src/ui/scene.cpp
         src/game/game.cpp
+        src/game/map.cpp
         src/main.cpp
 )
 target_compile_features(main PRIVATE cxx_std_23)

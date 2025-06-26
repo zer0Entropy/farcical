@@ -23,20 +23,24 @@ std::optional<farcical::Error> farcical::game::Game::Update() {
 }
 
 void farcical::game::Game::TransitionToState(State::ID stateID) {
+    State::ID previousStateID{currentState.id};
+    currentState.id = stateID;
     switch(stateID) {
         case State::ID::MainMenu: {
             ui::Scene* scene{LoadScene(Game::mainMenuPath)};
-        }
-        break;
+        } break;
         case State::ID::StartNewGame: {
-        }
-        break;
+            currentState.world = std::move(CreateWorld());
+            currentState.player = std::move(CreatePlayer());
+            TransitionToState(State::ID::Gameplay);
+        } break;
         case State::ID::LoadSavedGame: {
-        }
-        break;
+        } break;
         case State::ID::OptionsMenu: {
-        }
-        break;
+        } break;
+        case State::ID::Gameplay: {
+            ui::Scene* scene{LoadScene(Game::gameplayPath)};
+        } break;
     }
 }
 
@@ -130,4 +134,12 @@ farcical::ui::Scene* farcical::game::Game::LoadScene(std::string_view path) {
     } // if json contains scene
 
     return scene;
+}
+
+std::unique_ptr<farcical::game::World> farcical::game::Game::CreateWorld() {
+    return std::make_unique<World>();
+}
+
+std::unique_ptr<farcical::game::Player> farcical::game::Game::CreatePlayer() {
+    return std::make_unique<Player>();
 }

@@ -5,6 +5,7 @@
 #ifndef RESOURCE_HPP
 #define RESOURCE_HPP
 
+#include <SFML/Graphics/Rect.hpp>
 #include <string>
 
 namespace farcical {
