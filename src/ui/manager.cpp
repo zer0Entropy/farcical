@@ -68,8 +68,9 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
                   menuTitleProperties.outlineThickness = fontValue.template get<float>();
                 }
               } // for each key-value pair in font
-              auto loadFontResult{resourceManager.LoadResource(menuTitleProperties.fontID, Resource::Type::Font,
-                                                               fontPath)
+              auto loadFontResult{
+                resourceManager.LoadResource(menuTitleProperties.fontID, Resource::Type::Font,
+                                             fontPath)
               };
               if(loadFontResult.has_value()) {
                 return loadFontResult.value();
