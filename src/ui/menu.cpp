@@ -79,15 +79,14 @@ farcical::ui::Menu::Menu(std::string_view name, Manager& uiManager, Widget* pare
   buttonSpacing{0.0f} {
 }
 
-farcical::ui::MenuItem* farcical::ui::Menu::CreateMenuItem(std::string_view name, Event::Type onSelection) {
+farcical::ui::MenuItem* farcical::ui::Menu::CreateMenuItem(std::string_view name, std::string_view labelContents, Event::Type onSelection) {
   children.emplace_back(std::make_unique<MenuItem>(name, onSelection, this));
   MenuItem* item{dynamic_cast<MenuItem*>(children.rbegin()->get())};
   std::string buttonName{std::string{name} + "Button"};
-  std::string labelName{std::string{name}};
 
   std::vector textureList{buttonTextureNormal, buttonTextureHighlighted, buttonTexturePressed};
   Button* button{item->CreateButton(buttonName, textureList)};
-  Label* label{item->CreateLabel(labelName, *labelFont)};
+  Label* label{item->CreateLabel(labelContents, *labelFont)};
 
   button->SetScale(sf::Vector2f{3.0f, 3.0f});
   const sf::Vector2f buttonSize{button->GetSize()};
