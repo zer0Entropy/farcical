@@ -19,7 +19,9 @@ namespace farcical {
 
         virtual void ReceiveMouseMovement(sf::Vector2i position) = 0;
 
-        virtual void ReceiveMouseButtonClick(sf::Mouse::Button button, sf::Vector2i position) = 0;
+        virtual void ReceiveMouseButtonPress(sf::Mouse::Button button, sf::Vector2i position) = 0;
+
+        virtual void ReceiveMouseButtonRelease(sf::Mouse::Button button, sf::Vector2i position) = 0;
     };
 }
 

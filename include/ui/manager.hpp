@@ -72,7 +72,9 @@ namespace farcical::ui {
 
         void ReceiveMouseMovement(sf::Vector2i position) override;
 
-        void ReceiveMouseButtonClick(sf::Mouse::Button button, sf::Vector2i position) override;
+        void ReceiveMouseButtonPress(sf::Mouse::Button button, sf::Vector2i position) override;
+
+        void ReceiveMouseButtonRelease(sf::Mouse::Button button, sf::Vector2i position) override;
 
         void DoAction(Action action) override;
 

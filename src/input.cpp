@@ -26,9 +26,15 @@ void farcical::InputSystem::Update() {
 
             else if(const auto* mouseButtonPressed = event->getIf<sf::Event::MouseButtonPressed>()) {
                 for(const auto& listener: mouseListeners) {
-                    listener->ReceiveMouseButtonClick(mouseButtonPressed->button, mouseButtonPressed->position);
+                    listener->ReceiveMouseButtonPress(mouseButtonPressed->button, mouseButtonPressed->position);
                 } // for each mouseListener
             } // else if(event == MouseButtonPressed)
+
+            else if(const auto* mouseButtonReleased = event->getIf<sf::Event::MouseButtonReleased>()) {
+                for(const auto& listener: mouseListeners) {
+                    listener->ReceiveMouseButtonRelease(mouseButtonReleased->button, mouseButtonReleased->position);
+                } // for each mouseListener
+            } // else if(event == MouseButtonReleased)
 
             else if(const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
                 for(const auto& listener: keyListeners) {
