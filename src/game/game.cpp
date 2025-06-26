@@ -122,7 +122,9 @@ farcical::ui::Scene* farcical::game::Game::LoadScene(std::string_view path) {
                 } else if(onSelectionString == "TransitionMainMenu") {
                     onSelectionEvent.type = Event::Type::TransitionMainMenu;
                 }
-                ui::MenuItem* menuItem{menu->CreateMenuItem(itemID, itemLabel, onSelectionEvent.type)};
+                ui::TextProperties labelProperties{engine.GetUIManager().GetButtonTextProperties()};
+                labelProperties.contents = itemLabel;
+                ui::MenuItem* menuItem{menu->CreateMenuItem(itemID, labelProperties, onSelectionEvent.type)};
             }
         }
     } // if json contains scene

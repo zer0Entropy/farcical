@@ -8,8 +8,18 @@
 
 #include "SFML/Graphics/Color.hpp"
 #include "widget.hpp"
+#include "../resource/resource.hpp"
 
 namespace farcical::ui {
+
+  struct TextProperties {
+    std::string   contents;
+    ResourceID    fontID;
+    unsigned int  fontSize;
+    sf::Color     fontColor;
+    sf::Color     outlineColor;
+    float         outlineThickness;
+  };
 
   class Label final : public Widget {
   public:
@@ -23,19 +33,16 @@ namespace farcical::ui {
     void SetOutlineThickness(float thickness);
     void SetContents(std::string_view contents);
 
-    sf::Vector2u GetSize() const override;
+    [[nodiscard]] const TextProperties& GetTextProperties() const;
+    [[nodiscard]] sf::Vector2u GetSize() const override;
 
     void Draw(sf::RenderTarget& target) const override;
 
     void DoAction(Action action) override;
 
   private:
-    sf::Font*     font;
-    unsigned int  fontSize;
-    sf::Color     fontColor;
-    sf::Color     outlineColor;
-    float         outlineThickness;
-    std::string   contents;
+    sf::Font*       font;
+    TextProperties  properties;
   };
 
 }

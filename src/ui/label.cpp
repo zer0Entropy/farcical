@@ -7,12 +7,14 @@
 
 farcical::ui::Label::Label(std::string_view name, Widget* parent): Widget(name, Widget::Type::Label, parent, false),
                                                                    font{nullptr},
-                                                                   fontSize{0},
-                                                                   outlineThickness{0.1f},
-                                                                   contents{name},
-                                                                   fontColor{sf::Color::White},
-                                                                   outlineColor{sf::Color::Black} {
-
+                                                                   properties{
+                                                                     .contents = "",
+                                                                     .fontID = "",
+                                                                     .fontSize = 0,
+                                                                     .fontColor = sf::Color::White,
+                                                                     .outlineColor = sf::Color::Black,
+                                                                     .outlineThickness = 0.0f
+                                                                   } {
 }
 
 void farcical::ui::Label::SetFont(sf::Font& font) {
@@ -20,27 +22,27 @@ void farcical::ui::Label::SetFont(sf::Font& font) {
 }
 
 void farcical::ui::Label::SetFontSize(unsigned int fontSize) {
-  this->fontSize = fontSize;
+  properties.fontSize = fontSize;
 }
 
 void farcical::ui::Label::SetFontColor(sf::Color color) {
-  this->fontColor = color;
+  properties.fontColor = color;
 }
 
 void farcical::ui::Label::SetOutlineColor(sf::Color color) {
-  this->outlineColor = color;
+  properties.outlineColor = color;
 }
 
 void farcical::ui::Label::SetOutlineThickness(float thickness) {
-  this->outlineThickness = thickness;
+  properties.outlineThickness = thickness;
 }
 
 void farcical::ui::Label::SetContents(std::string_view contents) {
-  this->contents = contents;
+  properties.contents = contents;
 }
 
 sf::Vector2u farcical::ui::Label::GetSize() const {
-  sf::Text text{*font, contents, fontSize};
+  sf::Text text{*font, properties.contents, properties.fontSize};
   return sf::Vector2u{
     static_cast<unsigned int>(text.getLocalBounds().size.x),
     static_cast<unsigned int>(text.getLocalBounds().size.y)
@@ -48,11 +50,11 @@ sf::Vector2u farcical::ui::Label::GetSize() const {
 }
 
 void farcical::ui::Label::Draw(sf::RenderTarget& target) const {
-  sf::Text text{*font, contents, fontSize};
-  text.setFillColor(fontColor);
-  text.setOutlineColor(outlineColor);
-  text.setOutlineThickness(outlineThickness);
-  text.setCharacterSize(fontSize);
+  sf::Text text{*font, properties.contents, properties.fontSize};
+  text.setFillColor(properties.fontColor);
+  text.setOutlineColor(properties.outlineColor);
+  text.setOutlineThickness(properties.outlineThickness);
+  text.setCharacterSize(properties.fontSize);
   text.setPosition(position);
   target.draw(text);
 }

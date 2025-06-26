@@ -11,6 +11,7 @@
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 
+#include "label.hpp"
 #include "../resource/config.hpp"
 #include "widget.hpp"
 #include "../keyboard.hpp"
@@ -66,6 +67,8 @@ namespace farcical::ui {
 
         void SetFocusedWidget(Widget* widget);
 
+        const TextProperties& GetButtonTextProperties() const;
+
         void Update(sf::RenderWindow& window) const;
 
         void ReceiveKeyboardInput(sf::Keyboard::Key input) override;
@@ -81,26 +84,23 @@ namespace farcical::ui {
         void ReceiveEvent(const Event& event) override;
 
     private:
-        EventSystem& eventSystem;
+        EventSystem&                            eventSystem;
 
-        Config config;
+        Config                                  config;
 
-        std::unique_ptr<Widget> rootWidget;
-        Widget* focusedWidget;
+        std::unique_ptr<Widget>                 rootWidget;
+        Widget*                                 focusedWidget;
 
-        Resource* buttonTextures[3];
-        Resource* buttonFont;
+        Resource*                               buttonTextures[3];
+        Resource*                               buttonFont;
 
-        static constexpr std::string_view buttonTextureNormalID{"buttonNormalTexture"};
-        static constexpr std::string_view buttonTextureHighlightedID{"buttonHighlightedTexture"};
-        static constexpr std::string_view buttonTexturePressedID{"buttonPressedTexture"};
-        static constexpr std::string_view   buttonFontID{"buttonFont"};
+        static constexpr std::string_view       buttonTextureNormalID{"buttonNormalTexture"};
+        static constexpr std::string_view       buttonTextureHighlightedID{"buttonHighlightedTexture"};
+        static constexpr std::string_view       buttonTexturePressedID{"buttonPressedTexture"};
 
-        unsigned int defaultFontSize;
-        sf::Color defaultFontColor;
-        sf::Color                           defaultOutlineColor;
-        float defaultOutlineThickness;
-        float defaultButtonSpacing;
+        TextProperties                          menuTitleProperties;
+        TextProperties                          buttonTextProperties;
+        float                                   defaultButtonSpacing;
     };
 }
 

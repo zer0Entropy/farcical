@@ -38,7 +38,8 @@ namespace farcical::ui {
     explicit Widget(std::string_view name, Type type, Widget* parent = nullptr,
                     bool receiveFocus = false): ActionHandler(),
                                                 name{name}, type{type}, parent{parent}, canReceiveFocus{receiveFocus},
-                                                size{0,0}, scale{1.0f, 1.0f}, position{0.0f, 0.0f} {}
+                                                size{0, 0}, scale{1.0f, 1.0f}, position{0.0f, 0.0f} {
+    }
 
     [[nodiscard]] std::string_view GetName() const { return name; }
     [[nodiscard]] Type GetType() const { return type; }

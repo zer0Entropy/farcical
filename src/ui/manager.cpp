@@ -13,27 +13,32 @@
 #include "../../include/color.hpp"
 #include "../../include/ui/decoration.hpp"
 
-farcical::ui::Manager::Manager(EventSystem& eventSystem): KeyboardInterface(),
-                                                          MouseInterface(),
-                                                          ActionHandler(),
-                                                          EventPropagator(nullptr),
-                                                          eventSystem{eventSystem},
-                                                          config{},
-                                                          buttonTextures{nullptr},
-                                                          buttonFont{nullptr},
-                                                          rootWidget{nullptr},
-                                                          focusedWidget{nullptr},
-                                                          defaultFontSize{0},
-                                                          defaultFontColor{sf::Color::Black},
-                                                          defaultOutlineColor{sf::Color::Black},
-                                                          defaultOutlineThickness{0.0f} {
+farcical::ui::Manager::Manager(EventSystem& eventSystem):
+  KeyboardInterface(),
+  MouseInterface(),
+  ActionHandler(),
+  EventPropagator(nullptr),
+  eventSystem{eventSystem},
+  config{},
+  buttonTextures{nullptr},
+  buttonFont{nullptr},
+  rootWidget{nullptr},
+  focusedWidget{nullptr},
+  buttonTextProperties{
+    .contents = "",
+    .fontID = "",
+    .fontSize = 0,
+    .fontColor = sf::Color::White,
+    .outlineColor = sf::Color::Black,
+    .outlineThickness = 0.0f
+  } {
+
 }
 
 std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceManager& resourceManager) {
   const std::string cfgPath{"dat/ui.json"};
   ResourceID configID{"uiConfig"};
   auto result{resourceManager.LoadResource(configID, Resource::Type::Config, cfgPath)};
-  //auto result{LoadConfig(cfgPath)};
   if(result.has_value()) {
     return result;
   }
@@ -43,35 +48,65 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
       for(auto& [menuKey, menuValue]: value.items()) {
         if(menuKey == "defaultButtonSpacing") {
           defaultButtonSpacing = menuValue.template get<float>();
-        }
+        } // if menuKey == defaultButtonSpacing
+        else if(menuKey == "title") {
+          for(auto& [titleKey, titleValue]: menuValue.items()) {
+            if(titleKey == "font") {
+              std::string fontPath;
+              for(auto& [fontKey, fontValue]: titleValue.items()) {
+                if(fontKey == "id") {
+                  menuTitleProperties.fontID = fontValue.template get<std::string>();
+                }
+                else if(fontKey == "path") {
+                  fontPath = fontValue.template get<std::string>();
+                }
+                else if(fontKey == "defaultSize") {
+                  menuTitleProperties.fontSize = fontValue.template get<int>();
+                }
+                else if(fontKey == "defaultColor") {
+                  menuTitleProperties.fontColor = GetColorByName(fontValue.template get<std::string>());
+                }
+                else if(fontKey == "defaultOutlineColor") {
+                  menuTitleProperties.outlineColor = GetColorByName(fontValue.template get<std::string>());
+                }
+                else if(fontKey == "defaultOutlineThickness") {
+                  menuTitleProperties.outlineThickness = fontValue.template get<float>();
+                }
+              } // for each key-value pair in font
+              auto loadFontResult{resourceManager.LoadResource(menuTitleProperties.fontID, Resource::Type::Font, fontPath)};
+              if(loadFontResult.has_value()) {
+                return loadFontResult.value();
+              }
+            } // if titleKey == font
+          } // for each key-value pair in title
+        } // else if menuKey == title
       } // for each key-value pair in menu
     } // if menu
     else if(key == "button") {
       for(auto& [buttonKey, buttonValue]: value.items()) {
         if(buttonKey == "font") {
-          ResourceID fontID;
           std::string fontPath;
           for(auto& [fontKey, fontValue]: buttonValue.items()) {
             if(fontKey == "id") {
-              fontID = fontValue.template get<std::string>();
+              buttonTextProperties.fontID = fontValue.template get<std::string>();
             }
             else if(fontKey == "path") {
               fontPath = fontValue.template get<std::string>();
             }
             else if(fontKey == "defaultSize") {
-              defaultFontSize = fontValue.template get<int>();
+              buttonTextProperties.fontSize = fontValue.template get<int>();
             }
             else if(fontKey == "defaultColor") {
-              defaultFontColor = GetColorByName(fontValue.template get<std::string>());
+              buttonTextProperties.fontColor = GetColorByName(fontValue.template get<std::string>());
             }
             else if(fontKey == "defaultOutlineColor") {
-              defaultOutlineColor = GetColorByName(fontValue.template get<std::string>());
+              buttonTextProperties.outlineColor = GetColorByName(fontValue.template get<std::string>());
             }
             else if(fontKey == "defaultOutlineThickness") {
-              defaultOutlineThickness = fontValue.template get<float>();
+              buttonTextProperties.outlineThickness = fontValue.template get<float>();
             }
           } // for each key-value pair in font
-          auto loadFontResult{resourceManager.LoadResource(fontID, Resource::Type::Font, fontPath)};
+          auto loadFontResult{resourceManager.LoadResource(buttonTextProperties.fontID, Resource::Type::Font, fontPath)};
           if(loadFontResult.has_value()) {
             return loadFontResult.value();
           }
@@ -201,7 +236,7 @@ farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, Res
     menu->SetButtonTexture(Button::Status::Normal, *buttonNormalTexture);
     menu->SetButtonTexture(Button::Status::Highlighted, *buttonHighlightedTexture);
     menu->SetButtonTexture(Button::Status::Pressed, *buttonPressedTexture);
-    auto fontRequest{resourceManager.GetFont(static_cast<ResourceID>(Manager::buttonFontID))};
+    auto fontRequest{resourceManager.GetFont(static_cast<ResourceID>(buttonTextProperties.fontID))};
     if(!fontRequest.has_value()) {
       return nullptr;
     }
@@ -291,6 +326,10 @@ void farcical::ui::Manager::SetFocusedWidget(Widget* widget) {
   } else {
     focusedWidget = nullptr;
   }
+}
+
+const farcical::ui::TextProperties& farcical::ui::Manager::GetButtonTextProperties() const {
+  return buttonTextProperties;
 }
 
 void farcical::ui::Manager::Update(sf::RenderWindow& window) const {
