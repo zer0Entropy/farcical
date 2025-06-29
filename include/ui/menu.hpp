@@ -45,6 +45,10 @@ namespace farcical::ui {
 
         ~Menu() override = default;
 
+        void AddChild(std::unique_ptr<Widget> child) override;
+
+        int GetNumMenuItems() const;
+
         [[nodiscard]] MenuItem* CreateMenuItem(std::string_view name,
                                                const TextProperties& labelProperties,
                                                Event::Type onSelection);
@@ -73,6 +77,7 @@ namespace farcical::ui {
 
     private:
         Manager& uiManager;
+        std::vector<MenuItem*> items;
         sf::Texture* buttonTextureNormal;
         sf::Texture* buttonTextureHighlighted;
         sf::Texture* buttonTexturePressed;

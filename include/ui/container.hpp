@@ -29,7 +29,7 @@ namespace farcical::ui {
         [[nodiscard]] bool IsContainer() const noexcept override { return true; }
         [[nodiscard]] unsigned int GetNumChildren() const { return static_cast<unsigned int>(children.size()); }
         [[nodiscard]] Widget* GetChild(unsigned int index) const { return children[index].get(); }
-        void AddChild(std::unique_ptr<Widget> child) { children.push_back(std::move(child)); }
+        virtual void AddChild(std::unique_ptr<Widget> child) { children.push_back(std::move(child)); }
 
         void Draw(sf::RenderTarget& target) const override {
             for(const auto& child: children) {

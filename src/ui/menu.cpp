@@ -59,7 +59,7 @@ void farcical::ui::MenuItem::DoAction(Action action) {
     }
   } // else if action == ReceiveFocus
   else if(action.type == Action::Type::LoseFocus) {
-    if(button->GetStatus() == Button::Status::Highlighted) {
+    if(button->GetStatus() == Button::Status::Highlighted || button->GetStatus() == Button::Status::Pressed) {
       button->SetStatus(Button::Status::Normal);
       std::string colorName{"gray"};
       label->SetOutlineColor(GetColorByName(colorName));
@@ -87,10 +87,24 @@ farcical::ui::Menu::Menu(std::string_view name, Manager& uiManager, Widget* pare
   buttonSpacing{0.0f} {
 }
 
+void farcical::ui::Menu::AddChild(std::unique_ptr<Widget> child) {
+  unsigned int childIndex{GetNumChildren()};
+  Container::AddChild(std::move(child));
+  Widget* movedChild(GetChild(childIndex));
+  if(movedChild->GetType() == Widget::Type::MenuItem) {
+    items.push_back(dynamic_cast<MenuItem*>(movedChild));
+  }
+}
+
+int farcical::ui::Menu::GetNumMenuItems() const {
+  return items.size();
+}
+
 farcical::ui::MenuItem* farcical::ui::Menu::CreateMenuItem(
   std::string_view name, const TextProperties& labelProperties, Event::Type onSelection) {
-  children.emplace_back(std::make_unique<MenuItem>(name, onSelection, this));
-  MenuItem* item{dynamic_cast<MenuItem*>(children.rbegin()->get())};
+  const int index{this->GetNumMenuItems()};
+  this->AddChild(std::make_unique<MenuItem>(name, onSelection, this));
+  MenuItem* item{GetMenuItemByIndex(index)};
   std::string buttonName{std::string{name} + "Button"};
   std::string labelName{std::string{name} + "Label"};
   std::vector textureList{buttonTextureNormal, buttonTextureHighlighted, buttonTexturePressed};
@@ -107,7 +121,8 @@ farcical::ui::MenuItem* farcical::ui::Menu::CreateMenuItem(
   };
   button->SetPosition(sf::Vector2f{
     menuCenter.x - buttonSize.x / 2.0f,
-    buttonSize.y * (static_cast<float>(numButtons) + 1.0f) + buttonSpacing * (static_cast<float>(numButtons) + 1.0f)
+    this->position.y + (buttonSize.y * static_cast<float>(numButtons)) + (buttonSpacing * static_cast<float>(numButtons))
+    //buttonSize.y * (static_cast<float>(numButtons) + 1.0f) + buttonSpacing * (static_cast<float>(numButtons) + 1.0f)
   });
   const sf::Vector2f buttonCenter{
     button->GetPosition().x + buttonSize.x / 2.0f,
@@ -121,24 +136,23 @@ farcical::ui::MenuItem* farcical::ui::Menu::CreateMenuItem(
 }
 
 farcical::ui::MenuItem* farcical::ui::Menu::GetMenuItemByName(std::string_view name) const {
-  for(const auto& child: children) {
-    if(child->GetName() == name) {
-      return dynamic_cast<MenuItem*>(child.get());
+  for(const auto& item: items) {
+    if(item->GetName() == name) {
+      return item;
     }
   }
   return nullptr;
 }
 
 farcical::ui::MenuItem* farcical::ui::Menu::GetMenuItemByIndex(int index) const {
-  if(index >= children.size()) {
+  if(items.size() <= index) {
     return nullptr;
   }
-  return dynamic_cast<MenuItem*>(children[index].get());
+  return items.at(index);
 }
 
 farcical::ui::MenuItem* farcical::ui::Menu::GetMenuItemUnderCursor(sf::Vector2i position) const {
-  for(const auto& child: children) {
-    MenuItem* item{dynamic_cast<MenuItem*>(child.get())};
+  for(const auto& item: items) {
     const Button* button{item->GetButton()};
     if(position.x >= static_cast<int>(button->GetPosition().x)
        && position.y >= static_cast<int>(button->GetPosition().y)

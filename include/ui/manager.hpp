@@ -54,8 +54,15 @@ namespace farcical::ui {
 
         Menu* CreateMenu(std::string_view name, ResourceManager& resourceManager, Widget* parent = nullptr);
 
-        Decoration* CreateDecoration(std::string_view name, std::string_view textureID,
-                                     ResourceManager& resourceManager, Widget* parent = nullptr);
+        Decoration* CreateDecoration(   std::string_view name,
+                                        std::string_view textureID,
+                                        ResourceManager& resourceManager,
+                                        Widget* parent = nullptr);
+
+        Label* CreateFloatingText(      std::string_view name,
+                                        const TextProperties& properties,
+                                        ResourceManager& resourceManager,
+                                        Widget* parent = nullptr);
 
         [[nodiscard]] Widget* GetRootWidget() const;
 
@@ -66,6 +73,8 @@ namespace farcical::ui {
         [[nodiscard]] Widget* FindWidgetByType(Widget::Type type, Widget* parent = nullptr) const;
 
         void SetFocusedWidget(Widget* widget);
+
+        const TextProperties& GetMenuTitleProperties() const;
 
         const TextProperties& GetButtonTextProperties() const;
 
@@ -92,7 +101,7 @@ namespace farcical::ui {
         Widget* focusedWidget;
 
         Resource* buttonTextures[3];
-        Resource*                               buttonFont;
+        Resource* buttonFont;
 
         static constexpr std::string_view buttonTextureNormalID{"buttonNormalTexture"};
         static constexpr std::string_view buttonTextureHighlightedID{"buttonHighlightedTexture"};

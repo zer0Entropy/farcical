@@ -28,16 +28,19 @@ void farcical::game::Game::TransitionToState(State::ID stateID) {
     switch(stateID) {
         case State::ID::MainMenu: {
             ui::Scene* scene{LoadScene(Game::mainMenuPath)};
-        } break;
+        }
+        break;
         case State::ID::StartNewGame: {
             currentState.world = std::move(CreateWorld());
             currentState.player = std::move(CreatePlayer());
             TransitionToState(State::ID::Gameplay);
-        } break;
+        }
+        break;
         case State::ID::LoadSavedGame: {
         } break;
         case State::ID::OptionsMenu: {
-        } break;
+        }
+        break;
         case State::ID::Gameplay: {
             ui::Scene* scene{LoadScene(Game::gameplayPath)};
         } break;
@@ -83,6 +86,29 @@ farcical::ui::Scene* farcical::game::Game::LoadScene(std::string_view path) {
             } // for each decoration
         } // if sceneJSON contains decorations
 
+        if(sceneJSON.contains("title")) {
+            const auto& titleJSON{sceneJSON.at("title")};
+            const auto& alignmentJSON{titleJSON.at("alignment")};
+            const std::string hAlignString{alignmentJSON.at("horizontal").template get<std::string>()};
+            const std::string vAlignString{alignmentJSON.at("vertical").template get<std::string>()};
+            ui::TextProperties titleProperties{engine.GetUIManager().GetMenuTitleProperties()};
+            titleProperties.contents = titleJSON.at("contents").template get<std::string>();
+            const std::string titleID{"gameTitle"};
+            ui::Label* title{
+                engine.GetUIManager().CreateFloatingText(titleID, titleProperties, engine.GetResourceManager(), scene)
+            };
+            sf::Vector2f position{0.0f, 0.0f};
+            if(vAlignString == "top") {
+                position.y = (static_cast<float>(windowSize.y) / 20.0f) + (
+                                 static_cast<float>(title->GetSize().y) / 2.0f);
+            } // if vAlignString == "top"
+            if(hAlignString == "centered") {
+                position.x = (static_cast<float>(windowSize.x) / 2.0f) - (
+                                 static_cast<float>(title->GetSize().x) / 2.0f);
+            } // if hAlignString == "centered"
+            title->SetPosition(position);
+        } // if sceneJSON contains title
+
         if(sceneJSON.contains("menu")) {
             const auto& menuJSON{sceneJSON.at("menu")};
             const auto& menuItemsJSON{menuJSON.at("items")};
@@ -109,7 +135,14 @@ farcical::ui::Scene* farcical::game::Game::LoadScene(std::string_view path) {
                     (static_cast<float>(windowSize.y) / 2.0f) - (static_cast<float>(menu->GetSize().y) / 2.0f)
                 };
                 menu->SetPosition(position);
-            } // if alignment.vertical == "centered
+            } // if alignment.vertical == "centered"
+            else if(vAlignmentString == "bottom") {
+                sf::Vector2f position{
+                    menu->GetPosition().x,
+                    (static_cast<float>(windowSize.y) / 4.0f)
+                };
+                menu->SetPosition(position);
+            } // else if alignment.vertical == "bottom"
             for(const auto& item: menuItemsJSON) {
                 const std::string itemID{item.at("id").template get<std::string>()};
                 const std::string itemLabel{item.at("label").template get<std::string>()};

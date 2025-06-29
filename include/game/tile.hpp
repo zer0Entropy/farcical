@@ -9,12 +9,10 @@
 #include "creature.hpp"
 
 namespace farcical::game {
-
     struct Tile {
         Terrain* terrain;
         Creature* occupant;
     };
-
 }
 
 #endif //TILE_HPP

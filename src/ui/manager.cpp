@@ -200,8 +200,7 @@ farcical::ui::Scene* farcical::ui::Manager::CreateScene(std::string_view name) {
 }
 
 
-farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, ResourceManager& resourceManager,
-                                                      Widget* parent) {
+farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, ResourceManager& resourceManager, Widget* parent) {
   Menu* menu{nullptr};
   if(!parent) {
     if(rootWidget) {
@@ -247,7 +246,12 @@ farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, Res
 farcical::ui::Decoration* farcical::ui::Manager::CreateDecoration(std::string_view name, std::string_view textureID,
                                                                   ResourceManager& resourceManager, Widget* parent) {
   Decoration* decoration{nullptr};
-  if(parent->IsContainer()) {
+  if(!parent) {
+    if(rootWidget) {
+      parent = rootWidget.get();
+    }
+  }
+  if(parent && parent->IsContainer()) {
     Container* container{dynamic_cast<Container*>(parent)};
     unsigned int childIndex{container->GetNumChildren()};
     container->AddChild(std::make_unique<Decoration>(name, parent));
@@ -256,6 +260,33 @@ farcical::ui::Decoration* farcical::ui::Manager::CreateDecoration(std::string_vi
     decoration->SetTexture(texture);
   }
   return decoration;
+}
+
+farcical::ui::Label* farcical::ui::Manager::CreateFloatingText(
+  std::string_view name,
+  const TextProperties& properties,
+  ResourceManager& resourceManager,
+  Widget* parent) {
+  Label* label{nullptr};
+  if(!parent) {
+    if(rootWidget) {
+      parent = rootWidget.get();
+    }
+  }
+  if(parent && parent->IsContainer()) {
+    Container* container{dynamic_cast<Container*>(parent)};
+    unsigned int childIndex{container->GetNumChildren()};
+    container->AddChild(std::make_unique<Label>(name, parent));
+    label = dynamic_cast<Label*>(container->GetChild(childIndex));
+    sf::Font* font{resourceManager.GetFont(properties.fontID).value()};
+    label->SetFont(*font);
+    label->SetContents(properties.contents);
+    label->SetFontSize(properties.fontSize);
+    label->SetFontColor(properties.fontColor);
+    label->SetOutlineColor(properties.outlineColor);
+    label->SetOutlineThickness(properties.outlineThickness);
+  }
+  return label;
 }
 
 
@@ -328,6 +359,10 @@ void farcical::ui::Manager::SetFocusedWidget(Widget* widget) {
   }
 }
 
+const farcical::ui::TextProperties& farcical::ui::Manager::GetMenuTitleProperties() const {
+  return menuTitleProperties;
+}
+
 const farcical::ui::TextProperties& farcical::ui::Manager::GetButtonTextProperties() const {
   return buttonTextProperties;
 }
@@ -378,6 +413,9 @@ void farcical::ui::Manager::ReceiveMouseMovement(sf::Vector2i position) {
     SetFocusedWidget(hoverItem);
   } // if hoverItem
   else {
+    if(focusedWidget) {
+      focusedWidget->DoAction(Action{Action::Type::LoseFocus});
+    }
     SetFocusedWidget(nullptr);
   } // else !hoverItem
 }

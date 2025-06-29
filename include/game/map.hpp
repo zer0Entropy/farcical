@@ -9,24 +9,27 @@
 #include "tile.hpp"
 
 namespace farcical::game {
-
     struct Map {
         int width;
         int height;
         std::vector<Tile> tiles;
 
         Map() = delete;
+
         Map(const Map&) = delete;
+
         Map(Map&) = delete;
+
         Map(Map&&) = delete;
+
         Map& operator=(const Map&) = delete;
 
         Map(int width, int height);
+
         ~Map();
 
         Tile* GetTile(int x, int y);
     };
-
 }
 
 #endif //MAP_HPP

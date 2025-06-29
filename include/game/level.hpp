@@ -9,13 +9,11 @@
 #include "map.hpp"
 
 namespace farcical::game {
-
     struct Level {
-        std::string                 name;
-        unsigned int                index;
-        std::unique_ptr<Map>        map;
+        std::string name;
+        unsigned int index;
+        std::unique_ptr<Map> map;
     };
-
 }
 
 #endif //LEVEL_HPP

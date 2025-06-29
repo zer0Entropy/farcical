@@ -8,11 +8,9 @@
 #include "level.hpp"
 
 namespace farcical::game {
-
     struct World {
         Level currentLevel;
     };
-
 }
 
 #endif //WORLD_HPP

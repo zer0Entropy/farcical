@@ -9,9 +9,7 @@
 #include "../resource/resource.hpp"
 
 namespace farcical::game {
-
     struct Terrain {
-
         enum class Type {
             Floor,
             Wall,
@@ -25,7 +23,6 @@ namespace farcical::game {
         bool isTransparent;
         ResourceID textureID;
     };
-
 }
 
 #endif //TERRAIN_HPP

@@ -3,8 +3,7 @@
 //
 #include "../../include/game/map.hpp"
 
-farcical::game::Map::Map(int width, int height):
-    width{width}, height{height} {
+farcical::game::Map::Map(int width, int height): width{width}, height{height} {
     for(int y = 0; y < height; ++y) {
         for(int x = 0; x < width; ++x) {
             tiles.push_back(Tile{});

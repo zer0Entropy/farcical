@@ -8,11 +8,9 @@
 #include "creature.hpp"
 
 namespace farcical::game {
-
     struct Player {
         Creature character;
     };
-
 }
 
 #endif //PLAYER_HPP
