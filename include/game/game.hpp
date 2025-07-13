@@ -15,19 +15,6 @@
 namespace farcical::game {
     class Game {
     public:
-        struct State {
-            enum class ID {
-                MainMenu = 0,
-                StartNewGame,
-                LoadSavedGame,
-                OptionsMenu,
-                Gameplay,
-                NumGameStates
-            };
-            ID  id;
-            std::unique_ptr<World> world;
-            std::unique_ptr<Player> player;
-        };
 
         Game() = delete;
         Game(Game const&) = delete;
@@ -38,11 +25,9 @@ namespace farcical::game {
 
         ~Game() = default;
 
-        std::optional<engine::Error> Init();
+        std::optional<engine::Error> Init(const ResourceList& sceneResourceList);
 
         std::optional<engine::Error> Update();
-
-        void TransitionToState(State::ID stateID);
 
         std::unique_ptr<World> CreateWorld();
 
@@ -53,39 +38,31 @@ namespace farcical::game {
     private:
         std::optional<engine::Error> CreateSceneLayout(ui::Scene& scene, const ui::LayoutConfig& layoutConfig);
 
-        std::optional<engine::Error> CreateDecorations(ui::Scene& scene, const std::vector<ui::DecorationConfig>& decorationConfigList);
+        std::optional<engine::Error> CreateDecorations(ui::Scene& scene,
+                                                       const std::vector<ui::DecorationConfig>& decorationConfigList);
 
         std::optional<engine::Error> CreateTitle(ui::Scene& scene, const ui::LabelConfig& titleConfig);
 
         std::optional<engine::Error> CreateMenu(ui::Scene& scene, const ui::MenuConfig& menuConfig);
 
-        std::optional<engine::Error> CacheFonts(ui::Scene& scene, const std::vector<FontProperties>& fontPropertiesList);
+        std::optional<engine::Error> CacheFonts(ui::Scene& scene,
+                                                const std::vector<FontProperties>& fontPropertiesList);
 
-        std::optional<engine::Error> CacheTextures(ui::Scene& scene, const std::vector<TextureProperties>& texturePropertiesList);
+        std::optional<engine::Error> CacheTextures(ui::Scene& scene,
+                                                   const std::vector<TextureProperties>& texturePropertiesList);
 
-        std::optional<engine::Error> CacheRepeatingTextures(ui::Scene& scene, const std::vector<RepeatingTextureProperties>& texturePropertiesList);
+        std::optional<engine::Error> CacheRepeatingTextures(ui::Scene& scene,
+                                                            const std::vector<RepeatingTextureProperties>&
+                                                            texturePropertiesList);
 
-        std::optional<engine::Error> CacheSegmentedTextures(ui::Scene& scene, const std::vector<SegmentedTextureProperties>& texturePropertiesList);
+        std::optional<engine::Error> CacheSegmentedTextures(ui::Scene& scene,
+                                                            const std::vector<SegmentedTextureProperties>&
+                                                            texturePropertiesList);
 
         engine::Engine& engine;
-        State currentState;
         ui::SceneHierarchy sceneHierarchy;
+        std::unordered_map<engine::EntityID, ResourceParameters> sceneResources;
 
-        std::array<ResourceParameters, static_cast<int>(State::ID::NumGameStates)> sceneResources;
-
-        static constexpr std::string_view mainMenuID = "mainMenu";
-        static constexpr std::string_view newGameText = "New Game";
-        static constexpr std::string_view loadGameText = "Load Game";
-        static constexpr std::string_view optionsText = "Options";
-        static constexpr std::string_view quitGameText = "Quit Game";
-
-        static constexpr std::string_view mainMenuSceneID = "mainMenuScene";
-        static constexpr std::string_view gameplaySceneID = "gameplayScene";
-
-        static constexpr std::string_view appConfigPath = "dat/farcical.json";
-        static constexpr std::string_view uiConfigPath = "dat/ui.json";
-        static constexpr std::string_view mainMenuPath = "dat/scene/mainMenu.json";
-        static constexpr std::string_view gameplayPath = "dat/gameplay.json";
     };
 }
 

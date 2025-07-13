@@ -14,8 +14,7 @@
 #include "../resource/config.hpp"
 
 namespace farcical::engine {
-
-    struct RenderComponent final: public Component {
+    struct RenderComponent final : public Component {
         sf::Texture* texture;
         sf::Font* font;
         FontProperties fontProperties;
@@ -24,13 +23,15 @@ namespace farcical::engine {
         sf::Vector2f scale;
 
         RenderComponent() = delete;
-        explicit RenderComponent(EntityID parentID):
-            Component(Type::Render, parentID),
-            texture{nullptr},
-            font{nullptr},
-            contents{""},
-            position{0.0f, 0.0f},
-            scale{1.0f, 1.0f} {}
+
+        explicit RenderComponent(EntityID parentID): Component(Type::Render, parentID),
+                                                     texture{nullptr},
+                                                     font{nullptr},
+                                                     contents{""},
+                                                     position{0.0f, 0.0f},
+                                                     scale{1.0f, 1.0f} {
+        }
+
         ~RenderComponent() override = default;
     };
 
@@ -39,21 +40,27 @@ namespace farcical::engine {
         std::vector<RenderComponent*> componentList;
     };
 
-    class RenderSystem final: public System
-    {
+    class RenderSystem final : public System {
     public:
         RenderSystem() = delete;
+
         RenderSystem(RenderSystem&) = delete;
+
         RenderSystem(const RenderSystem&) = delete;
+
         explicit RenderSystem(sf::RenderWindow& window);
+
         ~RenderSystem() override = default;
 
-        void        Init() override;
-        void        Update() override;
-        void        Stop() override;
+        void Init() override;
+
+        void Update() override;
+
+        void Stop() override;
 
         // Create RenderComponent for Sprite
-        std::expected<RenderComponent*, Error> CreateRenderComponent(ui::Layout::Layer::ID layerID, EntityID parentID, sf::Texture* texture);
+        std::expected<RenderComponent*, Error> CreateRenderComponent(ui::Layout::Layer::ID layerID, EntityID parentID,
+                                                                     sf::Texture* texture);
 
         // Create RenderComponent for Text
         std::expected<RenderComponent*, Error> CreateRenderComponent(
@@ -66,11 +73,10 @@ namespace farcical::engine {
         std::optional<Error> DestroyRenderComponent(EntityID parentID);
 
     private:
-        sf::RenderWindow&       window;
-        RenderLayer             layers[static_cast<int>(ui::Layout::Layer::ID::NumLayers)];
-        std::unordered_map<EntityID, std::unique_ptr<RenderComponent>> components;
+        sf::RenderWindow& window;
+        RenderLayer layers[static_cast<int>(ui::Layout::Layer::ID::NumLayers)];
+        std::unordered_map<EntityID, std::unique_ptr<RenderComponent> > components;
     };
-
 };
 
 #endif //RENDER_HPP

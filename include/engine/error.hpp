@@ -8,7 +8,6 @@
 #include <string>
 
 namespace farcical::engine {
-
     struct Error {
         enum class Signal {
             None,

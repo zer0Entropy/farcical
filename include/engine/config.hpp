@@ -11,14 +11,12 @@
 #include "../window.hpp"
 
 namespace farcical::engine {
-
     struct Config {
-        WindowProperties    windowProperties;
-        std::string         scenePath;
+        WindowProperties windowProperties;
+        std::string scenePath;
     };
 
-    std::expected<Config, Error>        LoadConfig(const nlohmann::json& json);
-
+    std::expected<Config, Error> LoadConfig(const nlohmann::json& json);
 }
 
 #endif //ENGINE_CONFIG_HPP

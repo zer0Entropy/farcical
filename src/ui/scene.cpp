@@ -4,13 +4,12 @@
 #include "../../include/ui/scene.hpp"
 #include "../../include/ui/decoration.hpp"
 
-farcical::ui::Scene::Scene(engine::EntityID id, Widget* parent, SceneHierarchy& hierarchy):
-    Container(id, Widget::Type::Scene, parent),
-    hierarchy{hierarchy} {
+farcical::ui::Scene::Scene(engine::EntityID id, Widget* parent,
+                           SceneHierarchy& hierarchy): Container(id, Widget::Type::Scene, parent),
+                                                       hierarchy{hierarchy} {
 }
 
 void farcical::ui::Scene::DoAction(Action action) {
-
 }
 
 std::vector<sf::Text*> farcical::ui::Scene::GetTextLayer(Layout::Layer::ID layerID) const {

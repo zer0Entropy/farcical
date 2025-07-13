@@ -27,19 +27,19 @@ void farcical::engine::EventSystem::Update() {
             }
             break;
             case Event::Type::TransitionMainMenu: {
-                game.TransitionToState(game::Game::State::ID::MainMenu);
+                //game.TransitionToState(game::Game::State::ID::MainMenu);
             }
             break;
             case Event::Type::TransitionNewGame: {
-                game.TransitionToState(game::Game::State::ID::StartNewGame);
+                //game.TransitionToState(game::Game::State::ID::StartNewGame);
             }
             break;
             case Event::Type::TransitionLoadGame: {
-                game.TransitionToState(game::Game::State::ID::LoadSavedGame);
+                //game.TransitionToState(game::Game::State::ID::LoadSavedGame);
             }
             break;
             case Event::Type::TransitionOptions: {
-                game.TransitionToState(game::Game::State::ID::OptionsMenu);
+                //game.TransitionToState(game::Game::State::ID::OptionsMenu);
             }
             break;
         }

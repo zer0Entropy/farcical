@@ -7,15 +7,16 @@
 
 #include <string>
 #include <SFML/Graphics/Rect.hpp>
+#include "../engine/id.hpp"
 
 namespace farcical {
 
     using ResourceID = std::string;
 
     using ResourceParameters = std::pair<ResourceID, std::string>;
+    using ResourceList = std::vector<std::pair<engine::EntityID,ResourceParameters>>;
 
     struct ResourceHandle {
-
         enum class Status {
             Uninitialized,
             IsReady,

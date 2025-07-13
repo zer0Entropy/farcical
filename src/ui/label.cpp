@@ -6,9 +6,8 @@
 #include "../../include/ui/label.hpp"
 
 farcical::ui::Label::Label(engine::EntityID id, Widget* parent): Widget(id, Widget::Type::Label, parent, false),
-  font{nullptr},
-  contents{""} {
-
+                                                                 font{nullptr},
+                                                                 contents{""} {
 }
 
 void farcical::ui::Label::SetFont(sf::Font& font) {

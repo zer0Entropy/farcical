@@ -8,12 +8,11 @@
 #include "../../include/ui/label.hpp"
 #include "../../include/engine/render.hpp"
 
-farcical::ui::MenuItem::MenuItem(engine::EntityID id, engine::Event::Type onSelection, Widget* parent):
-  Container(id, Type::MenuItem, parent, true),
-  button{nullptr},
-  label{nullptr},
-  triggeredOnSelection{onSelection} {
-
+farcical::ui::MenuItem::MenuItem(engine::EntityID id, engine::Event::Type onSelection,
+                                 Widget* parent): Container(id, Type::MenuItem, parent, true),
+                                                  button{nullptr},
+                                                  label{nullptr},
+                                                  triggeredOnSelection{onSelection} {
 }
 
 farcical::ui::Button* farcical::ui::MenuItem::CreateButton(engine::EntityID id, std::vector<sf::Texture*> textures) {
@@ -192,10 +191,9 @@ void farcical::ui::Menu::DoAction(Action action) {
   }
 }
 
-farcical::ui::MenuController::MenuController(Menu* menu, engine::EventSystem& eventSystem):
-  MouseInterface(), KeyboardInterface(),
+farcical::ui::MenuController::MenuController(Menu* menu, engine::EventSystem& eventSystem): MouseInterface(),
+  KeyboardInterface(),
   menu{menu}, eventSystem{eventSystem} {
-
 }
 
 void farcical::ui::MenuController::ReceiveMouseMovement(sf::Vector2i position) {
@@ -234,7 +232,6 @@ void farcical::ui::MenuController::ReceiveMouseButtonPress(sf::Mouse::Button but
       menuItem->DoAction(Action{Action::Type::LoseFocus});
     }
   } // for each MenuItem in Menu
-
 }
 
 void farcical::ui::MenuController::ReceiveMouseButtonRelease(sf::Mouse::Button button, sf::Vector2i position) {

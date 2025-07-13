@@ -16,7 +16,9 @@ namespace farcical::engine {
         InputSystem() = delete;
         InputSystem(InputSystem&) = delete;
         InputSystem(const InputSystem&) = delete;
+
         explicit InputSystem(sf::RenderWindow& window);
+
         ~InputSystem() override = default;
 
         void Init() override;

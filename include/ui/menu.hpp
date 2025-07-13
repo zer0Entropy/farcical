@@ -26,7 +26,8 @@ namespace farcical::ui {
 
         [[nodiscard]] Button* CreateButton(engine::EntityID id, std::vector<sf::Texture*> textures);
 
-        [[nodiscard]] Label* CreateLabel(engine::EntityID id, std::string_view contents, const FontProperties& fontProperties, sf::Font& font);
+        [[nodiscard]] Label* CreateLabel(engine::EntityID id, std::string_view contents,
+                                         const FontProperties& fontProperties, sf::Font& font);
 
         [[nodiscard]] engine::Event::Type OnSelection() const;
 
@@ -45,7 +46,9 @@ namespace farcical::ui {
             engine::Event::Type onSelection,
             Widget* parent) {
             if(!parent || !parent->IsContainer()) {
-                const std::string failMsg{"Invalid configuration: Label (id=" + id + ") with missing or invalid parent."};
+                const std::string failMsg{
+                    "Invalid configuration: Label (id=" + id + ") with missing or invalid parent."
+                };
                 return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
             } // if missing or invalid parent
             if(!font) {
@@ -125,7 +128,9 @@ namespace farcical::ui {
                 std::string itemID{itemIDs.at(index)};
                 std::string contents{itemContents.at(index)};
                 engine::Event::Type onSelection{itemEvents.at(index)};
-                const auto& createMenuItem{MenuItem::Create(itemID, contents, labelFont, fontProperties, buttonTextures, onSelection, menu)};
+                const auto& createMenuItem{
+                    MenuItem::Create(itemID, contents, labelFont, fontProperties, buttonTextures, onSelection, menu)
+                };
                 if(createMenuItem.has_value()) {
                     MenuItem* menuItem{createMenuItem.value()};
                 } // if createMenuItem == success
@@ -144,9 +149,10 @@ namespace farcical::ui {
         float buttonSpacing;
     };
 
-    class MenuController final: public MouseInterface, public KeyboardInterface {
+    class MenuController final : public MouseInterface, public KeyboardInterface {
     public:
         MenuController(Menu* menu, engine::EventSystem& eventSystem);
+
         ~MenuController() override = default;
 
         void ReceiveMouseMovement(sf::Vector2i position) override;

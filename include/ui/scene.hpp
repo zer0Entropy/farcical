@@ -16,7 +16,6 @@
 #include "../resource/manager.hpp"
 
 namespace farcical::ui {
-
     struct SceneHierarchy;
 
     class Scene final : public Container {
@@ -26,23 +25,31 @@ namespace farcical::ui {
         Scene(Scene&) = delete;
         Scene(Scene&&) = delete;
         Scene& operator=(const Scene&) = delete;
+
         explicit Scene(engine::EntityID id, Widget* parent, SceneHierarchy& hierarchy);
+
         ~Scene() override = default;
 
         void DoAction(Action action) override;
 
         [[nodiscard]] std::vector<sf::Text*> GetTextLayer(Layout::Layer::ID layerID) const;
+
         [[nodiscard]] std::vector<sf::Sprite*> GetSpriteLayer(Layout::Layer::ID layerID) const;
 
         [[nodiscard]] sf::Font* GetCachedFont(ResourceID id) const;
+
         [[nodiscard]] FontProperties GetCachedFontProperties(ResourceID id) const;
+
         [[nodiscard]] sf::Texture* GetCachedTexture(ResourceID id) const;
+
         [[nodiscard]] TextureProperties GetCachedTextureProperties(ResourceID id) const;
 
         void CacheFont(ResourceID id, sf::Font* font);
+
         void CacheFontProperties(ResourceID id, const FontProperties& fontProperties);
 
         void CacheTexture(ResourceID id, sf::Texture* texture);
+
         void CacheTextureProperties(ResourceID id, const TextureProperties& textureProperties);
 
     private:
@@ -56,13 +63,14 @@ namespace farcical::ui {
         std::unordered_map<ResourceID, sf::Texture*> textureCache;
         std::unordered_map<ResourceID, TextureProperties> texturePropertiesCache;
 
-        std::array<std::unordered_map<std::string, sf::Text>, static_cast<int>(Layout::Layer::ID::NumLayers)> textLayers;
-        std::array<std::unordered_map<std::string, sf::Sprite>, static_cast<int>(ui::Layout::Layer::ID::NumLayers)> spriteLayers;
-
+        std::array<std::unordered_map<std::string, sf::Text>, static_cast<int>(Layout::Layer::ID::NumLayers)>
+        textLayers;
+        std::array<std::unordered_map<std::string, sf::Sprite>, static_cast<int>(ui::Layout::Layer::ID::NumLayers)>
+        spriteLayers;
     };
 
     struct SceneHierarchy {
-        std::unique_ptr<Scene>  root;
+        std::unique_ptr<Scene> root;
 
         Scene* currentScene;
         std::unique_ptr<MenuController> menuController;

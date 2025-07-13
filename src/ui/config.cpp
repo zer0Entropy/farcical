@@ -5,7 +5,8 @@
 
 #include "../../include/resource/parser.hpp"
 
-std::expected<farcical::ui::DecorationConfig, farcical::engine::Error> farcical::ui::LoadDecorationConfig(const nlohmann::json& json) {
+std::expected<farcical::ui::DecorationConfig, farcical::engine::Error> farcical::ui::LoadDecorationConfig(
+    const nlohmann::json& json) {
     DecorationConfig config;
     const auto& findID{json.find("id")};
     const auto& findPosition{json.find("relativePosition")};
@@ -34,7 +35,8 @@ std::expected<farcical::ui::DecorationConfig, farcical::engine::Error> farcical:
     return config;
 }
 
-std::expected<farcical::ui::ButtonConfig, farcical::engine::Error> farcical::ui::LoadButtonConfig(const nlohmann::json& json) {
+std::expected<farcical::ui::ButtonConfig, farcical::engine::Error> farcical::ui::LoadButtonConfig(
+    const nlohmann::json& json) {
     ButtonConfig config;
     const auto& findState{json.find("state")};
     const auto& findTexture{json.find("texture")};
@@ -67,7 +69,8 @@ std::expected<farcical::ui::ButtonConfig, farcical::engine::Error> farcical::ui:
     return config;
 }
 
-std::expected<farcical::ui::LabelConfig, farcical::engine::Error> farcical::ui::LoadLabelConfig(const nlohmann::json& json) {
+std::expected<farcical::ui::LabelConfig, farcical::engine::Error> farcical::ui::LoadLabelConfig(
+    const nlohmann::json& json) {
     LabelConfig config;
     const auto& findID{json.find("id")};
     const auto& findPosition{json.find("relativePosition")};
@@ -104,7 +107,8 @@ std::expected<farcical::ui::LabelConfig, farcical::engine::Error> farcical::ui::
     return config;
 }
 
-std::expected<farcical::ui::MenuItemConfig, farcical::engine::Error> farcical::ui::LoadMenuItemConfig(const nlohmann::json& json) {
+std::expected<farcical::ui::MenuItemConfig, farcical::engine::Error> farcical::ui::LoadMenuItemConfig(
+    const nlohmann::json& json) {
     MenuItemConfig config;
     const auto& findID{json.find("id")};
     const auto& findLabel{json.find("label")};
@@ -142,7 +146,8 @@ std::expected<farcical::ui::MenuItemConfig, farcical::engine::Error> farcical::u
     return config;
 }
 
-std::expected<farcical::ui::MenuConfig, farcical::engine::Error> farcical::ui::LoadMenuConfig(const nlohmann::json& json) {
+std::expected<farcical::ui::MenuConfig, farcical::engine::Error> farcical::ui::LoadMenuConfig(
+    const nlohmann::json& json) {
     MenuConfig config;
     const auto& findID{json.find("id")};
     const auto& findPosition{json.find("relativePosition")};
@@ -205,7 +210,8 @@ std::expected<farcical::ui::MenuConfig, farcical::engine::Error> farcical::ui::L
     return config;
 }
 
-std::expected<farcical::ui::LayoutLayerConfig, farcical::engine::Error> farcical::ui::LoadLayoutLayerConfig(const nlohmann::json& json) {
+std::expected<farcical::ui::LayoutLayerConfig, farcical::engine::Error> farcical::ui::LoadLayoutLayerConfig(
+    const nlohmann::json& json) {
     LayoutLayerConfig config;
     const auto& findID{json.find("id")};
     const auto& findDecorations{json.find("decorations")};
@@ -246,20 +252,19 @@ std::expected<farcical::ui::LayoutLayerConfig, farcical::engine::Error> farcical
     return config;
 }
 
-std::expected<farcical::ui::LayoutConfig, farcical::engine::Error> farcical::ui::LoadLayoutConfig(const nlohmann::json& json) {
+std::expected<farcical::ui::LayoutConfig, farcical::engine::Error> farcical::ui::LoadLayoutConfig(
+    const nlohmann::json& json) {
     LayoutConfig config;
-    for(const auto& layerJSON : json.items()) {
+    for(const auto& layerJSON: json.items()) {
         const auto& loadLayerResult{LoadLayoutLayerConfig(layerJSON.value())};
         if(loadLayerResult.has_value()) {
             std::string layerID{loadLayerResult.value().layerID};
             int layerIndex{0};
             if(layerID == "background") {
                 layerIndex = static_cast<int>(Layout::Layer::ID::Background);
-            }
-            else if(layerID == "foreground") {
+            } else if(layerID == "foreground") {
                 layerIndex = static_cast<int>(Layout::Layer::ID::Foreground);
-            }
-            else if(layerID == "overlay") {
+            } else if(layerID == "overlay") {
                 layerIndex = static_cast<int>(Layout::Layer::ID::Overlay);
             }
             config.layers[layerIndex] = loadLayerResult.value();
@@ -268,7 +273,8 @@ std::expected<farcical::ui::LayoutConfig, farcical::engine::Error> farcical::ui:
     return config;
 }
 
-std::expected<farcical::ui::SceneConfig, farcical::engine::Error> farcical::ui::LoadSceneConfig(const nlohmann::json& json) {
+std::expected<farcical::ui::SceneConfig, farcical::engine::Error> farcical::ui::LoadSceneConfig(
+    const nlohmann::json& json) {
     SceneConfig config;
     const auto& findID{json.find("id")};
     const auto& findFonts{json.find("fonts")};
@@ -285,7 +291,7 @@ std::expected<farcical::ui::SceneConfig, farcical::engine::Error> farcical::ui::
     // FONTS
     if(findFonts != json.end()) {
         const auto& fontsJSON{findFonts.value()};
-        for(const auto& fontJSON : fontsJSON.items()) {
+        for(const auto& fontJSON: fontsJSON.items()) {
             const auto& loadFontResult{LoadFontProperties(fontJSON.value())};
             if(loadFontResult.has_value()) {
                 config.fonts.push_back(loadFontResult.value());
@@ -296,7 +302,7 @@ std::expected<farcical::ui::SceneConfig, farcical::engine::Error> farcical::ui::
     // TEXTURES
     if(findTextures != json.end()) {
         const auto& texturesJSON{findTextures.value()};
-        for(const auto& textureJSON : texturesJSON.items()) {
+        for(const auto& textureJSON: texturesJSON.items()) {
             const auto& loadTextureResult{LoadTextureProperties(textureJSON.value())};
             if(loadTextureResult.has_value()) {
                 config.textures.push_back(loadTextureResult.value());
@@ -328,7 +334,8 @@ std::expected<farcical::ui::SceneConfig, farcical::engine::Error> farcical::ui::
                     std::string segmentListString{segmentListJSON.dump()};
                     for(auto& segmentProperties: segmentedTextureProperties.segments) {
                         const char firstLetter{segmentProperties.id.at(0)};
-                        segmentProperties.id = static_cast<char>(std::toupper(firstLetter)) + segmentProperties.id.substr(1, segmentProperties.id.size() - 1);
+                        segmentProperties.id = static_cast<char>(std::toupper(firstLetter)) + segmentProperties.id.
+                                               substr(1, segmentProperties.id.size() - 1);
                         segmentProperties.id = segmentedTextureProperties.id + segmentProperties.id;
                         segmentProperties.id.append("Texture");
                     } // for each segmentTexture in segmentedTexture
@@ -347,7 +354,6 @@ std::expected<farcical::ui::SceneConfig, farcical::engine::Error> farcical::ui::
             config.layout = loadLayoutResult.value();
 
             for(auto& layer: config.layout.layers) {
-
                 // Locate the Title for this Layer, if any.
                 // If found, apply the correct fontProperties that were previously loaded:
                 if(!layer.title.id.empty()) {
@@ -361,13 +367,14 @@ std::expected<farcical::ui::SceneConfig, farcical::engine::Error> farcical::ui::
                 // If found, go through each MenuItem and set the correct fontProperties for its Label:
                 if(!layer.menu.id.empty()) {
                     for(auto& menuItemConfig: layer.menu.menuItemConfigs) {
-                        const auto& findFontProperties{config.FindFontProperties(menuItemConfig.labelConfig.fontProperties.id)};
+                        const auto& findFontProperties{
+                            config.FindFontProperties(menuItemConfig.labelConfig.fontProperties.id)
+                        };
                         if(findFontProperties.has_value()) {
                             menuItemConfig.labelConfig.fontProperties = findFontProperties.value();
                         }
                     } // for each menuItemConfig in layer.menu
                 } // if this layer has a menu
-
             } // for each layer in config.layout.layers
         } // if loadLayoutResult == success
     } // if layout found

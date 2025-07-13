@@ -6,17 +6,17 @@
 #include "../../include/game/game.hpp"
 #include <cassert>
 
-farcical::engine::Engine::Engine(std::string_view configPath):
-    status{Status::Uninitialized},
-    config{},
-    window{nullptr},
-    renderSystem{nullptr},
-    inputSystem{nullptr},
-    eventSystem{nullptr},
-    game{nullptr} {
-
+farcical::engine::Engine::Engine(std::string_view configPath): status{Status::Uninitialized},
+                                                               config{},
+                                                               window{nullptr},
+                                                               renderSystem{nullptr},
+                                                               inputSystem{nullptr},
+                                                               eventSystem{nullptr},
+                                                               game{nullptr} {
   // Create a ResourceHandle for the engine's config document
-  const auto& createHandle{resourceManager.CreateResourceHandle(std::string{configDocumentID}, ResourceHandle::Type::JSONDocument, configPath)};
+  const auto& createHandle{
+    resourceManager.CreateResourceHandle(std::string{configDocumentID}, ResourceHandle::Type::JSONDocument, configPath)
+  };
   if(createHandle.has_value()) {
     const ResourceHandle* jsonDocHandle{createHandle.value()};
     // Load JSON data from the document
@@ -29,19 +29,17 @@ farcical::engine::Engine::Engine(std::string_view configPath):
       } // if loadConfig == success
     } // if requestJSONDoc == success
   } // if createHandle == success
-
-
 }
 
 farcical::engine::Engine::Status farcical::engine::Engine::GetStatus() const {
-    return status;
+  return status;
 }
 
 const farcical::engine::Config& farcical::engine::Engine::GetConfig() const {
   return config;
 }
 
-std::optional<farcical::engine::Error> farcical::engine::Engine::Init(game::Game *game) {
+std::optional<farcical::engine::Error> farcical::engine::Engine::Init(game::Game* game) {
   if(status == Status::Uninitialized) {
     this->game = game;
 
@@ -50,8 +48,7 @@ std::optional<farcical::engine::Error> farcical::engine::Engine::Init(game::Game
     auto& windowProperties{config.windowProperties};
     if(windowProperties.fullscreen) {
       window->create(sf::VideoMode{windowProperties.displayMode}, windowProperties.title, sf::State::Fullscreen);
-    }
-    else {
+    } else {
       window->create(sf::VideoMode{windowProperties.displayMode}, windowProperties.title, sf::Style::None);
       window->setPosition(windowProperties.position);
     }
@@ -71,8 +68,44 @@ std::optional<farcical::engine::Error> farcical::engine::Engine::Init(game::Game
     inputSystem->Init();
     eventSystem->Init();
 
-    // Initialize Game
-    game->Init();
+    // Compile a ResourceList for Game
+    const std::string indexPath{config.scenePath + "/index.json"};
+    ResourceID sceneIndexID{static_cast<ResourceID>(sceneIndexDocumentID)};
+    const auto& createHandle{
+      resourceManager.CreateResourceHandle(sceneIndexID, ResourceHandle::Type::JSONDocument, indexPath)
+    };
+    if(createHandle.has_value()) {
+      const auto& loadSceneIndex{
+        resourceManager.GetJSONDoc(sceneIndexID)
+      };
+      if(loadSceneIndex.has_value()) {
+        const auto& indexJSON{*loadSceneIndex.value()};
+        ResourceList sceneResourceList;
+        for(const auto& sceneResourceJSON: indexJSON) {
+          const auto& findID{sceneResourceJSON.find("id")};
+          const auto& findResource{sceneResourceJSON.find("resource")};
+          engine::EntityID sceneID{""};
+          ResourceParameters resourceParameters;
+          if(findID != sceneResourceJSON.end()) {
+            sceneID = findID.value().get<std::string>();
+          } // if id found
+          if(findResource != sceneResourceJSON.end()) {
+            const auto& resourceJSON{findResource.value()};
+            const auto& findResourceID{resourceJSON.find("id")};
+            const auto& findResourcePath{resourceJSON.find("path")};
+            if(findResourceID != resourceJSON.end()) {
+              resourceParameters.first = findResourceID.value().get<std::string>();
+            } // if resourceID found
+            if(findResourcePath != resourceJSON.end()) {
+              resourceParameters.second = config.scenePath + "/" + findResourcePath.value().get<std::string>();
+            } // if resourcePath found
+          } // if resource found
+          sceneResourceList.push_back(std::make_pair(sceneID, resourceParameters));
+        } // for each sceneResource in indexJSON
+        // Initialize Game
+        game->Init(sceneResourceList);
+      } // if loadSceneIndex == success
+    } // if createHandle == success
 
     status = Status::IsRunning;
   } // if Uninitialized

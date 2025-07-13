@@ -6,27 +6,25 @@
 #include <SFML/Graphics/Text.hpp>
 #include "../../include/engine/render.hpp"
 
-farcical::engine::RenderSystem::RenderSystem(sf::RenderWindow &window):
-  System{ID::RenderSystem},
-  window{window},
-  layers{
-    {.id = ui::Layout::Layer::ID::Background},
-    {.id = ui::Layout::Layer::ID::Foreground},
-    {.id = ui::Layout::Layer::ID::Overlay}
-  } {
-
+farcical::engine::RenderSystem::RenderSystem(sf::RenderWindow& window): System{ID::RenderSystem},
+                                                                        window{window},
+                                                                        layers{
+                                                                          {.id = ui::Layout::Layer::ID::Background},
+                                                                          {.id = ui::Layout::Layer::ID::Foreground},
+                                                                          {.id = ui::Layout::Layer::ID::Overlay}
+                                                                        } {
 }
 
 void farcical::engine::RenderSystem::Init() {
-
 }
 
 void farcical::engine::RenderSystem::Update() {
   if(window.isOpen()) {
     window.clear();
-    for(int layerIndex = static_cast<int>(ui::Layout::Layer::ID::Background); layerIndex < static_cast<int>(ui::Layout::Layer::ID::NumLayers); ++layerIndex) {
-      RenderLayer &layer{layers[layerIndex]};
-      for(const auto& component : layer.componentList) {
+    for(int layerIndex = static_cast<int>(ui::Layout::Layer::ID::Background);
+        layerIndex < static_cast<int>(ui::Layout::Layer::ID::NumLayers); ++layerIndex) {
+      RenderLayer& layer{layers[layerIndex]};
+      for(const auto& component: layer.componentList) {
         if(component->texture) {
           sf::Sprite sprite{*component->texture};
           sprite.setScale(component->scale);
@@ -50,12 +48,13 @@ void farcical::engine::RenderSystem::Update() {
 }
 
 void farcical::engine::RenderSystem::Stop() {
-  if (window.isOpen()) {
+  if(window.isOpen()) {
     window.close();
   }
 }
 
-std::expected<farcical::engine::RenderComponent*, farcical::engine::Error> farcical::engine::RenderSystem::CreateRenderComponent(
+std::expected<farcical::engine::RenderComponent*, farcical::engine::Error>
+farcical::engine::RenderSystem::CreateRenderComponent(
   ui::Layout::Layer::ID layerID, EntityID parentID, sf::Texture* texture) {
   const auto& createComponent{
     components.insert(std::make_pair(parentID, std::make_unique<RenderComponent>(parentID)))
@@ -70,8 +69,10 @@ std::expected<farcical::engine::RenderComponent*, farcical::engine::Error> farci
   return std::unexpected(Error{Error::Signal::InvalidConfiguration, failMsg});
 }
 
-std::expected<farcical::engine::RenderComponent*, farcical::engine::Error> farcical::engine::RenderSystem::CreateRenderComponent(
-  ui::Layout::Layer::ID layerID, EntityID parentID, sf::Font* font,const FontProperties& fontProperties, std::string_view contents) {
+std::expected<farcical::engine::RenderComponent*, farcical::engine::Error>
+farcical::engine::RenderSystem::CreateRenderComponent(
+  ui::Layout::Layer::ID layerID, EntityID parentID, sf::Font* font, const FontProperties& fontProperties,
+  std::string_view contents) {
   const auto& createComponent{
     components.insert(std::make_pair(parentID, std::make_unique<RenderComponent>(parentID)))
   };
@@ -90,11 +91,10 @@ std::expected<farcical::engine::RenderComponent*, farcical::engine::Error> farci
 std::optional<farcical::engine::Error> farcical::engine::RenderSystem::DestroyRenderComponent(EntityID parentID) {
   const auto& findComponent{components.find(parentID)};
   if(findComponent != components.end()) {
-
     for(int index = 0; index < static_cast<int>(ui::Layout::Layer::ID::NumLayers); ++index) {
       bool found{false};
       for(auto componentIter = layers[index].componentList.begin();
-        !found && componentIter != layers[index].componentList.end(); ++componentIter) {
+          !found && componentIter != layers[index].componentList.end(); ++componentIter) {
         if((*componentIter)->parentID == parentID) {
           layers[index].componentList.erase(componentIter);
           found = true;

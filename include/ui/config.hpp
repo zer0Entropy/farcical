@@ -13,24 +13,25 @@
 #include "layout.hpp"
 
 namespace farcical::ui {
-
     struct DecorationConfig {
         engine::EntityID id;
         sf::Vector2u relativePosition;
         TextureProperties textureProperties;
 
-        DecorationConfig():
-            id{""},
-            relativePosition{sf::Vector2u{0, 0}} {}
+        DecorationConfig(): id{""},
+                            relativePosition{sf::Vector2u{0, 0}} {
+        }
+
         ~DecorationConfig() = default;
     };
 
     struct ButtonConfig {
         engine::EntityID id;
-        std::vector<std::pair<Button::Status, TextureProperties>> textureProperties;
+        std::vector<std::pair<Button::Status, TextureProperties> > textureProperties;
 
-        ButtonConfig():
-            id{""} {}
+        ButtonConfig(): id{""} {
+        }
+
         ~ButtonConfig() = default;
     };
 
@@ -40,10 +41,11 @@ namespace farcical::ui {
         std::string contents;
         FontProperties fontProperties;
 
-        LabelConfig():
-            id{""},
-            relativePosition{sf::Vector2u{0, 0}},
-            contents{""} {}
+        LabelConfig(): id{""},
+                       relativePosition{sf::Vector2u{0, 0}},
+                       contents{""} {
+        }
+
         ~LabelConfig() = default;
     };
 
@@ -53,9 +55,10 @@ namespace farcical::ui {
         LabelConfig labelConfig;
         engine::Event::Type onSelect;
 
-        MenuItemConfig():
-            id{""},
-            onSelect{engine::Event::Type::QuitGame} {}
+        MenuItemConfig(): id{""},
+                          onSelect{engine::Event::Type::QuitGame} {
+        }
+
         ~MenuItemConfig() = default;
     };
 
@@ -66,9 +69,10 @@ namespace farcical::ui {
         ButtonConfig buttonConfig;
         FontProperties fontProperties;
 
-        MenuConfig():
-            id{""},
-            relativePosition{sf::Vector2u{0, 0}} {}
+        MenuConfig(): id{""},
+                      relativePosition{sf::Vector2u{0, 0}} {
+        }
+
         ~MenuConfig() = default;
     };
 
@@ -78,8 +82,9 @@ namespace farcical::ui {
         LabelConfig title;
         MenuConfig menu;
 
-        LayoutLayerConfig():
-            layerID{""} {}
+        LayoutLayerConfig(): layerID{""} {
+        }
+
         ~LayoutLayerConfig() = default;
     };
 
@@ -95,8 +100,9 @@ namespace farcical::ui {
         std::vector<SegmentedTextureProperties> segmentedTextures;
         LayoutConfig layout;
 
-        SceneConfig():
-            id{""} {}
+        SceneConfig(): id{""} {
+        }
+
         ~SceneConfig() = default;
 
         std::optional<FontProperties> FindFontProperties(ResourceID id) const {
@@ -109,22 +115,21 @@ namespace farcical::ui {
         }
     };
 
-    std::expected<DecorationConfig, engine::Error>      LoadDecorationConfig(const nlohmann::json& json);
+    std::expected<DecorationConfig, engine::Error> LoadDecorationConfig(const nlohmann::json& json);
 
-    std::expected<ButtonConfig, engine::Error>          LoadButtonConfig(const nlohmann::json& json);
+    std::expected<ButtonConfig, engine::Error> LoadButtonConfig(const nlohmann::json& json);
 
-    std::expected<LabelConfig, engine::Error>           LoadLabelConfig(const nlohmann::json& json);
+    std::expected<LabelConfig, engine::Error> LoadLabelConfig(const nlohmann::json& json);
 
-    std::expected<MenuItemConfig, engine::Error>        LoadMenuItemConfig(const nlohmann::json& json);
+    std::expected<MenuItemConfig, engine::Error> LoadMenuItemConfig(const nlohmann::json& json);
 
-    std::expected<MenuConfig, engine::Error>            LoadMenuConfig(const nlohmann::json& json);
+    std::expected<MenuConfig, engine::Error> LoadMenuConfig(const nlohmann::json& json);
 
-    std::expected<LayoutLayerConfig, engine::Error>     LoadLayoutLayerConfig(const nlohmann::json& json);
+    std::expected<LayoutLayerConfig, engine::Error> LoadLayoutLayerConfig(const nlohmann::json& json);
 
-    std::expected<LayoutConfig, engine::Error>          LoadLayoutConfig(const nlohmann::json& json);
+    std::expected<LayoutConfig, engine::Error> LoadLayoutConfig(const nlohmann::json& json);
 
-    std::expected<SceneConfig, engine::Error>           LoadSceneConfig(const nlohmann::json& json);
-
+    std::expected<SceneConfig, engine::Error> LoadSceneConfig(const nlohmann::json& json);
 }
 
 #endif //UI_CONFIG_HPP
