@@ -3,18 +3,24 @@
 //
 
 #include "../../include/ui/button.hpp"
+#include "../../include/engine/render.hpp"
 
-#include <SFML/Graphics/Sprite.hpp>
-#include "../../include/ui/button.hpp"
-
-farcical::ui::Button::Button(std::string_view name, Widget* parent)
-  : Widget(name, Widget::Type::Button, parent, false),
+farcical::ui::Button::Button(engine::EntityID id, Widget* parent)
+  : Widget(id, Widget::Type::Button, parent, false),
     textures{nullptr},
     status{Status::Normal} {
 }
 
 void farcical::ui::Button::SetTexture(Status state, sf::Texture& texture) {
   this->textures[static_cast<int>(state)] = &texture;
+}
+
+sf::Texture* farcical::ui::Button::GetTexture(Status buttonStatus) const {
+  return textures[static_cast<int>(buttonStatus)];
+}
+
+sf::Texture* farcical::ui::Button::GetTexture() const {
+  return textures[static_cast<int>(status)];
 }
 
 sf::Vector2u farcical::ui::Button::GetSize() const {
@@ -29,14 +35,10 @@ farcical::ui::Button::Status farcical::ui::Button::GetStatus() const {
 
 void farcical::ui::Button::SetStatus(Status status) {
   this->status = status;
-}
-
-void farcical::ui::Button::Draw(sf::RenderTarget& target) const {
-  sf::Texture& texture = *this->textures[static_cast<int>(this->status)];
-  sf::Sprite sprite{texture};
-  sprite.setPosition(position);
-  sprite.setScale(scale);
-  target.draw(sprite);
+  engine::RenderComponent* renderCmp{
+    dynamic_cast<engine::RenderComponent*>(this->GetComponent(engine::Component::Type::Render))
+  };
+  renderCmp->texture = this->textures[static_cast<int>(status)];
 }
 
 void farcical::ui::Button::DoAction(Action action) {

@@ -7,7 +7,7 @@
 
 #include <string>
 
-namespace farcical {
+namespace farcical::engine {
 
     struct Error {
         enum class Signal {

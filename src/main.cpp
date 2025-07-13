@@ -1,21 +1,16 @@
 
-#include <cmath>
-#include <string>
-
+#include <fstream>
 #include "../include/game/game.hpp"
 
 int main()
 {
-    farcical::Engine engine;
+    const std::string configPath{"dat/farcical.json"};
+    farcical::engine::Engine engine(configPath);
     farcical::game::Game game(engine);
 
-    // Loads engine configuration from "dat/farcical.json"
     engine.Init(&game);
 
-    // Initializes game
-    game.Init();
-
-    while(engine.GetStatus() == farcical::Engine::Status::IsRunning) {
+    while(engine.GetStatus() == farcical::engine::Engine::Status::IsRunning) {
         engine.Update();
     };
     return 0;

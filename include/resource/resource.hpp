@@ -5,14 +5,16 @@
 #ifndef RESOURCE_HPP
 #define RESOURCE_HPP
 
-#include <SFML/Graphics/Rect.hpp>
 #include <string>
+#include <SFML/Graphics/Rect.hpp>
 
 namespace farcical {
 
     using ResourceID = std::string;
 
-    struct Resource {
+    using ResourceParameters = std::pair<ResourceID, std::string>;
+
+    struct ResourceHandle {
 
         enum class Status {
             Uninitialized,
@@ -21,7 +23,7 @@ namespace farcical {
         };
 
         enum class Type {
-            Config,
+            JSONDocument,
             Font,
             Texture,
             Sound,
@@ -32,7 +34,6 @@ namespace farcical {
         Status              status;
         Type                type;
         std::string         path;
-        sf::IntRect         rect;
     };
 
 }

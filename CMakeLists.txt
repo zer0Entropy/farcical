@@ -16,21 +16,26 @@ FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download
 FetchContent_MakeAvailable(SFML json)
 
 add_executable( main
-                src/engine.cpp
+
         src/color.cpp
-        src/event.cpp
-        src/input.cpp
-                src/render.cpp
+        src/engine/event.cpp
+        src/engine/input.cpp
+        src/engine/render.cpp
+        src/resource/parser.cpp
         src/resource/manager.cpp
-                src/ui/manager.cpp
                 src/ui/menu.cpp
                 src/ui/label.cpp
                 src/ui/button.cpp
         src/ui/decoration.cpp
         src/ui/scene.cpp
+        src/engine/config.cpp
+        src/engine/engine.cpp
         src/game/game.cpp
         src/game/map.cpp
         src/main.cpp
+        src/resource/parser.cpp
+        src/resource/config.cpp
+        src/ui/config.cpp
 )
 target_compile_features(main PRIVATE cxx_std_23)
 target_link_libraries(main PRIVATE SFML::Graphics nlohmann_json::nlohmann_json)

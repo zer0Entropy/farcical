@@ -20,18 +20,20 @@ namespace farcical::ui {
       NumStates
     };
 
-    explicit Button(std::string_view name, Widget* parent);
+    explicit Button(engine::EntityID id, Widget* parent);
     ~Button() override = default;
 
     void SetTexture(Status state, sf::Texture& texture);
+
+    [[nodiscard]] sf::Texture* GetTexture(Status buttonStatus) const;
+
+    [[nodiscard]] sf::Texture* GetTexture() const;
 
     [[nodiscard]] sf::Vector2u GetSize() const override;
 
     [[nodiscard]] Status GetStatus() const;
 
     void SetStatus(Status status);
-
-    void Draw(sf::RenderTarget& target) const override;
 
     void DoAction(Action action) override;
 

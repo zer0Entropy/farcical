@@ -5,30 +5,45 @@
 #ifndef DECORATION_HPP
 #define DECORATION_HPP
 
-#include "widget.hpp"
+#include <expected>
+#include <memory>
+
+#include "container.hpp"
+#include "../engine/error.hpp"
 
 namespace farcical::ui {
     class Decoration final : public Widget {
     public:
         Decoration() = delete;
-
         Decoration(const Decoration&) = delete;
-
         Decoration(Decoration&) = delete;
-
         Decoration(Decoration&&) = delete;
-
         Decoration& operator=(const Decoration&) = delete;
-
-        explicit Decoration(std::string_view name, Widget* parent);
-
+        explicit Decoration(engine::EntityID id, Widget* parent);
         ~Decoration() override = default;
-
-        void Draw(sf::RenderTarget& target) const override;
 
         void DoAction(Action action) override;
 
+        [[nodiscard]] sf::Texture* GetTexture() const;
+
         void SetTexture(sf::Texture* texture);
+
+        static std::expected<Decoration*, engine::Error> Create(engine::EntityID id, sf::Texture* texture, Widget* parent) {
+            if(!parent || !parent->IsContainer()) {
+                const std::string failMsg{"Invalid configuration: Decoration with missing or invalid parent."};
+                return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+            } // if missing or invalid parent
+            if(!texture) {
+                const std::string failMsg{"Invalid configuration: Decoration with missing or invalid texture."};
+                return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+            }
+            Container* container{dynamic_cast<Container*>(parent)};
+            const unsigned int childIndex{container->GetNumChildren()};
+            container->AddChild(std::make_unique<Decoration>(id, parent));
+            Decoration* decoration = dynamic_cast<Decoration*>(container->GetChild(childIndex));
+            decoration->SetTexture(texture);
+            return decoration;
+        }
 
     private:
         sf::Texture* texture;

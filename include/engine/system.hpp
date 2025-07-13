@@ -5,7 +5,7 @@
 #ifndef SYSTEM_HPP
 #define SYSTEM_HPP
 
-namespace farcical
+namespace farcical::engine
 {
     class System
     {

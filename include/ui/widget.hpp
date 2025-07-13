@@ -4,19 +4,13 @@
 #ifndef WIDGET_HPP
 #define WIDGET_HPP
 
-#include <memory>
-#include <string>
-#include <vector>
-
-#include <SFML/Graphics/RenderTarget.hpp>
-#include <SFML/Graphics/Texture.hpp>
 #include <SFML/System/Vector2.hpp>
 
+#include "../engine/entity.hpp"
 #include "action.hpp"
-#include "../event.hpp"
 
 namespace farcical::ui {
-  class Widget : public ActionHandler {
+  class Widget: public engine::Entity, public ActionHandler {
   public:
     enum class Type {
       Scene,
@@ -35,13 +29,16 @@ namespace farcical::ui {
     virtual ~Widget() = default;
     Widget& operator=(const Widget&) = delete;
 
-    explicit Widget(std::string_view name, Type type, Widget* parent = nullptr,
-                    bool receiveFocus = false): ActionHandler(),
-                                                name{name}, type{type}, parent{parent}, canReceiveFocus{receiveFocus},
-                                                size{0, 0}, scale{1.0f, 1.0f}, position{0.0f, 0.0f} {
+    explicit Widget(  engine::EntityID id,
+                      Type type,
+                      Widget* parent = nullptr,
+                      bool canReceiveFocus = false):
+      Entity(id),
+      ActionHandler(),
+      type{type}, parent{parent}, canReceiveFocus{canReceiveFocus},
+      size{0, 0}, scale{1.0f, 1.0f}, position{0.0f, 0.0f} {
     }
 
-    [[nodiscard]] std::string_view GetName() const { return name; }
     [[nodiscard]] Type GetType() const { return type; }
     [[nodiscard]] Widget* GetParent() const { return parent; }
     [[nodiscard]] virtual sf::Vector2u GetSize() const { return size; }
@@ -56,12 +53,9 @@ namespace farcical::ui {
 
     [[nodiscard]] virtual bool IsContainer() const { return false; }
 
-    virtual void Draw(sf::RenderTarget& target) const = 0;
-
     virtual void DoAction(Action action) = 0;
 
   protected:
-    std::string name;
     Type type;
     Widget* parent;
     bool canReceiveFocus;

@@ -8,7 +8,11 @@
 #include <deque>
 #include "system.hpp"
 
-namespace farcical {
+namespace farcical::game {
+    class Game;
+}
+
+namespace farcical::engine {
     struct Event {
         enum class Type {
             QuitGame,
@@ -21,35 +25,14 @@ namespace farcical {
         Type type;
     };
 
-    class EventPropagator {
-    public:
-        explicit EventPropagator(EventPropagator* next): next{next} {
-        }
-
-        virtual ~EventPropagator() = default;
-
-        virtual void ReceiveEvent(const Event& event) { next->ReceiveEvent(event); }
-
-    protected:
-        EventPropagator* next;
-    };
-
-    namespace game {
-        class Game;
-    }
-
     class Engine;
 
     class EventSystem final : public System {
     public:
         EventSystem() = delete;
-
         EventSystem(EventSystem&) = delete;
-
         EventSystem(const EventSystem&) = delete;
-
         explicit EventSystem(game::Game& game, Engine& engine);
-
         ~EventSystem() override = default;
 
         void Enqueue(const Event& event);

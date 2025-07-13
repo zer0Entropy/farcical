@@ -5,18 +5,18 @@
 #ifndef INPUT_HPP
 #define INPUT_HPP
 
+#include <SFML/Graphics/RenderWindow.hpp>
 #include "system.hpp"
-#include "ui/manager.hpp"
-#include "keyboard.hpp"
-#include "mouse.hpp"
+#include "../keyboard.hpp"
+#include "../mouse.hpp"
 
-namespace farcical {
+namespace farcical::engine {
     class InputSystem final : public System {
     public:
         InputSystem() = delete;
         InputSystem(InputSystem&) = delete;
         InputSystem(const InputSystem&) = delete;
-        explicit InputSystem(sf::RenderWindow& window, ui::Manager& manager);
+        explicit InputSystem(sf::RenderWindow& window);
         ~InputSystem() override = default;
 
         void Init() override;
@@ -35,7 +35,6 @@ namespace farcical {
 
     private:
         sf::RenderWindow& window;
-        ui::Manager& uiManager;
         std::vector<KeyboardInterface*> keyListeners;
         std::vector<MouseInterface*> mouseListeners;
     };

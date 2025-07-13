@@ -10,15 +10,10 @@ namespace farcical {
     class KeyboardInterface {
     public:
         explicit KeyboardInterface() = default;
-
         KeyboardInterface(const KeyboardInterface&) = delete;
-
         KeyboardInterface(KeyboardInterface&) = delete;
-
         KeyboardInterface(KeyboardInterface&&) = delete;
-
         virtual ~KeyboardInterface() = default;
-
         KeyboardInterface& operator=(const KeyboardInterface&) = delete;
 
         virtual void ReceiveKeyboardInput(sf::Keyboard::Key input) = 0;

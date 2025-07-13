@@ -5,16 +5,10 @@
 #include <SFML/Graphics/Text.hpp>
 #include "../../include/ui/label.hpp"
 
-farcical::ui::Label::Label(std::string_view name, Widget* parent): Widget(name, Widget::Type::Label, parent, false),
-                                                                   font{nullptr},
-                                                                   properties{
-                                                                     .contents = "",
-                                                                     .fontID = "",
-                                                                     .fontSize = 0,
-                                                                     .fontColor = sf::Color::White,
-                                                                     .outlineColor = sf::Color::Black,
-                                                                     .outlineThickness = 0.0f
-                                                                   } {
+farcical::ui::Label::Label(engine::EntityID id, Widget* parent): Widget(id, Widget::Type::Label, parent, false),
+  font{nullptr},
+  contents{""} {
+
 }
 
 void farcical::ui::Label::SetFont(sf::Font& font) {
@@ -22,45 +16,47 @@ void farcical::ui::Label::SetFont(sf::Font& font) {
 }
 
 void farcical::ui::Label::SetFontSize(unsigned int fontSize) {
-  properties.fontSize = fontSize;
+  fontProperties.characterSize = fontSize;
 }
 
 void farcical::ui::Label::SetFontColor(sf::Color color) {
-  properties.fontColor = color;
+  fontProperties.color = color;
 }
 
 void farcical::ui::Label::SetOutlineColor(sf::Color color) {
-  properties.outlineColor = color;
+  fontProperties.outlineColor = color;
 }
 
 void farcical::ui::Label::SetOutlineThickness(float thickness) {
-  properties.outlineThickness = thickness;
+  fontProperties.outlineThickness = thickness;
 }
 
 void farcical::ui::Label::SetContents(std::string_view contents) {
-  properties.contents = contents;
+  this->contents = contents;
 }
 
-const farcical::ui::TextProperties& farcical::ui::Label::GetTextProperties() const {
-  return properties;
+void farcical::ui::Label::SetFontProperties(const FontProperties& properties) {
+  this->fontProperties = properties;
+}
+
+std::string_view farcical::ui::Label::GetContents() const {
+  return contents;
+}
+
+sf::Font* farcical::ui::Label::GetFont() const {
+  return font;
+}
+
+const farcical::FontProperties& farcical::ui::Label::GetFontProperties() const {
+  return fontProperties;
 }
 
 sf::Vector2u farcical::ui::Label::GetSize() const {
-  sf::Text text{*font, properties.contents, properties.fontSize};
+  sf::Text text{*font, contents, fontProperties.characterSize};
   return sf::Vector2u{
     static_cast<unsigned int>(text.getLocalBounds().size.x),
     static_cast<unsigned int>(text.getLocalBounds().size.y)
   };
-}
-
-void farcical::ui::Label::Draw(sf::RenderTarget& target) const {
-  sf::Text text{*font, properties.contents, properties.fontSize};
-  text.setFillColor(properties.fontColor);
-  text.setOutlineColor(properties.outlineColor);
-  text.setOutlineThickness(properties.outlineThickness);
-  text.setCharacterSize(properties.fontSize);
-  text.setPosition(position);
-  target.draw(text);
 }
 
 void farcical::ui::Label::DoAction(Action action) {

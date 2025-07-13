@@ -3,22 +3,21 @@
 //
 
 #include "../../include/ui/menu.hpp"
-
 #include "../../include/color.hpp"
 #include "../../include/ui/button.hpp"
 #include "../../include/ui/label.hpp"
-#include "../../include/ui/manager.hpp"
+#include "../../include/engine/render.hpp"
 
-farcical::ui::MenuItem::MenuItem(std::string_view name, Event::Type onSelection,
-                                 Widget* parent): Container(name, Widget::Type::MenuItem, parent, true),
-                                                  EventPropagator(dynamic_cast<EventPropagator*>(parent)),
-                                                  button{nullptr},
-                                                  label{nullptr},
-                                                  triggeredOnSelection{onSelection} {
+farcical::ui::MenuItem::MenuItem(engine::EntityID id, engine::Event::Type onSelection, Widget* parent):
+  Container(id, Type::MenuItem, parent, true),
+  button{nullptr},
+  label{nullptr},
+  triggeredOnSelection{onSelection} {
+
 }
 
-farcical::ui::Button* farcical::ui::MenuItem::CreateButton(std::string_view name, std::vector<sf::Texture*> textures) {
-  children.emplace_back(std::make_unique<Button>(name, this));
+farcical::ui::Button* farcical::ui::MenuItem::CreateButton(engine::EntityID id, std::vector<sf::Texture*> textures) {
+  children.emplace_back(std::make_unique<Button>(id, this));
   button = dynamic_cast<Button*>(children.rbegin()->get());
   button->SetTexture(Button::Status::Normal, *textures[static_cast<int>(Button::Status::Normal)]);
   button->SetTexture(Button::Status::Highlighted, *textures[static_cast<int>(Button::Status::Highlighted)]);
@@ -27,17 +26,20 @@ farcical::ui::Button* farcical::ui::MenuItem::CreateButton(std::string_view name
 }
 
 farcical::ui::Label* farcical::ui::MenuItem::CreateLabel(
-  std::string_view name, const TextProperties& labelProperties, sf::Font& font) {
-  children.emplace_back(std::make_unique<Label>(name, this));
+  engine::EntityID id, std::string_view contents, const FontProperties& fontProperties, sf::Font& font) {
+  children.emplace_back(std::make_unique<Label>(id, this));
   label = dynamic_cast<Label*>(children.rbegin()->get());
-  this->labelProperties = labelProperties;
   label->SetFont(font);
-  label->SetFontSize(labelProperties.fontSize);
-  label->SetFontColor(labelProperties.fontColor);
-  label->SetOutlineColor(labelProperties.outlineColor);
-  label->SetOutlineThickness(labelProperties.outlineThickness);
-  label->SetContents(labelProperties.contents);
+  label->SetFontSize(fontProperties.characterSize);
+  label->SetFontColor(fontProperties.color);
+  label->SetOutlineColor(fontProperties.outlineColor);
+  label->SetOutlineThickness(fontProperties.outlineThickness);
+  label->SetContents(contents);
   return label;
+}
+
+farcical::engine::Event::Type farcical::ui::MenuItem::OnSelection() const {
+    return triggeredOnSelection;
 }
 
 farcical::ui::Button* farcical::ui::MenuItem::GetButton() const {
@@ -49,21 +51,22 @@ farcical::ui::Label* farcical::ui::MenuItem::GetLabel() const {
 }
 
 void farcical::ui::MenuItem::DoAction(Action action) {
-  if(action.type == Action::Type::ConfirmSelection) {
-    dynamic_cast<EventPropagator*>(parent)->ReceiveEvent(Event{triggeredOnSelection});
-  } // if action == ConfirmSelection
-  else if(action.type == Action::Type::ReceiveFocus) {
+  engine::RenderComponent* labelRenderCmp{dynamic_cast<engine::RenderComponent*>(label->GetComponent(engine::Component::Type::Render))};
+  if(action.type == Action::Type::ReceiveFocus) {
     if(button->GetStatus() == Button::Status::Normal) {
       button->SetStatus(Button::Status::Highlighted);
       label->SetOutlineColor(sf::Color::Black);
-    }
+      labelRenderCmp->fontProperties.outlineColor = sf::Color::Black;
+    } // if buttonStatus == Normal
   } // else if action == ReceiveFocus
   else if(action.type == Action::Type::LoseFocus) {
     if(button->GetStatus() == Button::Status::Highlighted || button->GetStatus() == Button::Status::Pressed) {
       button->SetStatus(Button::Status::Normal);
-      std::string colorName{"gray"};
-      label->SetOutlineColor(GetColorByName(colorName));
-    }
+      const std::string colorName{"darkGray"};
+      const sf::Color color{GetColorByName(colorName)};
+      label->SetOutlineColor(color);
+      labelRenderCmp->fontProperties.outlineColor = color;
+    } // if buttonStatus == Highlighted || buttonStatus == Pressed
   } // else if action == LoseFocus
   else if(action.type == Action::Type::SetPressedTrue) {
     button->SetStatus(Button::Status::Pressed);
@@ -74,10 +77,8 @@ void farcical::ui::MenuItem::DoAction(Action action) {
 }
 
 
-farcical::ui::Menu::Menu(std::string_view name, Manager& uiManager, Widget* parent):
-  Container(name, Widget::Type::Menu, parent, false),
-  EventPropagator(dynamic_cast<EventPropagator*>(&uiManager)),
-  uiManager{uiManager},
+farcical::ui::Menu::Menu(engine::EntityID id, Widget* parent):
+  Container(id, Type::Menu, parent, false),
   buttonTextureNormal{nullptr},
   buttonTextureHighlighted{nullptr},
   buttonTexturePressed{nullptr},
@@ -88,56 +89,21 @@ farcical::ui::Menu::Menu(std::string_view name, Manager& uiManager, Widget* pare
 }
 
 void farcical::ui::Menu::AddChild(std::unique_ptr<Widget> child) {
-  unsigned int childIndex{GetNumChildren()};
+  const unsigned int childIndex{GetNumChildren()};
   Container::AddChild(std::move(child));
   Widget* movedChild(GetChild(childIndex));
-  if(movedChild->GetType() == Widget::Type::MenuItem) {
+  if(movedChild->GetType() == Type::MenuItem) {
     items.push_back(dynamic_cast<MenuItem*>(movedChild));
   }
 }
 
 int farcical::ui::Menu::GetNumMenuItems() const {
-  return items.size();
+  return static_cast<int>(items.size());
 }
 
-farcical::ui::MenuItem* farcical::ui::Menu::CreateMenuItem(
-  std::string_view name, const TextProperties& labelProperties, Event::Type onSelection) {
-  const int index{this->GetNumMenuItems()};
-  this->AddChild(std::make_unique<MenuItem>(name, onSelection, this));
-  MenuItem* item{GetMenuItemByIndex(index)};
-  std::string buttonName{std::string{name} + "Button"};
-  std::string labelName{std::string{name} + "Label"};
-  std::vector textureList{buttonTextureNormal, buttonTextureHighlighted, buttonTexturePressed};
-  Button* button{item->CreateButton(buttonName, textureList)};
-  Label* label{item->CreateLabel(labelName, labelProperties, *labelFont)};
-
-  button->SetScale(sf::Vector2f{3.0f, 3.0f});
-  const sf::Vector2f buttonSize{button->GetSize()};
-  const int numButtons{static_cast<int>(children.size())};
-
-  const sf::Vector2f menuCenter{
-    this->position.x + static_cast<float>(this->size.x) / 2.0f,
-    this->position.y + static_cast<float>(this->size.y) / 2.0f
-  };
-  button->SetPosition(sf::Vector2f{
-    menuCenter.x - buttonSize.x / 2.0f,
-    this->position.y + (buttonSize.y * static_cast<float>(numButtons)) + (buttonSpacing * static_cast<float>(numButtons))
-    //buttonSize.y * (static_cast<float>(numButtons) + 1.0f) + buttonSpacing * (static_cast<float>(numButtons) + 1.0f)
-  });
-  const sf::Vector2f buttonCenter{
-    button->GetPosition().x + buttonSize.x / 2.0f,
-    button->GetPosition().y + buttonSize.y / 2.0f
-  };
-  label->SetPosition(sf::Vector2f{
-    buttonCenter.x - static_cast<float>(label->GetSize().x) / 2.0f,
-    buttonCenter.y - static_cast<float>(label->GetSize().y) / 2.0f
-  });
-  return item;
-}
-
-farcical::ui::MenuItem* farcical::ui::Menu::GetMenuItemByName(std::string_view name) const {
+farcical::ui::MenuItem* farcical::ui::Menu::GetMenuItemByID(engine::EntityID id) const {
   for(const auto& item: items) {
-    if(item->GetName() == name) {
+    if(item->GetID() == id) {
       return item;
     }
   }
@@ -224,4 +190,100 @@ void farcical::ui::Menu::DoAction(Action action) {
       selectedIndex = 0;
     }
   }
+}
+
+farcical::ui::MenuController::MenuController(Menu* menu, engine::EventSystem& eventSystem):
+  MouseInterface(), KeyboardInterface(),
+  menu{menu}, eventSystem{eventSystem} {
+
+}
+
+void farcical::ui::MenuController::ReceiveMouseMovement(sf::Vector2i position) {
+  MenuItem* menuItemUnderCursor{menu->GetMenuItemUnderCursor(position)};
+  int selectedIndex{menu->GetSelectedIndex()};
+
+  for(int index = 0; index < menu->GetNumMenuItems(); ++index) {
+    MenuItem* menuItem{menu->GetMenuItemByIndex(index)};
+    if(menuItem == menuItemUnderCursor) {
+      if(selectedIndex != index) {
+        menu->SetSelectedIndex(index);
+        menuItem->DoAction(Action{Action::Type::ReceiveFocus});
+      } // if not currently focused
+    } // if this item is under the cursor
+    else {
+      menuItem->DoAction(Action{Action::Type::LoseFocus});
+    } // else if this item is not under the cursor
+  } // for each MenuItem in Menu
+
+  if(menuItemUnderCursor == nullptr) {
+    menu->SetSelectedIndex(-1);
+  } // if no MenuItem is under the cursor
+}
+
+void farcical::ui::MenuController::ReceiveMouseButtonPress(sf::Mouse::Button button, sf::Vector2i position) {
+  MenuItem* menuItemUnderCursor{menu->GetMenuItemUnderCursor(position)};
+  int selectedIndex{menu->GetSelectedIndex()};
+
+  for(int index = 0; index < menu->GetNumMenuItems(); ++index) {
+    MenuItem* menuItem{menu->GetMenuItemByIndex(index)};
+    if(menuItem == menuItemUnderCursor) {
+      menu->SetSelectedIndex(index);
+      menuItem->DoAction(Action{Action::Type::SetPressedTrue});
+    } // if this item is under the cursor
+    else {
+      menuItem->DoAction(Action{Action::Type::LoseFocus});
+    }
+  } // for each MenuItem in Menu
+
+}
+
+void farcical::ui::MenuController::ReceiveMouseButtonRelease(sf::Mouse::Button button, sf::Vector2i position) {
+  MenuItem* menuItemUnderCursor{menu->GetMenuItemUnderCursor(position)};
+  int selectedIndex{menu->GetSelectedIndex()};
+
+  for(int index = 0; index < menu->GetNumMenuItems(); ++index) {
+    MenuItem* menuItem{menu->GetMenuItemByIndex(index)};
+    if(menuItem->GetButton()->GetStatus() == Button::Status::Pressed) {
+      menuItem->DoAction(Action{Action::Type::SetPressedFalse});
+      if(menuItem == menuItemUnderCursor) {
+        eventSystem.Enqueue(engine::Event{menuItem->OnSelection()});
+      } // if this MenuItem is under the cursor, enqueue its OnSelection event
+    } // if Button == Pressed
+  } // for each MenuItem in Menu
+  menu->SetSelectedIndex(-1);
+}
+
+void farcical::ui::MenuController::ReceiveKeyboardInput(sf::Keyboard::Key input) {
+  int selectedIndex{menu->GetSelectedIndex()};
+  MenuItem* previouslySelectedItem{nullptr};
+  if(selectedIndex >= 0) {
+    previouslySelectedItem = menu->GetMenuItemByIndex(selectedIndex);
+  }
+
+  if(input == sf::Keyboard::Key::Up) {
+    if(previouslySelectedItem) {
+      previouslySelectedItem->DoAction(Action{Action::Type::LoseFocus});
+    } // if a MenuItem had focus prior to this input, make it lose focus
+    menu->DoAction(Action{Action::Type::MoveSelectionUp});
+    selectedIndex = menu->GetSelectedIndex();
+    MenuItem* selectedItem{menu->GetMenuItemByIndex(selectedIndex)};
+    selectedItem->DoAction(Action{Action::Type::ReceiveFocus});
+  } // if input == Up
+
+  else if(input == sf::Keyboard::Key::Down) {
+    if(previouslySelectedItem) {
+      previouslySelectedItem->DoAction(Action{Action::Type::LoseFocus});
+    } // if a MenuItem had focus prior to this input, make it lose focus
+    menu->DoAction(Action{Action::Type::MoveSelectionDown});
+    selectedIndex = menu->GetSelectedIndex();
+    MenuItem* selectedItem{menu->GetMenuItemByIndex(selectedIndex)};
+    selectedItem->DoAction(Action{Action::Type::ReceiveFocus});
+  } // else if input == Down
+
+  else if(input == sf::Keyboard::Key::Enter) {
+    if(previouslySelectedItem) {
+      const engine::Event::Type eventType{previouslySelectedItem->OnSelection()};
+      eventSystem.Enqueue(engine::Event{eventType});
+    } // if previouslySelectedItem
+  } // else if input == Enter
 }

@@ -1,22 +1,22 @@
 //
 // Created by dgmuller on 6/22/25.
 //
-#include "../include/event.hpp"
+#include "../../include/engine/event.hpp"
+#include "../../include/game/game.hpp"
 
-#include "../include/game/game.hpp"
-
-farcical::EventSystem::EventSystem(game::Game& game, Engine& engine): System(System::ID::EventSystem),
-                                                                      game{game}, engine{engine} {
+farcical::engine::EventSystem::EventSystem(game::Game& game, Engine& engine):
+    System(ID::EventSystem),
+    game{game}, engine{engine} {
 }
 
-void farcical::EventSystem::Enqueue(const Event& event) {
+void farcical::engine::EventSystem::Enqueue(const Event& event) {
     eventQueue.push_back(event);
 }
 
-void farcical::EventSystem::Init() {
+void farcical::engine::EventSystem::Init() {
 }
 
-void farcical::EventSystem::Update() {
+void farcical::engine::EventSystem::Update() {
     // Iterate through a copy of the eventQueue, to prevent changes to the queue from messing up our iteration
     const auto queueCopy{eventQueue};
     eventQueue.clear();
@@ -46,6 +46,6 @@ void farcical::EventSystem::Update() {
     }
 }
 
-void farcical::EventSystem::Stop() {
+void farcical::engine::EventSystem::Stop() {
     eventQueue.clear();
 }

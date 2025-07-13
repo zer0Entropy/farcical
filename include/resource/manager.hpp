@@ -5,54 +5,86 @@
 #ifndef RESOURCE_MANAGER_HPP
 #define RESOURCE_MANAGER_HPP
 
+#include <expected>
 #include <unordered_map>
+#include <nlohmann/json.hpp>
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Texture.hpp>
 #include "resource.hpp"
+#include "../engine/error.hpp"
 #include "config.hpp"
-#include "../error.hpp"
 
 namespace farcical {
 
     class ResourceManager final {
     public:
-        Resource*                                   GetResource(ResourceID id) const;
+        ResourceHandle*                                 GetResourceHandle(ResourceID id) const;
 
-        std::optional<Error> LoadResource(ResourceID id,
-                                          Resource::Type type,
-                                          std::string_view path,
-                                          sf::IntRect rect = {{0, 0}, {0, 0}},
-                                          bool isRepeating = false);
+        std::expected<ResourceHandle*, engine::Error>   CreateResourceHandle(   ResourceID id,
+                                                                                ResourceHandle::Type type,
+                                                                                std::string_view path);
 
-        std::optional<Error>                        UnloadResource(ResourceID id);
+        std::optional<engine::Error>                    DestroyResourceHandle(ResourceID id, ResourceHandle::Type type);
 
-        std::optional<Error> SaveConfig(ResourceID id);
+        std::expected<nlohmann::json*, engine::Error>   GetJSONDoc(ResourceID id);
+        std::expected<sf::Font*, engine::Error>         GetFont(ResourceID id);
+        std::expected<sf::Texture*, engine::Error>      GetTexture(ResourceID id);
+        std::expected<sf::Texture*, engine::Error>      GetTexture(TextureProperties properties);
+        std::expected<sf::Texture*, engine::Error>      GetTexture(RepeatingTextureProperties properties);
+        std::expected<sf::Texture*, engine::Error>      GetTexture(SegmentedTextureProperties properties);
 
-        std::optional<Error>                        SpliceTextures(const std::vector<ResourceID> inputTextureIDs, ResourceID splicedTextureID);
+        std::expected<sf::Texture*, engine::Error>      CreateSplicedTexture(ResourceID id, std::vector<ResourceID> inputTextureIDs);
+        std::expected<sf::Texture*, engine::Error>      CreateRepeatingTexture( ResourceID id,
+                                                                                sf::Vector2u outputSize,
+                                                                                ResourceID inputID,
+                                                                                sf::IntRect inputRect = {{0, 0}, {0, 0}});
 
-        std::expected<Config*, Error>               GetConfig(ResourceID id) const;
-        std::expected<sf::Font*, Error>             GetFont(ResourceID id) const;
-        std::expected<sf::Texture*, Error>          GetTexture(ResourceID id) const;
 
     private:
-        std::optional<Error> LoadConfig(ResourceID id, std::string_view path);
+        void                                            RepeatTexture(sf::Texture& input, sf::Texture& output);
+        void                                            RepeatSliceHorizontal(sf::Texture& input, sf::Texture& output);
+        void                                            RepeatSliceVertical(sf::Texture& input, sf::Texture& output);
+        /*
+        std::optional<Error>                        LoadFont(ResourceHandle* resource);
+        std::optional<Error>                        LoadTexture(ResourceHandle* resource,
+                                                                sf::IntRect inputRect = {{0, 0}, {0, 0}},
+                                                                sf::Vector2u outputSize = {0, 0},
+                                                                bool isRepeating = false);
+        */
+        /*
+        std::optional<Error>                        LoadRepeatingTexture(   Resource* resource,
+                                                                            sf::IntRect inputRect = {{0, 0}, {0, 0}},
+                                                                            sf::Vector2u outputSize = {0, 0});
+        */
 
-        std::optional<Error> LoadFont(ResourceID id, std::string_view path);
+        /*
+        std::expected<ApplicationConfig, Error>     LoadAppConfig(std::ifstream& input);
+        std::expected<UIConfig, Error>              LoadGlobalUIConfig(std::ifstream& input);
+        std::expected<SceneConfig, Error>           LoadSceneConfig(std::ifstream& input);
 
-        std::optional<Error> LoadTexture(ResourceID id,
-                                         std::string_view path,
-                                         sf::IntRect rect = sf::IntRect{{0, 0}, {0, 0}},
-                                         bool repeat = false);
+        std::optional<Error>                        LoadConfigDecorations(const nlohmann::json& json, SceneConfig& config);
+        std::optional<Error>                        LoadConfigTitle(const nlohmann::json& json, SceneConfig& config);
+        std::optional<Error>                        LoadConfigMenu(const nlohmann::json& json, SceneConfig& config);
+        std::expected<sf::Texture*, Error>          LoadConfigTexture(const nlohmann::json& json);
+        std::expected<sf::Vector2f, Error>          LoadConfigPosition(const nlohmann::json& json);
+        std::expected<sf::Vector2u, Error>          LoadConfigSize(const nlohmann::json& json);
+        std::expected<ui::Layout, Error>            LoadConfigLayout(const nlohmann::json& json);
 
-        std::optional<Error> LoadRepeatingTexture(ResourceID id, std::string_view path,
-                                                  sf::IntRect rect = sf::IntRect{{0, 0}, {0, 0}});
-
-        std::unordered_map<ResourceID, Resource> registry;
-        std::unordered_map<ResourceID, Config> configs;
+        std::optional<Error> LoadRepeatingTexture(  ResourceID id,
+                                                    std::string_view path,
+                                                    sf::IntRect inputRect,
+                                                    sf::Vector2u outputSize);
+        */
+        std::unordered_map<ResourceID, ResourceHandle> registry;
+        std::unordered_map<ResourceID, nlohmann::json> jsonDocs;
         std::unordered_map<ResourceID, sf::Font> fonts;
         std::unordered_map<ResourceID, sf::Texture> textures;
+
+        //ApplicationConfig appConfig;
+        //UIConfig globalUIConfig;
+        //SceneConfig currentSceneConfig;
     };
 
 }
 
-#endif //MANAGER_HPP
+#endif //RESOURCE_MANAGER_HPP

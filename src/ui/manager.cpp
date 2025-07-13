@@ -22,7 +22,7 @@ farcical::ui::Manager::Manager(EventSystem& eventSystem): KeyboardInterface(),
                                                           config{},
                                                           buttonTextures{nullptr},
                                                           buttonFont{nullptr},
-                                                          rootWidget{nullptr},
+                                                          currentScene{nullptr},
                                                           focusedWidget{nullptr},
                                                           buttonTextProperties{
                                                             .contents = "",
@@ -162,27 +162,26 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
             std::string centerTextureID{currentTexture->id + "Center"};
             std::string rightTextureID{currentTexture->id + "Right"};
             std::vector<ResourceID> textureIDs{
-              static_cast<ResourceID>(leftTextureID),
-              static_cast<ResourceID>(centerTextureID),
-              static_cast<ResourceID>(rightTextureID)
+              leftTextureID,
+              centerTextureID,
+              rightTextureID
             };
             auto spliceResult{resourceManager.SpliceTextures(textureIDs, currentTexture->id)};
             if(spliceResult.has_value()) {
               return spliceResult;
-            } else {
-              if(currentTexture->id == "buttonNormalTexture") {
-                buttonTextures[static_cast<int>(Button::Status::Normal)] = resourceManager.GetResource(
-                  currentTexture->id);
-              } // if(buttonNormalTexture)
-              else if(currentTexture->id == "buttonHighlightedTexture") {
-                buttonTextures[static_cast<int>(Button::Status::Highlighted)] = resourceManager.GetResource(
-                  currentTexture->id);
-              } // else if(buttonHighlightedTexture)
-              else if(currentTexture->id == "buttonPressedTexture") {
-                buttonTextures[static_cast<int>(Button::Status::Pressed)] = resourceManager.GetResource(
-                  currentTexture->id);
-              } // else if(buttonPressedTexture)
             }
+            if(currentTexture->id == "buttonNormalTexture") {
+              buttonTextures[static_cast<int>(Button::Status::Normal)] = resourceManager.GetResource(
+                currentTexture->id);
+            } // if(buttonNormalTexture)
+            else if(currentTexture->id == "buttonHighlightedTexture") {
+              buttonTextures[static_cast<int>(Button::Status::Highlighted)] = resourceManager.GetResource(
+                currentTexture->id);
+            } // else if(buttonHighlightedTexture)
+            else if(currentTexture->id == "buttonPressedTexture") {
+              buttonTextures[static_cast<int>(Button::Status::Pressed)] = resourceManager.GetResource(
+                currentTexture->id);
+            } // else if(buttonPressedTexture)
           } // for each textureDescription in Button
         } // if segmentedTextures
       } // for each key-value pair in Button
@@ -191,6 +190,17 @@ std::optional<farcical::Error> farcical::ui::Manager::Init(farcical::ResourceMan
   return std::nullopt;
 }
 
+void farcical::ui::Manager::SetCurrentScene(std::unique_ptr<Scene> scene) {
+  currentScene = std::move(scene);
+}
+
+farcical::ui::Scene* farcical::ui::Manager::GetCurrentScene() const {
+  return currentScene.get();
+}
+
+
+
+/*
 farcical::ui::Scene* farcical::ui::Manager::CreateScene(std::string_view name) {
   if(rootWidget) {
     rootWidget.reset(nullptr);
@@ -198,9 +208,11 @@ farcical::ui::Scene* farcical::ui::Manager::CreateScene(std::string_view name) {
   rootWidget = std::make_unique<Scene>(name, nullptr);
   return dynamic_cast<Scene*>(rootWidget.get());
 }
+*/
 
-
-farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, ResourceManager& resourceManager, Widget* parent) {
+/*
+farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, ResourceManager& resourceManager,
+                                                      Widget* parent) {
   Menu* menu{nullptr};
   if(!parent) {
     if(rootWidget) {
@@ -242,7 +254,9 @@ farcical::ui::Menu* farcical::ui::Manager::CreateMenu(std::string_view name, Res
   } // if(menu)
   return menu;
 }
+*/
 
+/*
 farcical::ui::Decoration* farcical::ui::Manager::CreateDecoration(std::string_view name, std::string_view textureID,
                                                                   ResourceManager& resourceManager, Widget* parent) {
   Decoration* decoration{nullptr};
@@ -288,26 +302,27 @@ farcical::ui::Label* farcical::ui::Manager::CreateFloatingText(
   }
   return label;
 }
-
-
+*/
+/*
 farcical::ui::Widget* farcical::ui::Manager::GetRootWidget() const {
   return rootWidget.get();
 }
-
+*/
 farcical::ui::Widget* farcical::ui::Manager::GetFocusedWidget() const {
   return focusedWidget;
 }
 
 farcical::ui::Widget* farcical::ui::Manager::FindWidgetByName(std::string_view name, Widget* parent) const {
   if(!parent) {
-    if(!rootWidget) {
+    if(!currentScene) {
       return nullptr;
     }
-    parent = rootWidget.get();
+    parent = currentScene.get();
   }
   if(parent->GetName() == name) {
     return parent;
-  } else if(parent->IsContainer()) {
+  }
+  if(parent->IsContainer()) {
     Container* container{dynamic_cast<Container*>(parent)};
     Widget* widget{nullptr};
     for(int n = 0; n < container->GetNumChildren(); ++n) {
@@ -323,14 +338,15 @@ farcical::ui::Widget* farcical::ui::Manager::FindWidgetByName(std::string_view n
 
 farcical::ui::Widget* farcical::ui::Manager::FindWidgetByType(Widget::Type type, Widget* parent) const {
   if(!parent) {
-    if(!rootWidget) {
+    if(!currentScene) {
       return nullptr;
     }
-    parent = rootWidget.get();
+    parent = currentScene.get();
   }
   if(parent->GetType() == type) {
     return parent;
-  } else if(parent->IsContainer()) {
+  }
+  if(parent->IsContainer()) {
     Container* container{dynamic_cast<Container*>(parent)};
     Widget* widget{nullptr};
     for(int n = 0; n < container->GetNumChildren(); ++n) {
@@ -359,6 +375,41 @@ void farcical::ui::Manager::SetFocusedWidget(Widget* widget) {
   }
 }
 
+void farcical::ui::Manager::AddLayout(std::string_view id, const Layout& layout) {
+  layouts.insert(std::make_pair(std::string{id}, layout));
+
+}
+
+void farcical::ui::Manager::RemoveLayout(std::string_view id) {
+  const auto& layoutIter{layouts.find(std::string{id})};
+  if(layoutIter != layouts.end()) {
+    layouts.erase(layoutIter);
+  }
+}
+
+const farcical::ui::Layout farcical::ui::Manager::GetLayout(std::string_view id) const {
+  const auto& layoutIter{layouts.find(std::string{id})};
+  if(layoutIter != layouts.end()) {
+    return layoutIter->second;
+  }
+  return Layout{.layer = Layout::Layer::Background, .padding = {0.0f, 0.0f, 0.0f ,0.0f}};
+}
+
+void farcical::ui::Manager::AddToLayer(Widget* widget, Layout::Layer layerID) {
+  layers.at(static_cast<int>(layerID)).push_back(widget);
+}
+
+void farcical::ui::Manager::RemoveFromLayer(Widget* widget, Layout::Layer layerID) {
+  auto& layer{layers.at(static_cast<int>(layerID))};
+  for(auto layerIter = layer.begin(); layerIter != layer.end(); ++layerIter) {
+    if((*layerIter)->GetName() == widget->GetName()) {
+      layer.erase(layerIter);
+      return;
+    }
+  }
+
+}
+
 const farcical::ui::TextProperties& farcical::ui::Manager::GetMenuTitleProperties() const {
   return menuTitleProperties;
 }
@@ -368,7 +419,7 @@ const farcical::ui::TextProperties& farcical::ui::Manager::GetButtonTextProperti
 }
 
 void farcical::ui::Manager::Update(sf::RenderWindow& window) const {
-  rootWidget->Draw(window);
+  currentScene->Draw(window);
 }
 
 void farcical::ui::Manager::ReceiveKeyboardInput(sf::Keyboard::Key input) {

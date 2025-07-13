@@ -1,16 +1,16 @@
 //
 // Created by dgmuller on 6/9/25.
 //
-#include "../include/input.hpp"
+#include "../../include/engine/input.hpp"
 
-farcical::InputSystem::InputSystem(sf::RenderWindow& window, ui::Manager& manager): System(System::ID::InputSystem),
-    window{window}, uiManager{manager} {
+farcical::engine::InputSystem::InputSystem(sf::RenderWindow& window): System(System::ID::InputSystem),
+                                                              window{window} {
 }
 
-void farcical::InputSystem::Init() {
+void farcical::engine::InputSystem::Init() {
 }
 
-void farcical::InputSystem::Update() {
+void farcical::engine::InputSystem::Update() {
     if(window.isOpen()) {
         while(const std::optional event = window.pollEvent()) {
             if(event->is<sf::Event::Closed>()) {
@@ -45,18 +45,18 @@ void farcical::InputSystem::Update() {
     } // if(window isOpen)
 }
 
-void farcical::InputSystem::Stop() {
+void farcical::engine::InputSystem::Stop() {
 }
 
-void farcical::InputSystem::AddMouseListener(MouseInterface* listener) {
+void farcical::engine::InputSystem::AddMouseListener(MouseInterface* listener) {
     mouseListeners.push_back(listener);
 }
 
-void farcical::InputSystem::AddKeyListener(KeyboardInterface* listener) {
+void farcical::engine::InputSystem::AddKeyListener(KeyboardInterface* listener) {
     keyListeners.push_back(listener);
 }
 
-void farcical::InputSystem::RemoveMouseListener(MouseInterface* listener) {
+void farcical::engine::InputSystem::RemoveMouseListener(MouseInterface* listener) {
     for(auto listenIter = mouseListeners.begin(); listenIter != mouseListeners.end(); ++listenIter) {
         if(*listenIter == listener) {
             mouseListeners.erase(listenIter);
@@ -65,7 +65,7 @@ void farcical::InputSystem::RemoveMouseListener(MouseInterface* listener) {
     }
 }
 
-void farcical::InputSystem::RemoveKeyListener(KeyboardInterface* listener) {
+void farcical::engine::InputSystem::RemoveKeyListener(KeyboardInterface* listener) {
     for(auto listenIter = keyListeners.begin(); listenIter != keyListeners.end(); ++listenIter) {
         if(*listenIter == listener) {
             keyListeners.erase(listenIter);
