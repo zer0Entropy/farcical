@@ -62,7 +62,6 @@ namespace farcical::game {
         engine::Engine& engine;
         ui::SceneHierarchy sceneHierarchy;
         std::unordered_map<engine::EntityID, ResourceParameters> sceneResources;
-
     };
 }
 

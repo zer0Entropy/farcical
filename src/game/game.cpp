@@ -61,52 +61,7 @@ std::optional<farcical::engine::Error> farcical::game::Game::Init(const Resource
 std::optional<farcical::engine::Error> farcical::game::Game::Update() {
     return std::nullopt;
 }
-/*
-void farcical::game::Game::TransitionToState(State::ID stateID) {
-    State::ID previousStateID{currentState.id};
-    currentState.id = stateID;
-    switch(stateID) {
-        case State::ID::MainMenu: {
-            const ResourceHandle* documentHandle{
-                engine.GetResourceManager().GetResourceHandle(ResourceID{mainMenuSceneID})
-            };
-            if(!documentHandle) {
-                const auto& createDocumentHandle{
-                    engine.GetResourceManager().CreateResourceHandle(ResourceID{mainMenuSceneID},
-                                                                     ResourceHandle::Type::JSONDocument, mainMenuPath)
-                };
-                if(createDocumentHandle.has_value()) {
-                    documentHandle = createDocumentHandle.value();
-                } // if createDocumentHandle == success
-            } // if !documentHandle
-            const auto& requestJSONDoc{engine.GetResourceManager().GetJSONDoc(documentHandle->id)};
-            if(requestJSONDoc.has_value()) {
-                const auto& sceneJSON{requestJSONDoc.value()};
-                const auto& loadSceneConfig{ui::LoadSceneConfig(*sceneJSON)};
-                if(loadSceneConfig.has_value()) {
-                    const auto& sceneConfig{loadSceneConfig.value()};
-                    auto createScene{CreateScene(sceneConfig, nullptr)};
-                    sceneHierarchy.root = std::move(createScene.value());
-                    sceneHierarchy.currentScene = sceneHierarchy.root.get();
-                } // if loadScene == success
-            } // if requestJSONDoc == success
-        }
-        break;
-        case State::ID::StartNewGame: {
-        }
-        break;
-        case State::ID::LoadSavedGame: {
-        }
-        break;
-        case State::ID::OptionsMenu: {
-        }
-        break;
-        case State::ID::Gameplay: {
-            //ui::Scene* scene{LoadScene(Game::gameplayPath)};
-        } break;
-    }
-}
-*/
+
 std::unique_ptr<farcical::game::World> farcical::game::Game::CreateWorld() {
     return std::make_unique<World>();
 }

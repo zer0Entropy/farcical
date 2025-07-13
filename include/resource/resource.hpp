@@ -14,7 +14,7 @@ namespace farcical {
     using ResourceID = std::string;
 
     using ResourceParameters = std::pair<ResourceID, std::string>;
-    using ResourceList = std::vector<std::pair<engine::EntityID,ResourceParameters>>;
+    using ResourceList = std::vector<std::pair<engine::EntityID, ResourceParameters> >;
 
     struct ResourceHandle {
         enum class Status {
