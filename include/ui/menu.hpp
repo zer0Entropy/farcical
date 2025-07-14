@@ -20,10 +20,10 @@ namespace farcical::ui {
     public:
         class Menu;
 
-        explicit MenuItem(  engine::EntityID id,
-                            engine::Event::Type activationEventType,
-                            const std::vector<std::any>& activationEventArgs,
-                            Widget* parent = nullptr);
+        explicit MenuItem(engine::EntityID id,
+                          engine::Event::Type activationEventType,
+                          const std::vector<std::any>& activationEventArgs,
+                          Widget* parent = nullptr);
 
         ~MenuItem() override = default;
 
@@ -118,7 +118,7 @@ namespace farcical::ui {
             std::vector<engine::EntityID> itemIDs,
             std::vector<std::string> itemContents,
             std::vector<engine::Event::Type> itemEventTypes,
-            std::vector<std::vector<std::any>> itemEventArgs,
+            std::vector<std::vector<std::any> > itemEventArgs,
             Widget* parent) {
             if(!parent || !parent->IsContainer()) {
                 const std::string failMsg{"Invalid configuration: Label with missing or invalid parent."};

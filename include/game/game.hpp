@@ -12,22 +12,24 @@
 #include "../ui/config.hpp"
 
 namespace farcical::game {
-
     class Game;
 
-    class GameController final: public engine::EventHandler {
+    class GameController final : public engine::EventHandler {
     public:
         GameController() = delete;
+
         explicit GameController(Game& game);
+
         ~GameController() override = default;
+
         void HandleEvent(const engine::Event& event) override;
+
     private:
         Game& game;
     };
 
     class Game {
     public:
-
         enum class Status {
             Uninitialized = -2,
             Error = -1,

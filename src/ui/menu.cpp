@@ -13,12 +13,11 @@ farcical::ui::MenuItem::MenuItem(
   engine::EntityID id,
   engine::Event::Type activationEventType,
   const std::vector<std::any>& activationEventArgs,
-  Widget* parent):
-  Container(id, Type::MenuItem, parent, true),
-  button{nullptr},
-  label{nullptr},
-  activationEventType{activationEventType},
-  activationEventArgs{activationEventArgs} {
+  Widget* parent): Container(id, Type::MenuItem, parent, true),
+                   button{nullptr},
+                   label{nullptr},
+                   activationEventType{activationEventType},
+                   activationEventArgs{activationEventArgs} {
 }
 
 farcical::ui::Button* farcical::ui::MenuItem::CreateButton(engine::EntityID id, std::vector<sf::Texture*> textures) {
@@ -252,7 +251,7 @@ void farcical::ui::MenuController::ReceiveMouseButtonRelease(sf::Mouse::Button b
     if(menuItem->GetButton()->GetStatus() == Button::Status::Pressed) {
       menuItem->DoAction(Action{Action::Type::SetPressedFalse});
       if(menuItem == menuItemUnderCursor) {
-        engine::Event event {
+        engine::Event event{
           menuItem->GetActivationEventType(),
           menuItem->GetActivationEventArgs()
         };
@@ -294,8 +293,8 @@ void farcical::ui::MenuController::ReceiveKeyboardInput(sf::Keyboard::Key input)
   else if(input == sf::Keyboard::Key::Enter) {
     if(previouslySelectedItem) {
       eventSystem.Enqueue(engine::Event{
-          previouslySelectedItem->GetActivationEventType(),
-          previouslySelectedItem->GetActivationEventArgs()
+        previouslySelectedItem->GetActivationEventType(),
+        previouslySelectedItem->GetActivationEventArgs()
       });
     } // if previouslySelectedItem
   } // else if input == Enter
