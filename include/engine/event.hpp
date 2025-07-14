@@ -18,7 +18,6 @@ namespace farcical::game {
 }
 
 namespace farcical::engine {
-
     struct Event {
         enum class Type {
             CreateScene,
@@ -30,16 +29,20 @@ namespace farcical::engine {
         std::vector<std::any> args;
 
         Event() = delete;
-        explicit Event(Type type, const std::vector<std::any>& args = {}):
-            type{type},
-            args{args} {}
+
+        explicit Event(Type type, const std::vector<std::any>& args = {}): type{type},
+                                                                           args{args} {
+        }
+
         virtual ~Event() = default;
     };
 
     class EventHandler {
     public:
         EventHandler() = default;
+
         virtual ~EventHandler() = default;
+
         virtual void HandleEvent(const Event& event) = 0;
     };
 
@@ -51,9 +54,11 @@ namespace farcical::engine {
         EventSystem(EventSystem&) = delete;
         EventSystem(const EventSystem&) = delete;
         explicit EventSystem(game::Game& game, Engine& engine);
+
         ~EventSystem() override = default;
 
         void RegisterHandler(Event::Type type, EventHandler* handler);
+
         void UnregisterHandler(Event::Type type, EventHandler* handler);
 
         void Enqueue(const Event& event);

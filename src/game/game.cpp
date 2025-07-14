@@ -8,9 +8,8 @@
 #include "../../include/ui/menu.hpp"
 #include "../../include/ui/decoration.hpp"
 
-farcical::game::GameController::GameController(Game& game):
-    EventHandler(),
-    game{game} {
+farcical::game::GameController::GameController(Game& game): EventHandler(),
+                                                            game{game} {
 }
 
 void farcical::game::GameController::HandleEvent(const engine::Event& event) {
@@ -18,17 +17,14 @@ void farcical::game::GameController::HandleEvent(const engine::Event& event) {
         game.Stop();
     } // if event.type == QuitGame
     else if(event.type == engine::Event::Type::CreateScene) {
-
     } // else if event.type == CreateScene
     else if(event.type == engine::Event::Type::DestroyScene) {
-
     } // else if event.type == DestroyScene
 }
 
-farcical::game::Game::Game(engine::Engine& engine):
-    status{Status::Uninitialized},
-    controller{*this},
-    engine{engine} {
+farcical::game::Game::Game(engine::Engine& engine): status{Status::Uninitialized},
+                                                    controller{*this},
+                                                    engine{engine} {
 }
 
 farcical::game::Game::Status farcical::game::Game::GetStatus() const {
