@@ -131,16 +131,20 @@ std::expected<farcical::ui::MenuItemConfig, farcical::engine::Error> farcical::u
     } // if onSelection not found
     const std::string onSelectString{findOnSelection.value().get<std::string>()};
     if(onSelectString == "TransitionNewGame") {
-        config.onSelect = engine::Event::Type::TransitionNewGame;
+        config.activationEventType = engine::Event::Type::CreateScene;
+        config.activationEventArgs = {"newGameScene"};
     } // if TransitionNewGame
     else if(onSelectString == "TransitionLoadGame") {
-        config.onSelect = engine::Event::Type::TransitionLoadGame;
+        config.activationEventType = engine::Event::Type::CreateScene;
+        config.activationEventArgs = {"loadGameScene"};
     } // else if TransitionLoadGame
     else if(onSelectString == "TransitionOptions") {
-        config.onSelect = engine::Event::Type::TransitionOptions;
+        config.activationEventType = engine::Event::Type::CreateScene;
+        config.activationEventArgs = {"optionsScene"};
     } // else if TransitionOptions
     else if(onSelectString == "QuitGame") {
-        config.onSelect = engine::Event::Type::QuitGame;
+        config.activationEventType = engine::Event::Type::QuitGame;
+        config.activationEventArgs = {""};
     } // else if QuitGame
 
     return config;

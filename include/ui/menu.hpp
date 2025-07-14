@@ -20,7 +20,10 @@ namespace farcical::ui {
     public:
         class Menu;
 
-        explicit MenuItem(engine::EntityID id, engine::Event::Type onSelection, Widget* parent = nullptr);
+        explicit MenuItem(  engine::EntityID id,
+                            engine::Event::Type activationEventType,
+                            const std::vector<std::any>& activationEventArgs,
+                            Widget* parent = nullptr);
 
         ~MenuItem() override = default;
 
@@ -29,7 +32,9 @@ namespace farcical::ui {
         [[nodiscard]] Label* CreateLabel(engine::EntityID id, std::string_view contents,
                                          const FontProperties& fontProperties, sf::Font& font);
 
-        [[nodiscard]] engine::Event::Type OnSelection() const;
+        [[nodiscard]] engine::Event::Type GetActivationEventType() const;
+
+        [[nodiscard]] const std::vector<std::any>& GetActivationEventArgs() const;
 
         [[nodiscard]] Button* GetButton() const;
 
@@ -43,7 +48,8 @@ namespace farcical::ui {
             sf::Font* font,
             const FontProperties& fontProperties,
             const std::vector<sf::Texture*>& textures,
-            engine::Event::Type onSelection,
+            engine::Event::Type activationEventType,
+            const std::vector<std::any>& activationEventArgs,
             Widget* parent) {
             if(!parent || !parent->IsContainer()) {
                 const std::string failMsg{
@@ -57,7 +63,7 @@ namespace farcical::ui {
             }
             Container* container{dynamic_cast<Container*>(parent)};
             const unsigned int childIndex{container->GetNumChildren()};
-            container->AddChild(std::make_unique<MenuItem>(id, onSelection, parent));
+            container->AddChild(std::make_unique<MenuItem>(id, activationEventType, activationEventArgs, parent));
             MenuItem* item = dynamic_cast<MenuItem*>(container->GetChild(childIndex));
             const engine::EntityID buttonID{std::string{id} + "Button"};
             const engine::EntityID labelID{std::string{id} + "Label"};
@@ -69,7 +75,8 @@ namespace farcical::ui {
     private:
         Button* button;
         Label* label;
-        engine::Event::Type triggeredOnSelection;
+        engine::Event::Type activationEventType;
+        std::vector<std::any> activationEventArgs;
     };
 
     class Menu final : public Container {
@@ -110,7 +117,8 @@ namespace farcical::ui {
             std::vector<sf::Texture*> buttonTextures,
             std::vector<engine::EntityID> itemIDs,
             std::vector<std::string> itemContents,
-            std::vector<engine::Event::Type> itemEvents,
+            std::vector<engine::Event::Type> itemEventTypes,
+            std::vector<std::vector<std::any>> itemEventArgs,
             Widget* parent) {
             if(!parent || !parent->IsContainer()) {
                 const std::string failMsg{"Invalid configuration: Label with missing or invalid parent."};
@@ -127,9 +135,18 @@ namespace farcical::ui {
             for(unsigned int index = 0; index < itemIDs.size(); ++index) {
                 std::string itemID{itemIDs.at(index)};
                 std::string contents{itemContents.at(index)};
-                engine::Event::Type onSelection{itemEvents.at(index)};
+                engine::Event::Type activationEventType{itemEventTypes.at(index)};
+                const std::vector<std::any>& activationEventArgs = itemEventArgs.at(index);
                 const auto& createMenuItem{
-                    MenuItem::Create(itemID, contents, labelFont, fontProperties, buttonTextures, onSelection, menu)
+                    MenuItem::Create(
+                        itemID,
+                        contents,
+                        labelFont,
+                        fontProperties,
+                        buttonTextures,
+                        activationEventType,
+                        activationEventArgs,
+                        menu)
                 };
                 if(createMenuItem.has_value()) {
                     MenuItem* menuItem{createMenuItem.value()};

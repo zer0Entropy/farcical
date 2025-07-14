@@ -53,10 +53,11 @@ namespace farcical::ui {
         engine::EntityID id;
         ButtonConfig buttonConfig;
         LabelConfig labelConfig;
-        engine::Event::Type onSelect;
+        engine::Event::Type activationEventType;
+        std::vector<std::any> activationEventArgs;
 
         MenuItemConfig(): id{""},
-                          onSelect{engine::Event::Type::QuitGame} {
+                          activationEventType{engine::Event::Type::QuitGame} {
         }
 
         ~MenuItemConfig() = default;

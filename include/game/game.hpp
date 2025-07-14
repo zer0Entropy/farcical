@@ -9,25 +9,46 @@
 #include "../ui/scene.hpp"
 #include "world.hpp"
 #include "player.hpp"
-#include "../ui/label.hpp"
 #include "../ui/config.hpp"
 
 namespace farcical::game {
+
+    class Game;
+
+    class GameController final: public engine::EventHandler {
+    public:
+        GameController() = delete;
+        explicit GameController(Game& game);
+        ~GameController() override = default;
+        void HandleEvent(const engine::Event& event) override;
+    private:
+        Game& game;
+    };
+
     class Game {
     public:
+
+        enum class Status {
+            Uninitialized = -2,
+            Error = -1,
+            StoppedSuccessfully = 0,
+            IsRunning = 1
+        };
 
         Game() = delete;
         Game(Game const&) = delete;
         Game(Game &&) = delete;
         Game& operator=(Game const&) = delete;
-
         explicit Game(engine::Engine& engine);
-
         ~Game() = default;
+
+        Status GetStatus() const;
 
         std::optional<engine::Error> Init(const ResourceList& sceneResourceList);
 
         std::optional<engine::Error> Update();
+
+        std::optional<engine::Error> Stop();
 
         std::unique_ptr<World> CreateWorld();
 
@@ -59,7 +80,9 @@ namespace farcical::game {
                                                             const std::vector<SegmentedTextureProperties>&
                                                             texturePropertiesList);
 
+        Status status;
         engine::Engine& engine;
+        GameController controller;
         ui::SceneHierarchy sceneHierarchy;
         std::unordered_map<engine::EntityID, ResourceParameters> sceneResources;
     };

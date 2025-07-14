@@ -7,12 +7,18 @@
 #include "../../include/ui/button.hpp"
 #include "../../include/ui/label.hpp"
 #include "../../include/engine/render.hpp"
+#include "../../include/game/game.hpp"
 
-farcical::ui::MenuItem::MenuItem(engine::EntityID id, engine::Event::Type onSelection,
-                                 Widget* parent): Container(id, Type::MenuItem, parent, true),
-                                                  button{nullptr},
-                                                  label{nullptr},
-                                                  triggeredOnSelection{onSelection} {
+farcical::ui::MenuItem::MenuItem(
+  engine::EntityID id,
+  engine::Event::Type activationEventType,
+  const std::vector<std::any>& activationEventArgs,
+  Widget* parent):
+  Container(id, Type::MenuItem, parent, true),
+  button{nullptr},
+  label{nullptr},
+  activationEventType{activationEventType},
+  activationEventArgs{activationEventArgs} {
 }
 
 farcical::ui::Button* farcical::ui::MenuItem::CreateButton(engine::EntityID id, std::vector<sf::Texture*> textures) {
@@ -37,8 +43,12 @@ farcical::ui::Label* farcical::ui::MenuItem::CreateLabel(
   return label;
 }
 
-farcical::engine::Event::Type farcical::ui::MenuItem::OnSelection() const {
-    return triggeredOnSelection;
+farcical::engine::Event::Type farcical::ui::MenuItem::GetActivationEventType() const {
+  return activationEventType;
+}
+
+const std::vector<std::any>& farcical::ui::MenuItem::GetActivationEventArgs() const {
+  return activationEventArgs;
 }
 
 farcical::ui::Button* farcical::ui::MenuItem::GetButton() const {
@@ -236,17 +246,21 @@ void farcical::ui::MenuController::ReceiveMouseButtonPress(sf::Mouse::Button but
 
 void farcical::ui::MenuController::ReceiveMouseButtonRelease(sf::Mouse::Button button, sf::Vector2i position) {
   MenuItem* menuItemUnderCursor{menu->GetMenuItemUnderCursor(position)};
-  int selectedIndex{menu->GetSelectedIndex()};
 
   for(int index = 0; index < menu->GetNumMenuItems(); ++index) {
     MenuItem* menuItem{menu->GetMenuItemByIndex(index)};
     if(menuItem->GetButton()->GetStatus() == Button::Status::Pressed) {
       menuItem->DoAction(Action{Action::Type::SetPressedFalse});
       if(menuItem == menuItemUnderCursor) {
-        eventSystem.Enqueue(engine::Event{menuItem->OnSelection()});
+        engine::Event event {
+          menuItem->GetActivationEventType(),
+          menuItem->GetActivationEventArgs()
+        };
+        eventSystem.Enqueue(event);
       } // if this MenuItem is under the cursor, enqueue its OnSelection event
     } // if Button == Pressed
   } // for each MenuItem in Menu
+
   menu->SetSelectedIndex(-1);
 }
 
@@ -279,8 +293,10 @@ void farcical::ui::MenuController::ReceiveKeyboardInput(sf::Keyboard::Key input)
 
   else if(input == sf::Keyboard::Key::Enter) {
     if(previouslySelectedItem) {
-      const engine::Event::Type eventType{previouslySelectedItem->OnSelection()};
-      eventSystem.Enqueue(engine::Event{eventType});
+      eventSystem.Enqueue(engine::Event{
+          previouslySelectedItem->GetActivationEventType(),
+          previouslySelectedItem->GetActivationEventArgs()
+      });
     } // if previouslySelectedItem
   } // else if input == Enter
 }

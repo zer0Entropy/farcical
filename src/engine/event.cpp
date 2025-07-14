@@ -9,6 +9,17 @@ farcical::engine::EventSystem::EventSystem(game::Game& game, Engine& engine):
     game{game}, engine{engine} {
 }
 
+void farcical::engine::EventSystem::RegisterHandler(Event::Type type, EventHandler* handler) {
+    handlers.insert(std::make_pair(type, handler));
+}
+
+void farcical::engine::EventSystem::UnregisterHandler(Event::Type type, EventHandler* handler) {
+    const auto& findHandler{handlers.find(type)};
+    if(findHandler != handlers.end()) {
+        handlers.erase(findHandler);
+    } // if handler found
+}
+
 void farcical::engine::EventSystem::Enqueue(const Event& event) {
     eventQueue.push_back(event);
 }
@@ -17,6 +28,18 @@ void farcical::engine::EventSystem::Init() {
 }
 
 void farcical::engine::EventSystem::Update() {
+    // Iterate through a copy of the eventQueue, to prevent changes to the queue from messing up our iteration
+    const auto queueCopy{eventQueue};
+    eventQueue.clear();
+
+    for(const auto& event: queueCopy) {
+        const auto& findHandler{handlers.find(event.type)};
+        if(findHandler != handlers.end()) {
+            findHandler->second->HandleEvent(event);
+        } // if handler found
+    } // for each Event in queueCopy
+
+    /*
     // Iterate through a copy of the eventQueue, to prevent changes to the queue from messing up our iteration
     const auto queueCopy{eventQueue};
     eventQueue.clear();
@@ -44,6 +67,7 @@ void farcical::engine::EventSystem::Update() {
             break;
         }
     }
+    */
 }
 
 void farcical::engine::EventSystem::Stop() {

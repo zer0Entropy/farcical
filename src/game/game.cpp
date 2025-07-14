@@ -8,11 +8,43 @@
 #include "../../include/ui/menu.hpp"
 #include "../../include/ui/decoration.hpp"
 
+farcical::game::GameController::GameController(Game& game):
+    EventHandler(),
+    game{game} {
+}
 
-farcical::game::Game::Game(engine::Engine& engine): engine{engine} {
+void farcical::game::GameController::HandleEvent(const engine::Event& event) {
+    if(event.type == engine::Event::Type::QuitGame) {
+        game.Stop();
+    } // if event.type == QuitGame
+    else if(event.type == engine::Event::Type::CreateScene) {
+
+    } // else if event.type == CreateScene
+    else if(event.type == engine::Event::Type::DestroyScene) {
+
+    } // else if event.type == DestroyScene
+}
+
+farcical::game::Game::Game(engine::Engine& engine):
+    status{Status::Uninitialized},
+    controller{*this},
+    engine{engine} {
+}
+
+farcical::game::Game::Status farcical::game::Game::GetStatus() const {
+    return status;
 }
 
 std::optional<farcical::engine::Error> farcical::game::Game::Init(const ResourceList& sceneResourceList) {
+    if(status != Status::Uninitialized) {
+        return std::nullopt;
+    }
+
+    // Subscribe GameController to QuitGame, CreateScene, DestroyScene Events
+    engine.GetEventSystem().RegisterHandler(engine::Event::Type::QuitGame, &controller);
+    engine.GetEventSystem().RegisterHandler(engine::Event::Type::CreateScene, &controller);
+    engine.GetEventSystem().RegisterHandler(engine::Event::Type::DestroyScene, &controller);
+
     // Copy all SceneResources on the list to a local cache
     for(const auto& resource: sceneResourceList) {
         sceneResources.insert(resource);
@@ -52,6 +84,7 @@ std::optional<farcical::engine::Error> farcical::game::Game::Init(const Resource
             auto createScene{CreateScene(sceneConfig, nullptr)};
             sceneHierarchy.root = std::move(createScene.value());
             sceneHierarchy.currentScene = sceneHierarchy.root.get();
+            status = Status::IsRunning;
         } // if loadScene == success
     } // if requestJSONDoc == success
 
@@ -59,6 +92,13 @@ std::optional<farcical::engine::Error> farcical::game::Game::Init(const Resource
 }
 
 std::optional<farcical::engine::Error> farcical::game::Game::Update() {
+    return std::nullopt;
+}
+
+std::optional<farcical::engine::Error> farcical::game::Game::Stop() {
+    if(status == Status::IsRunning) {
+        status = Status::StoppedSuccessfully;
+    }
     return std::nullopt;
 }
 
@@ -264,11 +304,13 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateMenu(
         // Create 3 lists: names, contents, and onSelection Events for all MenuItems
         std::vector<std::string> nameList;
         std::vector<std::string> contentsList;
-        std::vector<engine::Event::Type> eventList;
+        std::vector<engine::Event::Type> eventTypeList;
+        std::vector<std::vector<std::any>> eventArgsList;
         for(const auto& itemConfig: menuConfig.menuItemConfigs) {
             nameList.push_back(itemConfig.id);
             contentsList.push_back(itemConfig.labelConfig.contents);
-            eventList.push_back(itemConfig.onSelect);
+            eventTypeList.push_back(itemConfig.activationEventType);
+            eventArgsList.push_back(itemConfig.activationEventArgs);
         } // for each itemConfig in layerConfig.menu.menuItemConfigs
 
         // Create the Menu using the above lists
@@ -280,7 +322,8 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateMenu(
                 buttonTextures,
                 nameList,
                 contentsList,
-                eventList,
+                eventTypeList,
+                eventArgsList,
                 &scene)
         };
         if(createMenu.has_value()) {

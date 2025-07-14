@@ -113,6 +113,17 @@ std::optional<farcical::engine::Error> farcical::engine::Engine::Init(game::Game
 }
 
 void farcical::engine::Engine::Update() {
+  game::Game::Status gameStatus{game->GetStatus()};
+  if(gameStatus == game::Game::Status::StoppedSuccessfully) {
+    window->close();
+    status = Status::StoppedSuccessfully;
+    return;
+  } // Game StoppedSuccessfully
+  if(gameStatus == game::Game::Status::Error || gameStatus == game::Game::Status::Uninitialized) {
+    window->close();
+    status = Status::Error;
+    return;
+  } // Game Error || Uninitialized
   while(const std::optional event = window->pollEvent()) {
     if(event->is<sf::Event::Closed>()) {
       window->close();

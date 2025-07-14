@@ -5,7 +5,12 @@
 #ifndef EVENT_HPP
 #define EVENT_HPP
 
+#include <any>
 #include <deque>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
 #include "system.hpp"
 
 namespace farcical::game {
@@ -13,16 +18,29 @@ namespace farcical::game {
 }
 
 namespace farcical::engine {
+
     struct Event {
         enum class Type {
-            QuitGame,
-            TransitionMainMenu,
-            TransitionNewGame,
-            TransitionLoadGame,
-            TransitionOptions
+            CreateScene,
+            DestroyScene,
+            QuitGame
         };
 
         Type type;
+        std::vector<std::any> args;
+
+        Event() = delete;
+        explicit Event(Type type, const std::vector<std::any>& args = {}):
+            type{type},
+            args{args} {}
+        virtual ~Event() = default;
+    };
+
+    class EventHandler {
+    public:
+        EventHandler() = default;
+        virtual ~EventHandler() = default;
+        virtual void HandleEvent(const Event& event) = 0;
     };
 
     class Engine;
@@ -35,6 +53,9 @@ namespace farcical::engine {
         explicit EventSystem(game::Game& game, Engine& engine);
         ~EventSystem() override = default;
 
+        void RegisterHandler(Event::Type type, EventHandler* handler);
+        void UnregisterHandler(Event::Type type, EventHandler* handler);
+
         void Enqueue(const Event& event);
 
         void Init() override;
@@ -46,6 +67,7 @@ namespace farcical::engine {
     private:
         game::Game& game;
         Engine& engine;
+        std::unordered_map<Event::Type, EventHandler*> handlers;
         std::deque<Event> eventQueue;
     };
 }
