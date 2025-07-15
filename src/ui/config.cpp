@@ -112,7 +112,8 @@ std::expected<farcical::ui::MenuItemConfig, farcical::engine::Error> farcical::u
     MenuItemConfig config;
     const auto& findID{json.find("id")};
     const auto& findLabel{json.find("label")};
-    const auto& findOnSelection{json.find("onSelection")};
+    const auto& findEventType{json.find("eventType")};
+    const auto& findEventArgs{json.find("eventArgs")};
     if(findID == json.end()) {
         const std::string failMsg{"Invalid configuration: WidgetID could not be found."};
         return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
@@ -125,27 +126,36 @@ std::expected<farcical::ui::MenuItemConfig, farcical::engine::Error> farcical::u
     } // if label not found
     config.labelConfig.contents = findLabel.value().get<std::string>();
 
-    if(findOnSelection == json.end()) {
-        const std::string failMsg{"Invalid configuration: MenuItem onSelection could not be found."};
+    if(findEventType == json.end()) {
+        const std::string failMsg{"Invalid configuration: MenuItem EventType could not be found."};
         return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
-    } // if onSelection not found
-    const std::string onSelectString{findOnSelection.value().get<std::string>()};
-    if(onSelectString == "TransitionNewGame") {
+    } // if eventType not found
+    if(findEventArgs == json.end()) {
+        const std::string failMsg{"Invalid configuration: MenuItem EventType could not be found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if eventArgs not found
+    const std::string eventTypeString{findEventType.value().get<std::string>()};
+    if(eventTypeString == "CreateScene") {
         config.activationEventType = engine::Event::Type::CreateScene;
-        config.activationEventArgs = {"newGameScene"};
-    } // if TransitionNewGame
-    else if(onSelectString == "TransitionLoadGame") {
-        config.activationEventType = engine::Event::Type::CreateScene;
-        config.activationEventArgs = {"loadGameScene"};
-    } // else if TransitionLoadGame
-    else if(onSelectString == "TransitionOptions") {
-        config.activationEventType = engine::Event::Type::CreateScene;
-        config.activationEventArgs = {"optionsScene"};
-    } // else if TransitionOptions
-    else if(onSelectString == "QuitGame") {
+    } // if CreateScene
+    else if(eventTypeString == "DestroyScene") {
+        config.activationEventType = engine::Event::Type::DestroyScene;
+    } // else if DestroyScene
+    else if(eventTypeString == "QuitGame") {
         config.activationEventType = engine::Event::Type::QuitGame;
-        config.activationEventArgs = {""};
     } // else if QuitGame
+    const auto& eventArgsJSON{findEventArgs.value()};
+    for(const auto& arg: eventArgsJSON) {
+        if(arg.type() == nlohmann::json::value_t::string) {
+            config.activationEventArgs.emplace_back(arg.get<std::string>());
+        } // if string
+        else if(arg.type() == nlohmann::json::value_t::number_integer) {
+            config.activationEventArgs.emplace_back(arg.get<int>());
+        } // else if integer
+        else if(arg.type() == nlohmann::json::value_t::number_float) {
+            config.activationEventArgs.emplace_back(arg.get<float>());
+        } // else if float
+    } // for each arg in eventArgsJSON
 
     return config;
 }

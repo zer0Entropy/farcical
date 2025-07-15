@@ -48,8 +48,8 @@ namespace farcical::ui {
             sf::Font* font,
             const FontProperties& fontProperties,
             const std::vector<sf::Texture*>& textures,
-            engine::Event::Type activationEventType,
-            const std::vector<std::any>& activationEventArgs,
+            engine::Event::Type eventType,
+            const std::vector<std::any>& eventArgs,
             Widget* parent) {
             if(!parent || !parent->IsContainer()) {
                 const std::string failMsg{
@@ -63,7 +63,7 @@ namespace farcical::ui {
             }
             Container* container{dynamic_cast<Container*>(parent)};
             const unsigned int childIndex{container->GetNumChildren()};
-            container->AddChild(std::make_unique<MenuItem>(id, activationEventType, activationEventArgs, parent));
+            container->AddChild(std::make_unique<MenuItem>(id, eventType, eventArgs, parent));
             MenuItem* item = dynamic_cast<MenuItem*>(container->GetChild(childIndex));
             const engine::EntityID buttonID{std::string{id} + "Button"};
             const engine::EntityID labelID{std::string{id} + "Label"};
@@ -114,11 +114,11 @@ namespace farcical::ui {
             engine::EntityID id,
             sf::Font* labelFont,
             const FontProperties& fontProperties,
-            std::vector<sf::Texture*> buttonTextures,
-            std::vector<engine::EntityID> itemIDs,
-            std::vector<std::string> itemContents,
-            std::vector<engine::Event::Type> itemEventTypes,
-            std::vector<std::vector<std::any> > itemEventArgs,
+            const std::vector<sf::Texture*>& buttonTextures,
+            const std::vector<engine::EntityID>& itemIDs,
+            const std::vector<std::string>& itemContents,
+            const std::vector<engine::Event::Type>& itemEventTypes,
+            const std::vector<std::vector<std::any>>& itemEventArgs,
             Widget* parent) {
             if(!parent || !parent->IsContainer()) {
                 const std::string failMsg{"Invalid configuration: Label with missing or invalid parent."};
@@ -136,7 +136,7 @@ namespace farcical::ui {
                 std::string itemID{itemIDs.at(index)};
                 std::string contents{itemContents.at(index)};
                 engine::Event::Type activationEventType{itemEventTypes.at(index)};
-                const std::vector<std::any>& activationEventArgs = itemEventArgs.at(index);
+                const std::vector<std::any>& activationEventArgs{itemEventArgs.at(index)};
                 const auto& createMenuItem{
                     MenuItem::Create(
                         itemID,

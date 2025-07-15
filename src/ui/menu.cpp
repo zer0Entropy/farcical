@@ -16,8 +16,11 @@ farcical::ui::MenuItem::MenuItem(
   Widget* parent): Container(id, Type::MenuItem, parent, true),
                    button{nullptr},
                    label{nullptr},
-                   activationEventType{activationEventType},
-                   activationEventArgs{activationEventArgs} {
+                   activationEventType{activationEventType} {
+  // For some reason, copying the eventArgs vector directly results in an extra layer of indirection :(
+  for(const auto& eventArg : activationEventArgs) {
+    this->activationEventArgs.emplace_back(eventArg);
+  }
 }
 
 farcical::ui::Button* farcical::ui::MenuItem::CreateButton(engine::EntityID id, std::vector<sf::Texture*> textures) {

@@ -14,7 +14,6 @@ namespace farcical::ui {
   public:
     enum class Type {
       Scene,
-      Border,
       Decoration,
       Menu,
       MenuItem,

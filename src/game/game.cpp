@@ -8,27 +8,78 @@
 #include "../../include/ui/menu.hpp"
 #include "../../include/ui/decoration.hpp"
 
-farcical::game::GameController::GameController(Game& game): EventHandler(),
-                                                            game{game} {
+farcical::game::GameController::GameController(Game& game):
+    EventHandler(),
+    game{game} {
 }
 
 void farcical::game::GameController::HandleEvent(const engine::Event& event) {
+    ResourceManager& resourceManager{game.GetEngine().GetResourceManager()};
     if(event.type == engine::Event::Type::QuitGame) {
         game.Stop();
     } // if event.type == QuitGame
     else if(event.type == engine::Event::Type::CreateScene) {
+        const engine::EntityID sceneID{std::any_cast<std::string>(event.args.at(0))};
+
+        // Request ResourceParameters for this Scene from Game
+        const auto& findSceneResource{game.FindSceneResource(sceneID)};
+        if(findSceneResource.has_value()) {
+            const ResourceParameters& params{findSceneResource.value()};
+
+            // If a ResourceHandle has already been created for this document, retrieve it
+            const ResourceHandle* documentHandle{
+                resourceManager.GetResourceHandle(params.first)
+            };
+
+            // If no such ResourceHandle exists, create it
+            if(!documentHandle) {
+                const auto& createDocumentHandle{
+                    resourceManager.CreateResourceHandle(
+                        params.first,
+                        ResourceHandle::Type::JSONDocument,
+                        params.second)
+                };
+                if(createDocumentHandle.has_value()) {
+                    documentHandle = createDocumentHandle.value();
+                } // if createDocumentHandle == success
+            } // if !documentHandle
+
+            // Load the document, then use the data it contains to create the scene
+            const auto& requestJSONDoc{resourceManager.GetJSONDoc(documentHandle->id)};
+            if(requestJSONDoc.has_value()) {
+                const auto& sceneJSON{requestJSONDoc.value()};
+                const auto& loadSceneConfig{ui::LoadSceneConfig(*sceneJSON)};
+                if(loadSceneConfig.has_value()) {
+                    const auto& sceneConfig{loadSceneConfig.value()};
+                    ui::SceneHierarchy& sceneHierarchy{game.GetSceneHierarchy()};
+                    const auto& createScene{game.CreateScene(sceneConfig, sceneHierarchy.currentScene)};
+                    // Once the Scene has been created, set the hierarchy's currentScene to this one
+                    sceneHierarchy.currentScene = createScene.value().get();
+                } // if loadScene == success
+            } // if requestJSONDoc == success
+
+        } // if findSceneResource == success
     } // else if event.type == CreateScene
     else if(event.type == engine::Event::Type::DestroyScene) {
     } // else if event.type == DestroyScene
 }
 
-farcical::game::Game::Game(engine::Engine& engine): status{Status::Uninitialized},
-                                                    controller{*this},
-                                                    engine{engine} {
+farcical::game::Game::Game(engine::Engine& engine):
+    status{Status::Uninitialized},
+    engine{engine},
+    controller{*this} {
 }
 
 farcical::game::Game::Status farcical::game::Game::GetStatus() const {
     return status;
+}
+
+farcical::engine::Engine& farcical::game::Game::GetEngine() const {
+    return engine;
+}
+
+farcical::ui::SceneHierarchy& farcical::game::Game::GetSceneHierarchy() const {
+    return const_cast<ui::SceneHierarchy&>(sceneHierarchy);
 }
 
 std::optional<farcical::engine::Error> farcical::game::Game::Init(const ResourceList& sceneResourceList) {
@@ -487,4 +538,14 @@ std::optional<farcical::engine::Error> farcical::game::Game::CacheSegmentedTextu
         } // createHandle == success
     } // for each segmentedTexture in config.segmentedTextures
     return std::nullopt;
+}
+
+std::expected<farcical::ResourceParameters, farcical::engine::Error> farcical::game::Game::FindSceneResource(
+    engine::EntityID sceneID) const {
+    const auto& findResource{sceneResources.find(sceneID)};
+    if(findResource != sceneResources.end()) {
+        return findResource->second;
+    } // if SceneResource found
+    const std::string failMsg{"Resource not found: " + sceneID + "."};
+    return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
 }

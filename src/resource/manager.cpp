@@ -5,8 +5,7 @@
 #include <fstream>
 #include <SFML/Graphics/Image.hpp>
 #include "../../include/resource/manager.hpp"
-
-#include "../../include/color.hpp"
+#include "../../include/geometry.hpp"
 
 farcical::ResourceHandle* farcical::ResourceManager::GetResourceHandle(ResourceID id) const {
     const auto resourceIter{registry.find(id)};
@@ -305,7 +304,7 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
 }
 
 std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::CreateSplicedTexture(
-    ResourceID id, std::vector<ResourceID> inputTextureIDs) {
+    ResourceID id, const std::vector<ResourceID>& inputTextureIDs) {
 
     sf::Vector2u totalSize{0, 0};
     // Compute the total size of all textures spliced together (horizontally)
@@ -349,7 +348,7 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
 }
 
 std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::CreateRepeatingTexture(
-    ResourceID id, sf::Vector2u outputSize, ResourceID inputID, sf::IntRect inputRect) {
+    ResourceID id, const sf::Vector2u& outputSize, ResourceID inputID, sf::IntRect inputRect) {
 
     ResourceHandle* inputHandle{GetResourceHandle(inputID)};
     // If a ResourceHandle with inputID has not been created previously, return Error{ResourceNotFound}
@@ -448,6 +447,163 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
     return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
 }
 
+std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::CreateBorderTexture(
+    ResourceID id,
+    const sf::Vector2u& outputSize,
+    const std::vector<ResourceID>& cornerTextureIDs,
+    const std::vector<ResourceID>& edgeTextureIDs,
+    ResourceID centerTextureID) {
+
+    ResourceHandle* borderHandle{GetResourceHandle(id)};
+    // If a ResourceHandle with this ID has not been created previously, create it
+    if(!borderHandle) {
+        const auto& createBorderHandle{CreateResourceHandle(id, ResourceHandle::Type::Texture, "")};
+        if(!createBorderHandle.has_value()) {
+            const std::string failMsg{"Failed to create ResourceHandle for Border (id=" + id + "\")."};
+            return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+        } // if createBorderHadle failed, return Error
+        borderHandle = createBorderHandle.value();
+    } // if handle does not exist
+
+    // Ensure all cornerTextures and edgeTextures have valid handles and are ready to use
+    for(const auto& cornerTextureID : cornerTextureIDs) {
+        ResourceHandle* cornerHandle{GetResourceHandle(cornerTextureID)};
+        if(!cornerHandle || cornerHandle->status != ResourceHandle::Status::IsReady) {
+            const std::string failMsg{"Resource not found: Texture (id=" + cornerTextureID + "\")."};
+            return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+        } // if !cornerHandle or cornerHandle->status != IsReady
+    } // for each cornerTextureID
+    for(const auto& edgeTextureID : edgeTextureIDs) {
+        ResourceHandle* edgeHandle{GetResourceHandle(edgeTextureID)};
+        if(!edgeHandle || edgeHandle->status != ResourceHandle::Status::IsReady) {
+            const std::string failMsg{"Resource not found: Texture (id=" + edgeTextureID + "\")."};
+            return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+        } // if !edgeHandle or edgeHandle->status != IsReady
+    } // for each edgeTextureID
+    // Check the center, too
+    ResourceHandle* centerHandle{GetResourceHandle(centerTextureID)};
+    if(!centerHandle || centerHandle->status != ResourceHandle::Status::IsReady) {
+        const std::string failMsg{"Resource not found: Texture (id=" + centerTextureID + "\")."};
+        return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+    } // if !centerHandle or centerHandle->status != IsReady
+
+    // Prepare our input Textures
+    std::vector<sf::Texture*> cornerTextures;
+    for(int index = static_cast<int>(Rectangle::Corner::TopLeft); index < static_cast<int>(Rectangle::Corner::NumCorners); ++index) {
+        const auto& requestTexture{GetTexture(cornerTextureIDs[index])};
+        if(!requestTexture.has_value()) {
+            const std::string failMsg{"Resource not found: Texture (id=" + cornerTextureIDs[index] + "\")."};
+            return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+        } // if requestTexture failed
+        cornerTextures[index] = requestTexture.value();
+    } // for each Corner
+    std::vector<sf::Texture*> edgeTextures;
+    for(int index = static_cast<int>(Rectangle::Edge::Left); index < static_cast<int>(Rectangle::Edge::NumEdges); ++index) {
+        const auto& requestTexture{GetTexture(edgeTextureIDs[index])};
+        if(!requestTexture.has_value()) {
+            const std::string failMsg{"Resource not found: Texture (id=" + cornerTextureIDs[index] + "\")."};
+            return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+        } // if requestTexture failed
+        edgeTextures[index] = requestTexture.value();
+    } // for each Edge
+    const auto& requestTexture{GetTexture(centerTextureID)};
+    if(!requestTexture.has_value()) {
+        const std::string failMsg{"Resource not found: Texture (id=" + centerTextureID + "\")."};
+        return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+    } // if requestTexture failed
+    sf::Texture* centerTexture{requestTexture.value()};
+
+    // Create a blank canvas for our Border
+    const auto& createTextureResult{
+        textures.emplace(id, sf::Texture{outputSize, false})
+    };
+    if(createTextureResult.second) {
+        sf::Texture* outputTexture{nullptr};
+        // Retrieve the blank Texture we just created
+        const auto& findOutputTexture{textures.find(id)};
+        if(findOutputTexture == textures.end()) {
+            const std::string failMsg{"Resource not found: " + id + "."};
+            return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+
+        } // if outputTexture not found
+        outputTexture = &findOutputTexture->second;
+
+        // Copy corners into the outputTexture
+        const sf::Vector2u topLeftPosition{0, 0};
+        outputTexture->update(*cornerTextures[static_cast<int>(Rectangle::Corner::TopLeft)], topLeftPosition);
+        const sf::Vector2u topRightPosition{outputSize.x - cornerTextures[static_cast<int>(Rectangle::Corner::TopRight)]->getSize().x, 0};
+        outputTexture->update(*cornerTextures[static_cast<int>(Rectangle::Corner::TopRight)], topRightPosition);
+        const sf::Vector2u bottomLeftPosition{0, outputSize.y - cornerTextures[static_cast<int>(Rectangle::Corner::BottomLeft)]->getSize().y};
+        outputTexture->update(*cornerTextures[static_cast<int>(Rectangle::Corner::BottomLeft)], bottomLeftPosition);
+        const sf::Vector2u bottomRightPosition{
+            outputSize.x - cornerTextures[static_cast<int>(Rectangle::Corner::TopRight)]->getSize().x,
+            outputSize.y - cornerTextures[static_cast<int>(Rectangle::Corner::BottomLeft)]->getSize().y
+        };
+        outputTexture->update(*cornerTextures[static_cast<int>(Rectangle::Corner::BottomRight)], bottomRightPosition);
+
+        // Create edges of the appropriate size by repeating our input edge Textures
+        // Vertical edges - Left and Right
+        const sf::Vector2u vEdgeSize{
+            edgeTextures[static_cast<int>(Rectangle::Edge::Left)]->getSize().x,
+            bottomLeftPosition.y - topLeftPosition.y - cornerTextures[static_cast<int>(Rectangle::Corner::TopLeft)]->getSize().y,
+
+        };
+        // Horizontal edges - Top and Bottom
+        const sf::Vector2u hEdgeSize{
+            topRightPosition.x - topLeftPosition.x - cornerTextures[static_cast<int>(Rectangle::Corner::TopLeft)]->getSize().x,
+            edgeTextures[static_cast<int>(Rectangle::Edge::Top)]->getSize().y
+        };
+        sf::Texture topTexture{hEdgeSize, false};
+        sf::Texture bottomTexture{hEdgeSize, false};
+        sf::Texture leftTexture{vEdgeSize, false};
+        sf::Texture rightTexture{vEdgeSize, false};
+        // Create the edges
+        RepeatTexture(*edgeTextures[static_cast<int>(Rectangle::Edge::Top)], topTexture);
+        RepeatTexture(*edgeTextures[static_cast<int>(Rectangle::Edge::Bottom)], bottomTexture);
+        RepeatTexture(*edgeTextures[static_cast<int>(Rectangle::Edge::Left)], leftTexture);
+        RepeatTexture(*edgeTextures[static_cast<int>(Rectangle::Edge::Right)], rightTexture);
+        // Copy them into the outputTexture
+        const sf::Vector2u topPosition{
+            topLeftPosition.x + cornerTextures[static_cast<int>(Rectangle::Corner::TopLeft)]->getSize().x,
+            0
+        };
+        outputTexture->update(topTexture, topPosition);
+        const sf::Vector2u bottomPosition{
+            bottomLeftPosition.x + cornerTextures[static_cast<int>(Rectangle::Corner::BottomLeft)]->getSize().x,
+            outputSize.y - bottomTexture.getSize().y
+        };
+        outputTexture->update(bottomTexture, bottomPosition);
+        const sf::Vector2u leftPosition{
+            0,
+            topLeftPosition.y + cornerTextures[static_cast<int>(Rectangle::Corner::TopLeft)]->getSize().y
+        };
+        outputTexture->update(leftTexture, leftPosition);
+        const sf::Vector2u rightPosition{
+            topRightPosition.x,
+            topRightPosition.y + cornerTextures[static_cast<int>(Rectangle::Corner::TopRight)]->getSize().y
+        };
+        outputTexture->update(rightTexture, rightPosition);
+
+        // Create the center
+        sf::Vector2u centerSize{
+            outputSize.x - leftTexture.getSize().x - rightTexture.getSize().x,
+            outputSize.y - topTexture.getSize().y - bottomTexture.getSize().y
+        };
+        sf::Texture bigCenterTexture{centerSize, false};
+        RepeatTexture(*centerTexture, bigCenterTexture);
+        // Copy it into the outputTexture
+        sf::Vector2u centerPosition{
+            leftPosition.x + leftTexture.getSize().x,
+            leftPosition.y
+        };
+        outputTexture->update(bigCenterTexture, centerPosition);
+        return outputTexture;
+    } // if createTextureResult == success
+
+    const std::string failMsg{"Invalid configuration: Failed to create Texture " + id + "."};
+    return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+}
+
 void farcical::ResourceManager::RepeatTexture(sf::Texture& input, sf::Texture& output) {
     // Calculate # of tiles that fit in outputTexture, then copy inputTexture into outputTexture that many times
     const unsigned int widthInTiles{output.getSize().x / input.getSize().x};
@@ -526,584 +682,3 @@ void farcical::ResourceManager::RepeatSliceVertical(sf::Texture& input, sf::Text
         } // for each row
     } // if copySuccess
 }
-
-/*
-std::optional<farcical::Error> farcical::ResourceManager::LoadFont(Resource* resource) {
-    const bool exists{std::filesystem::exists(resource->path)};
-    if(!exists) {
-        const std::string failMsg{"Failed to load font file: " + std::string{resource->path} + "."};
-        return Error{Error::Signal::InvalidPath, failMsg};
-    }
-    const auto& fontResult{fonts.emplace(resource->id, sf::Font{resource->path})};
-    if(!fontResult.second) {
-        const std::string failMsg{"Invalid configuration (file: " + std::string{resource->path} + "."};
-        return Error{Error::Signal::InvalidConfiguration, failMsg};
-    }
-    resource->status = Resource::Status::IsReady;
-    return std::nullopt;
-}
-
-std::optional<farcical::Error> farcical::ResourceManager::LoadTexture(
-    Resource* resource, sf::IntRect inputRect, sf::Vector2u outputSize, bool isRepeating) {
-    const bool exists{std::filesystem::exists(resource->path)};
-    if(!exists) {
-        std::string failMsg{"Failed to load texture file: " + std::string{path} + "."};
-        return Error{Error::Signal::InvalidPath, failMsg};
-    }
-    if(isRepeating) {
-        return LoadRepeatingTexture(resource, inputRect, outputSize);
-        //return LoadRepeatingTexture(id, path, inputRect, outputSize);
-    } // if repeating
-    else {
-        const auto& textureResult{textures.emplace(resource->id, sf::Texture{resource->path, false, inputRect})};
-        if(!textureResult.second) {
-            std::string failMsg{"Invalid configuration (file: " + std::string{path} + "."};
-            return Error{Error::Signal::InvalidConfiguration, failMsg};
-        } // if loading texture failed
-    } // else not repeating
-    return std::nullopt;
-}
-*/
-/*
-std::optional<farcical::Error> farcical::ResourceManager::LoadRepeatingTexture(
-    Resource* resource, sf::IntRect inputRect, sf::Vector2u outputSize) {
-    auto createTextureResult{
-        textures.emplace(id, sf::Texture{outputSize, false})
-    };
-    if(createTextureResult.second) {
-        // Retrieve the (blank) bigTexture we just created
-        sf::Texture* bigTexture{GetTexture(id).value()};
-
-        // Load the smallTexture from disk
-        sf::Texture smallTexture{path, false, inputRect};
-
-        // Init fullTexture equal to smallTexture
-        sf::Image fullTexture{path};
-
-        // Calculate # of tiles that fit in bigTexture, then copy smallTexture into bigTexture that many times
-        const unsigned int widthInTiles{outputSize.x / smallTexture.getSize().x};
-        const unsigned int heightInTiles{outputSize.y / smallTexture.getSize().y};
-        for(unsigned int y = 0; y < heightInTiles; y++) {
-            for(unsigned int x = 0; x < widthInTiles; x++) {
-                bigTexture->update(smallTexture, sf::Vector2u{
-                                       x * smallTexture.getSize().x,
-                                       y * smallTexture.getSize().y});
-            } // for x
-        } // for y
-
-        // If we have a fractional tile on the x-axis...
-        if(smallTexture.getSize().x * widthInTiles < bigTexture->getSize().x) {
-            // Calculate the number of remaining pixels
-            const sf::Vector2u horizontalSliceSize{
-                bigTexture->getSize().x - (smallTexture.getSize().x * widthInTiles),
-                smallTexture.getSize().y
-            };
-            // Grab a "slice" of the fullTexture image with the above size
-            sf::Image horizontalSlice{horizontalSliceSize};
-            const sf::IntRect sourceRect{
-                    {0, 0},
-                    {static_cast<int>(horizontalSliceSize.x), static_cast<int>(horizontalSliceSize.y)},
-            };
-            bool copySuccess{horizontalSlice.copy(fullTexture, sf::Vector2u{0, 0}, sourceRect)};
-            if(copySuccess) {
-                // Copy that slice over at the end of each row
-                const sf::Texture hSliceTexture{horizontalSlice};
-                for(unsigned int y = 0; y < heightInTiles; y++) {
-                    const sf::Vector2u dest{
-                        smallTexture.getSize().x * widthInTiles,
-                        y * smallTexture.getSize().y
-                    };
-                    bigTexture->update(hSliceTexture, dest);
-                } // for each row
-            } // if copySuccess
-        } // if smallTexture.width * widthInTiles < bigTexture->width
-
-        // If we have a fractional tile on the y-axis...
-        if(smallTexture.getSize().y * heightInTiles < bigTexture->getSize().y) {
-            // Calculate the number of remaining pixels
-            const sf::Vector2u verticalSliceSize{
-                smallTexture.getSize().x,
-                bigTexture->getSize().y - (smallTexture.getSize().y * heightInTiles)
-            };
-            // Grab a "slice" of the fullTexture image with the above size
-            sf::Image verticalSlice{verticalSliceSize};
-            const sf::IntRect sourceRect{
-                    {0, 0},
-                    {static_cast<int>(verticalSliceSize.x), static_cast<int>(verticalSliceSize.y)},
-                };
-            bool copySuccess{verticalSlice.copy(fullTexture, sf::Vector2u{0, 0}, sourceRect)};
-            if(copySuccess) {
-                // Copy that slice over at the end of each column
-                const sf::Texture vSliceTexture{verticalSlice};
-                for(unsigned int x = 0; x < widthInTiles; x++) {
-                    const sf::Vector2u dest{
-                        x * smallTexture.getSize().x,
-                        smallTexture.getSize().y * heightInTiles,
-                    };
-                    bigTexture->update(vSliceTexture, dest);
-                } // for each column
-            } // if copySuccess
-        } // if smallTexture.height * heightInTiles < bigTexture->height
-
-        // If we have a fractional tile on both the x-axis AND the y-axis...
-        if(smallTexture.getSize().x * widthInTiles < bigTexture->getSize().x
-           && smallTexture.getSize().y * heightInTiles < bigTexture->getSize().y) {
-            // Calculate the number of remaining pixels
-            const sf::Vector2u sliceSize{
-                bigTexture->getSize().x - (smallTexture.getSize().x * widthInTiles),
-                bigTexture->getSize().y - (smallTexture.getSize().y * heightInTiles)
-            };
-            // Grab a "slice" of the fullTexture image with the above size
-            sf::Image slice{sliceSize};
-            const sf::IntRect sourceRect{
-                    {0, 0},
-                    {static_cast<int>(sliceSize.x), static_cast<int>(sliceSize.y)},
-                };
-            bool copySuccess{slice.copy(fullTexture, sf::Vector2u{0, 0}, sourceRect)};
-            if(copySuccess) {
-                // Copy that slice over at the end of the last column/row
-                const sf::Texture sliceTexture{slice};
-                const sf::Vector2u dest{
-                    smallTexture.getSize().x * widthInTiles,
-                    smallTexture.getSize().y * heightInTiles,
-                };
-                bigTexture->update(sliceTexture, dest);
-            } // if copySuccess
-           }
-    } // if createTextureResult != Error
-    return std::nullopt;
-}
-*/
-
-/*
-std::expected<farcical::ApplicationConfig, farcical::Error> farcical::ResourceManager::LoadAppConfig(std::ifstream& input) {
-    this->appConfig.data = nlohmann::json::parse(input);
-    ApplicationConfig config{this->appConfig};
-    const auto& configJSON{config.data};
-    for(auto& [key, value] : configJSON.items()) {
-        if(key == "window_properties") {
-            for(auto& [winCfgKey, winCfgValue] : value.items()) {
-                if(winCfgKey == "width") {
-                    config.windowProperties.displayMode.x = winCfgValue.get<int>();
-                }
-                else if(winCfgKey == "height") {
-                    config.windowProperties.displayMode.y = winCfgValue.get<int>();
-                }
-                else if(winCfgKey == "title") {
-                    config.windowProperties.title = winCfgValue.get<std::string>();
-                }
-                else if(winCfgKey == "fullscreen") {
-                    config.windowProperties.fullscreen = winCfgValue.get<bool>();
-                }
-                else if(winCfgKey == "position") {
-                    auto xIter{winCfgValue.find("x")};
-                    auto yIter{winCfgValue.find("y")};
-                    if(xIter != winCfgValue.end()) {
-                        config.windowProperties.position.x = *xIter;
-                    }
-                    if(yIter != winCfgValue.end()) {
-                        config.windowProperties.position.y = *yIter;
-                    }
-                }
-            } // for each key-value pair in windowProperties
-        } // if key == window_properties
-    } // for each key-value pair in configJSON.items()
-    return config;
-}
-
-std::expected<farcical::UIConfig, farcical::Error> farcical::ResourceManager::LoadGlobalUIConfig(std::ifstream& input) {
-    this->appConfig.data = nlohmann::json::parse(input);
-    UIConfig config{this->globalUIConfig};
-    const auto& configJSON{config.data};
-    for(auto& [key, value] : configJSON.items()) {
-        if(key == "menu") {
-            for(auto& [menuKey, menuValue]: value.items()) {
-                if(menuKey == "buttonSpacing") {
-                    config.buttonSpacing = menuValue.get<float>();
-                } // if menuKey == buttonSpacing
-                else if(menuKey == "title") {
-                    for(auto& [titleKey, titleValue]: menuValue.items()) {
-                        if(titleKey == "font") {
-                            for(auto& [fontKey, fontValue]: titleValue.items()) {
-                                if(fontKey == "id") {
-                                    config.titleProperties.id = fontValue.get<std::string>();
-                                } // if fontKey == id
-                                else if(fontKey == "path") {
-                                    config.titleProperties.path = fontValue.get<std::string>();
-                                } // else if fontKey == path
-                                else if(fontKey == "defaultSize") {
-                                    config.titleProperties.characterSize = fontValue.get<int>();
-                                } // else if fontKey == defaultSize
-                                else if(fontKey == "defaultColor") {
-                                    const std::string colorName = fontValue.get<std::string>();
-                                    const sf::Color color{GetColorByName(colorName)};
-                                    config.titleProperties.color = color;
-                                } // else if fontKey == defaultColor
-                                else if(fontKey == "defaultOutlineColor") {
-                                    const std::string colorName = fontValue.get<std::string>();
-                                    const sf::Color color{GetColorByName(colorName)};
-                                    config.titleProperties.outlineColor = color;
-                                } // else if fontKey == defaultOutlineColor
-                                else if(fontKey == "defaultOutlineThickness") {
-                                    config.titleProperties.outlineThickness = fontValue.get<float>();
-                                } // else if fontKey == defaultOutlineThickness
-                            } // for each key-value pair in font
-                        } // if titleKey == font
-                    } // for each key-value pair in title
-                } // if menuKey == title
-            } // for each key-value pair in menu
-        } // if(key == menu)
-        else if(key == "button") {
-            for(auto& [buttonKey, buttonValue]: value.items()) {
-                if(buttonKey == "font") {
-
-                } // if buttonKey == "font"
-            } // for each key-value pair in button
-        } // else if(key == button)
-    } // for each key-value pair in configJSON.items()
-    return config;
-}
-
-std::expected<farcical::SceneConfig, farcical::Error> farcical::ResourceManager::LoadSceneConfig(std::ifstream& input) {
-    this->currentSceneConfig.data = nlohmann::parse(input);
-    SceneConfig config{this->currentSceneConfig};
-    const auto& configJSON{config.data};
-    // CHECK FOR "scene" AT TOP LEVEL
-    if(!configJSON.contains("scene")) {
-        std::string failMsg{"Invalid configuration: Scene data expected, but could not be found."};
-        return Error{Error::Signal::InvalidConfiguration, failMsg};
-    } // if !sceneJSON.contains("scene")
-    const auto& sceneJSON{configJSON.at("scene")};
-
-    // SCENE MUST HAVE AN ID
-    if(!sceneJSON.contains("id")) {
-        std::string failMsg{"Invalid configuration: SceneID could not be found."};
-        return Error{Error::Signal::InvalidConfiguration, failMsg};
-    } // // if !sceneJSON.contains("id")
-    config.sceneID = sceneJSON.at("id").get<std::string>();
-
-    // CREATE DECORATIONS (if any)
-    if(sceneJSON.contains("decorations")) {
-        const auto& decorationsJSON{sceneJSON.at("decorations")};
-        const auto& decorationsError{LoadDecorations(decorationsJSON)};
-        if(decorationsError.has_value()) {
-            return decorationsError;
-        }
-    } // if sceneJSON.contains("decorations")
-
-    // CREATE TITLE (if any)
-    if(sceneJSON.contains("title")) {
-        const auto& titleJSON{sceneJSON.at("title")};
-        const auto& titleError{LoadTitle(titleJSON, resourceManager)};
-        if(titleError.has_value()) {
-            return titleError;
-        } // if(titleError)
-    } // if sceneJSON.contains("title")
-
-    // CREATE MENU (if any)
-    if(sceneJSON.contains("menu")) {
-        const auto& menuJSON{sceneJSON.at("menu")};
-        const auto& menuError{LoadMenu(menuJSON, resourceManager)};
-        if(menuError.has_value()) {
-            return menuError;
-        } // if(menuError)
-    } // if sceneJSON.contains("menu")
-    return config;
-}
-
-std::optional<farcical::Error> farcical::ResourceManager::LoadConfigDecorations(const nlohmann::json& json, SceneConfig& config) {
-    for(const auto& decDescription: json) {
-        const std::string decorationID{decDescription.at("id").get<std::string>()};
-
-        const auto& textureJSON{decDescription.at("texture")};
-        const auto loadTextureResult{LoadConfigTexture(textureJSON)};
-        if(!loadTextureResult.has_value()) {
-            return loadTextureResult.error();
-        } // if loadTextureResult == Error
-
-        const auto& positionJSON{decDescription.at("position")};
-        const auto loadPositionResult{LoadPosition(positionJSON)};
-        if(!loadPositionResult.has_value()) {
-            return loadPositionResult.error();
-        } // if loadPositionResult == Error
-
-        const auto& layoutJSON{decDescription.at("layout")};
-        const auto loadLayoutResult{LoadLayout(layoutJSON)};
-        if(!loadLayoutResult.has_value()) {
-            return loadLayoutResult.error();
-        } // if loadLayoutResult == Error
-        this->layouts.insert(std::make_pair(decorationID, loadLayoutResult.value()));
-
-        const auto createDecResult{Decoration::Create(decorationID, loadTextureResult.value(), this)};
-        if(!createDecResult.has_value()) {
-            return createDecResult.error();
-        }
-
-        Decoration* decoration{createDecResult.value()};
-        decoration->SetPosition(loadPositionResult.value());
-        ApplyLayout(loadLayoutResult.value(), createDecResult.value());
-    } // for each decoration in json
-    return std::nullopt;
-}
-
-std::optional<farcical::Error> farcical::ResourceManager::LoadConfigTitle(const nlohmann::json& json, SceneConfig& config) {
-}
-
-std::optional<farcical::Error> farcical::ResourceManager::LoadConfigMenu(const nlohmann::json& json, SceneConfig& config) {
-}
-
-std::expected<sf::Texture*, farcical::Error> farcical::ResourceManager::LoadConfigTexture(const nlohmann::json& json) {
-    if(!json.contains("id")) {
-        const std::string failMsg{"Invalid configuration: TextureID could not be found."};
-        return std::unexpected(Error{Error::Signal::InvalidConfiguration, failMsg});
-    }
-    if(!json.contains("path")) {
-        const std::string failMsg{"Invalid configuration: Texture path could not be found."};
-        return std::unexpected(Error{Error::Signal::InvalidConfiguration, failMsg});
-    }
-    const std::string id{json.at("id").get<std::string>()};
-    const std::string path{json.at("path").get<std::string>()};
-    const bool isRepeated{json.at("isRepeated").get<bool>()};
-    float scale{1.0f};
-    if(json.contains("scale")) {
-        scale = json.at("scale").get<float>();
-    }
-    sf::Vector2u size {0, 0};
-    if(json.contains("size")) {
-        const auto& sizeJSON{json.at("size")};
-        const auto loadSizeResult{LoadConfigSize(sizeJSON)};
-        if(!loadSizeResult.has_value()) {
-            return std::unexpected(loadSizeResult.error());
-        }
-        size = loadSizeResult.value();
-    }
-    const auto result{
-        resourceManager.LoadResource(
-            id,
-            Resource::Type::Texture,
-            path,
-            sf::Rect{sf::Vector2i{0, 0}, sf::Vector2i{static_cast<int>(size.x), static_cast<int>(size.y)}},
-            size,
-            isRepeated)
-    };
-    if(result.has_value()) {
-        return std::unexpected(result.value());
-    }
-    return resourceManager.GetTexture(id);
-}
-
-std::expected<sf::Vector2f, farcical::Error> farcical::ResourceManager::LoadConfigPosition(const nlohmann::json& json) {
-}
-
-std::expected<sf::Vector2u, farcical::Error> farcical::ResourceManager::LoadConfigSize(const nlohmann::json& json) {
-    if(!(json.contains("x")  && json.contains("y"))) {
-        const std::string failMsg{"Invalid configuration: Size not valid."};
-        return std::unexpected(Error{Error::Signal::InvalidConfiguration, failMsg});
-    }
-    sf::Vector2u size{
-        static_cast<unsigned int>(json.at("x").get<int>()),
-        static_cast<unsigned int>(json.at("y").get<int>())
-    };
-    return size;
-}
-
-std::expected<farcical::ui::Layout, farcical::Error> farcical::ResourceManager::LoadConfigLayout(const nlohmann::json& json) {
-}
-*/
-/*
-std::optional<farcical::Error> farcical::ResourceManager::LoadConfig(ResourceID id, std::string_view path) {
-    std::ifstream configFile{std::string{path}, std::ios_base::in};
-    if(!configFile.good()) {
-        std::string failMsg{"Failed to load config file from " + std::string{path} + "."};
-        return Error{Error::Signal::InvalidPath, failMsg};
-    }
-    Config config;
-    config.data = nlohmann::json::parse(configFile);
-    if(configFile.is_open()) {
-        configFile.close();
-    }
-    Resource resource{
-        .id = id,
-        .status = Resource::Status::Uninitialized,
-        .type = Resource::Type::Config,
-        .path = std::string{path}
-    };
-    auto registerResult{registry.emplace(id, std::move(resource))};
-    if(!registerResult.second) {
-        std::string failMsg{"Invalid configuration (file: " + std::string{path} + "."};
-        return Error{Error::Signal::InvalidConfiguration, failMsg};
-    }
-    auto configResult{configs.emplace(id, std::move(config))};
-    if(!configResult.second) {
-        std::string failMsg{"Invalid configuration (file: " + std::string{path} + "."};
-        return Error{Error::Signal::InvalidConfiguration, failMsg};
-    }
-    return std::nullopt;
-}
-*/
-/*
-std::optional<farcical::Error> farcical::ResourceManager::LoadFont(ResourceID id, std::string_view path) {
-    const bool exists{std::filesystem::exists(path)};
-    if(!exists) {
-        std::string failMsg{"Failed to load font file: " + std::string{path} + "."};
-        return Error{Error::Signal::InvalidPath, failMsg};
-    }
-    auto fontResult{fonts.emplace(id, sf::Font{path})};
-    if(!fontResult.second) {
-        std::string failMsg{"Invalid configuration (file: " + std::string{path} + "."};
-        return Error{Error::Signal::InvalidConfiguration, failMsg};
-    }
-    return std::nullopt;
-}
-*/
-/*
-std::optional<farcical::Error> farcical::ResourceManager::LoadTexture(ResourceID id,
-                                                                      std::string_view path,
-                                                                      sf::IntRect inputRect,
-                                                                      sf::Vector2u outputSize,
-                                                                      bool repeat) {
-    const bool exists{std::filesystem::exists(path)};
-    if(!exists) {
-        std::string failMsg{"Failed to load texture file: " + std::string{path} + "."};
-        return Error{Error::Signal::InvalidPath, failMsg};
-    }
-    Resource resource{
-        .id = id,
-        .status = Resource::Status::Uninitialized,
-        .type = Resource::Type::Texture,
-        .path = std::string{path},
-        .rect = inputRect
-    };
-    auto registerResult{registry.emplace(id, std::move(resource))};
-    if(!registerResult.second) {
-        std::string failMsg{"Invalid configuration (file: " + std::string{path} + "."};
-        return Error{Error::Signal::InvalidConfiguration, failMsg};
-    }
-    if(repeat) {
-        return LoadRepeatingTexture(id, path, inputRect, outputSize);
-    } // if repeating
-    else {
-        auto textureResult{textures.emplace(id, sf::Texture{path, false, inputRect})};
-        if(!textureResult.second) {
-            std::string failMsg{"Invalid configuration (file: " + std::string{path} + "."};
-            return Error{Error::Signal::InvalidConfiguration, failMsg};
-        } // if loading texture failed
-    } // else not repeating
-    return std::nullopt;
-}
-*/
-/*
-std::optional<farcical::Error> farcical::ResourceManager::LoadRepeatingTexture(
-    ResourceID id, std::string_view path, sf::IntRect inputRect, sf::Vector2u outputSize) {
-    auto createTextureResult{
-        // This texture is henceforth referred to as "bigTexture".
-        // We're creating it as a blank canvas here, then filling it with repeating tiles
-        // (of "smallTexture") below.
-        textures.emplace(id, sf::Texture{outputSize, false})
-    };
-    if(createTextureResult.second) {
-        // Retrieve the (blank) bigTexture we just created
-        sf::Texture* bigTexture{GetTexture(id).value()};
-        // Load the smallTexture from disk
-        sf::Texture smallTexture{path, false, inputRect};
-        // Init fullTexture equal to smallTexture
-        sf::Image fullTexture{path};
-
-        // Calculate how many tiles will fit in bigTexture, then copy smallTexture into bigTexture
-        // that number of times.
-        unsigned int widthInTiles{outputSize.x / smallTexture.getSize().x};
-        unsigned int heightInTiles{outputSize.y / smallTexture.getSize().y};
-        for(unsigned int y = 0; y < heightInTiles; y++) {
-            for(unsigned int x = 0; x < widthInTiles; x++) {
-                bigTexture->update(smallTexture, sf::Vector2u{
-                                       x * smallTexture.getSize().x,
-                                       y * smallTexture.getSize().y
-                                   });
-            } // for x
-        } // for y
-
-        // If we have a fractional tile on the x-axis...
-        if(smallTexture.getSize().x * widthInTiles < bigTexture->getSize().x) {
-            // Calculate the number of remaining pixels
-            sf::Vector2u horizontalSliceSize{
-                bigTexture->getSize().x - (smallTexture.getSize().x * widthInTiles),
-                smallTexture.getSize().y
-            };
-            // Grab a "slice" of the fullTexture image with the above size
-            sf::Image horizontalSlice{horizontalSliceSize};
-            sf::IntRect sourceRect{
-                {0, 0},
-                {static_cast<int>(horizontalSliceSize.x), static_cast<int>(horizontalSliceSize.y)},
-            };
-            bool copySuccess{horizontalSlice.copy(fullTexture, sf::Vector2u{0, 0}, sourceRect)};
-            if(copySuccess) {
-                // Copy that slice over at the end of each row
-                sf::Texture hSliceTexture{horizontalSlice};
-                for(unsigned int y = 0; y < heightInTiles; y++) {
-                    sf::Vector2u dest{
-                        smallTexture.getSize().x * widthInTiles,
-                        y * smallTexture.getSize().y
-                    };
-                    bigTexture->update(hSliceTexture, dest);
-                } // for each row
-            } // if copySuccess
-        } // if smallTexture.width * widthInTiles < bigTexture->width
-
-        // If we have a fractional tile on the y-axis...
-        if(smallTexture.getSize().y * heightInTiles < bigTexture->getSize().y) {
-            // Calculate the number of remaining pixels
-            sf::Vector2u verticalSliceSize{
-                smallTexture.getSize().x,
-                bigTexture->getSize().y - (smallTexture.getSize().y * heightInTiles)
-            };
-            // Grab a "slice" of the fullTexture image with the above size
-            sf::Image verticalSlice{verticalSliceSize};
-            sf::IntRect sourceRect{
-                {0, 0},
-                {static_cast<int>(verticalSliceSize.x), static_cast<int>(verticalSliceSize.y)},
-            };
-            bool copySuccess{verticalSlice.copy(fullTexture, sf::Vector2u{0, 0}, sourceRect)};
-            if(copySuccess) {
-                // Copy that slice over at the end of each column
-                sf::Texture vSliceTexture{verticalSlice};
-                for(unsigned int x = 0; x < widthInTiles; x++) {
-                    sf::Vector2u dest{
-                        x * smallTexture.getSize().x,
-                        smallTexture.getSize().y * heightInTiles,
-                    };
-                    bigTexture->update(vSliceTexture, dest);
-                } // for each column
-            } // if copySuccess
-        } // if smallTexture.height * heightInTiles < bigTexture->height
-
-        // If we have a fractional tile on both the x-axis AND the y-axis...
-        if(smallTexture.getSize().x * widthInTiles < bigTexture->getSize().x
-           && smallTexture.getSize().y * heightInTiles < bigTexture->getSize().y) {
-            // Calculate the number of remaining pixels
-            sf::Vector2u sliceSize{
-                bigTexture->getSize().x - (smallTexture.getSize().x * widthInTiles),
-                bigTexture->getSize().y - (smallTexture.getSize().y * heightInTiles)
-            };
-            // Grab a "slice" of the fullTexture image with the above size
-            sf::Image slice{sliceSize};
-            sf::IntRect sourceRect{
-                {0, 0},
-                {static_cast<int>(sliceSize.x), static_cast<int>(sliceSize.y)},
-            };
-            bool copySuccess{slice.copy(fullTexture, sf::Vector2u{0, 0}, sourceRect)};
-            if(copySuccess) {
-                // Copy that slice over at the end of the last column/row
-                sf::Texture sliceTexture{slice};
-                sf::Vector2u dest{
-                    smallTexture.getSize().x * widthInTiles,
-                    smallTexture.getSize().y * heightInTiles,
-                };
-                bigTexture->update(sliceTexture, dest);
-            } // if copySuccess
-        } /* if smallTexture.width * widthInTiles < bigTexture->width &&
-             smallTexture.height * heightInTiles < bigTexture->height */
-/*
-    } // if texture was successfully created
-    return std::nullopt;
-}
-*/

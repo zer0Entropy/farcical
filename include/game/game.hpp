@@ -46,6 +46,10 @@ namespace farcical::game {
 
         Status GetStatus() const;
 
+        engine::Engine& GetEngine() const;
+
+        ui::SceneHierarchy& GetSceneHierarchy() const;
+
         std::optional<engine::Error> Init(const ResourceList& sceneResourceList);
 
         std::optional<engine::Error> Update();
@@ -57,6 +61,8 @@ namespace farcical::game {
         std::unique_ptr<Player> CreatePlayer();
 
         std::expected<std::unique_ptr<ui::Scene>, engine::Error> CreateScene(ui::SceneConfig config, ui::Scene* parent);
+
+        std::expected<ResourceParameters, engine::Error> FindSceneResource(engine::EntityID sceneID) const;
 
     private:
         std::optional<engine::Error> CreateSceneLayout(ui::Scene& scene, const ui::LayoutConfig& layoutConfig);

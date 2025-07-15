@@ -30,7 +30,8 @@ namespace farcical::ui {
 
         void SetTexture(sf::Texture* texture);
 
-        static std::expected<Decoration*, engine::Error> Create(engine::EntityID id, sf::Texture* texture,
+        static std::expected<Decoration*, engine::Error> Create(engine::EntityID id,
+                                                                sf::Texture* texture,
                                                                 Widget* parent) {
             if(!parent || !parent->IsContainer()) {
                 const std::string failMsg{"Invalid configuration: Decoration with missing or invalid parent."};

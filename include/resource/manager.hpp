@@ -33,11 +33,17 @@ namespace farcical {
         std::expected<sf::Texture*, engine::Error>      GetTexture(RepeatingTextureProperties properties);
         std::expected<sf::Texture*, engine::Error>      GetTexture(SegmentedTextureProperties properties);
 
-        std::expected<sf::Texture*, engine::Error>      CreateSplicedTexture(ResourceID id, std::vector<ResourceID> inputTextureIDs);
+        std::expected<sf::Texture*, engine::Error>      CreateSplicedTexture(ResourceID id, const std::vector<ResourceID>& inputTextureIDs);
         std::expected<sf::Texture*, engine::Error>      CreateRepeatingTexture( ResourceID id,
-                                                                                sf::Vector2u outputSize,
+                                                                                const sf::Vector2u& outputSize,
                                                                                 ResourceID inputID,
                                                                                 sf::IntRect inputRect = {{0, 0}, {0, 0}});
+
+        std::expected<sf::Texture*, engine::Error>      CreateBorderTexture(    ResourceID id,
+                                                                                const sf::Vector2u& outputSize,
+                                                                                const std::vector<ResourceID>& cornerTextureIDs,
+                                                                                const std::vector<ResourceID>& edgeTextureIDs,
+                                                                                ResourceID centerTextureID);
 
 
     private:
