@@ -33,54 +33,28 @@ namespace farcical {
         std::expected<sf::Texture*, engine::Error>      GetTexture(RepeatingTextureProperties properties);
         std::expected<sf::Texture*, engine::Error>      GetTexture(SegmentedTextureProperties properties);
 
-        std::expected<sf::Texture*, engine::Error>      CreateSplicedTexture(ResourceID id, const std::vector<ResourceID>& inputTextureIDs);
-        std::expected<sf::Texture*, engine::Error>      CreateRepeatingTexture( ResourceID id,
-                                                                                const sf::Vector2u& outputSize,
-                                                                                ResourceID inputID,
-                                                                                sf::IntRect inputRect = {{0, 0}, {0, 0}});
+        std::expected<sf::Texture*, engine::Error> CreateSplicedTexture(
+            ResourceID id, const std::vector<ResourceID>& inputTextureIDs);
 
-        std::expected<sf::Texture*, engine::Error>      CreateBorderTexture(    ResourceID id,
-                                                                                const sf::Vector2u& outputSize,
-                                                                                const std::vector<ResourceID>& cornerTextureIDs,
-                                                                                const std::vector<ResourceID>& edgeTextureIDs,
-                                                                                ResourceID centerTextureID);
+        std::expected<sf::Texture*, engine::Error>      CreateRepeatingTexture(
+            ResourceID id,
+            const sf::Vector2u& outputSize,
+            ResourceID inputID,
+            sf::IntRect inputRect = {{0, 0}, {0, 0}});
 
+        std::expected<sf::Texture*, engine::Error>      CreateBorderTexture(
+            ResourceID id,
+            const sf::Vector2u& outputSize,
+            const std::vector<ResourceID>& cornerTextureIDs,
+            const std::vector<ResourceID>& edgeTextureIDs,
+            ResourceID centerTextureID);
 
     private:
         void                                            RepeatTexture(sf::Texture& input, sf::Texture& output);
+
         void                                            RepeatSliceHorizontal(sf::Texture& input, sf::Texture& output);
         void                                            RepeatSliceVertical(sf::Texture& input, sf::Texture& output);
-        /*
-        std::optional<Error>                        LoadFont(ResourceHandle* resource);
-        std::optional<Error>                        LoadTexture(ResourceHandle* resource,
-                                                                sf::IntRect inputRect = {{0, 0}, {0, 0}},
-                                                                sf::Vector2u outputSize = {0, 0},
-                                                                bool isRepeating = false);
-        */
-        /*
-        std::optional<Error>                        LoadRepeatingTexture(   Resource* resource,
-                                                                            sf::IntRect inputRect = {{0, 0}, {0, 0}},
-                                                                            sf::Vector2u outputSize = {0, 0});
-        */
 
-        /*
-        std::expected<ApplicationConfig, Error>     LoadAppConfig(std::ifstream& input);
-        std::expected<UIConfig, Error>              LoadGlobalUIConfig(std::ifstream& input);
-        std::expected<SceneConfig, Error>           LoadSceneConfig(std::ifstream& input);
-
-        std::optional<Error>                        LoadConfigDecorations(const nlohmann::json& json, SceneConfig& config);
-        std::optional<Error>                        LoadConfigTitle(const nlohmann::json& json, SceneConfig& config);
-        std::optional<Error>                        LoadConfigMenu(const nlohmann::json& json, SceneConfig& config);
-        std::expected<sf::Texture*, Error>          LoadConfigTexture(const nlohmann::json& json);
-        std::expected<sf::Vector2f, Error>          LoadConfigPosition(const nlohmann::json& json);
-        std::expected<sf::Vector2u, Error>          LoadConfigSize(const nlohmann::json& json);
-        std::expected<ui::Layout, Error>            LoadConfigLayout(const nlohmann::json& json);
-
-        std::optional<Error> LoadRepeatingTexture(  ResourceID id,
-                                                    std::string_view path,
-                                                    sf::IntRect inputRect,
-                                                    sf::Vector2u outputSize);
-        */
         std::unordered_map<ResourceID, ResourceHandle> registry;
         std::unordered_map<ResourceID, nlohmann::json> jsonDocs;
         std::unordered_map<ResourceID, sf::Font> fonts;

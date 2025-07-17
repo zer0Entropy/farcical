@@ -295,6 +295,7 @@ std::expected<farcical::ui::SceneConfig, farcical::engine::Error> farcical::ui::
     const auto& findTextures{json.find("textures")};
     const auto& findRepeating{json.find("repeatingTextures")};
     const auto& findSegmented(json.find("segmentedTextures"));
+    const auto& findBorder(json.find("borderTexture"));
     const auto& findLayout{json.find("layout")};
     if(findID == json.end()) {
         const std::string failMsg{"Invalid configuration: SceneID could not be found."};
@@ -360,6 +361,15 @@ std::expected<farcical::ui::SceneConfig, farcical::engine::Error> farcical::ui::
         } // for each segmentedTexture in segmentedJSON
     } // if segmentedTextures found
 
+    // BORDER TEXTURE
+    if(findBorder != json.end()) {
+        const auto& borderJSON{findBorder.value()};
+        const auto& loadBorderResult{LoadBorderTextureProperties(borderJSON)};
+        if(loadBorderResult.has_value()) {
+            config.borderTexture = loadBorderResult.value();
+        } // if loadBorderResult == success
+    } // if borderTexture found
+
     // LAYOUT
     if(findLayout != json.end()) {
         const auto& layoutJSON{findLayout.value()};
@@ -368,6 +378,48 @@ std::expected<farcical::ui::SceneConfig, farcical::engine::Error> farcical::ui::
             config.layout = loadLayoutResult.value();
 
             for(auto& layer: config.layout.layers) {
+                // Locate all Decorations for this Layer, if any.
+                // If found, apply the correct textureProperties that were previously loaded:
+                if(!layer.decorations.empty()) {
+                    for(auto& decoration: layer.decorations) {
+                        ResourceID textureID{decoration.textureProperties.id};
+                        if(textureID == config.borderTexture.id) {
+                            decoration.textureProperties = TextureProperties{
+                                config.borderTexture.id,
+                                config.borderTexture.path,
+                                config.borderTexture.scale,
+                                sf::IntRect{{0, 0}, {0, 0}}
+                            };
+                        } // if textureID == borderTextureID
+                        else {
+                            const auto& findTextureProperties{config.FindTextureProperties(textureID)};
+                            const auto& findRepeatingProperties{config.FindRepeatingTextureProperties(textureID)};
+                            const auto& findSegmentedProperties{config.FindSegmentedTextureProperties(textureID)};
+                            if(findTextureProperties) {
+                                decoration.textureProperties = findTextureProperties.value();
+                            } // if findTextureProperties
+                            else if(findRepeatingProperties) {
+                                const auto& repeatingProperties{findRepeatingProperties.value()};
+                                decoration.textureProperties = TextureProperties{
+                                    textureID,
+                                    repeatingProperties.path,
+                                    repeatingProperties.scale,
+                                    repeatingProperties.inputRect
+                                };
+                            } // else if findRepeatingProperties
+                            else if(findSegmentedProperties) {
+                                const auto& segmentedProperties{findSegmentedProperties.value()};
+                                decoration.textureProperties = TextureProperties{
+                                    textureID,
+                                    segmentedProperties.path,
+                                    segmentedProperties.scale,
+                                    sf::IntRect{{0, 0}, {0, 0}}
+                                };
+                            } // else if findSegmentedProperties
+                        } // else textureID != borderTexture
+                    } // for each decoration
+                } // if this layer has decorations
+
                 // Locate the Title for this Layer, if any.
                 // If found, apply the correct fontProperties that were previously loaded:
                 if(!layer.title.id.empty()) {
@@ -395,3 +447,4 @@ std::expected<farcical::ui::SceneConfig, farcical::engine::Error> farcical::ui::
 
     return config;
 }
+

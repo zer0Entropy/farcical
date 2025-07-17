@@ -18,7 +18,7 @@ farcical::ui::MenuItem::MenuItem(
                    label{nullptr},
                    activationEventType{activationEventType} {
   // For some reason, copying the eventArgs vector directly results in an extra layer of indirection :(
-  for(const auto& eventArg : activationEventArgs) {
+  for(const auto& eventArg: activationEventArgs) {
     this->activationEventArgs.emplace_back(eventArg);
   }
 }

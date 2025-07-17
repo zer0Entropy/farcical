@@ -67,26 +67,33 @@ namespace farcical::game {
     private:
         std::optional<engine::Error> CreateSceneLayout(ui::Scene& scene, const ui::LayoutConfig& layoutConfig);
 
-        std::optional<engine::Error> CreateDecorations(ui::Scene& scene,
-                                                       const std::vector<ui::DecorationConfig>& decorationConfigList);
+        std::optional<engine::Error> CreateDecorations(
+            ui::Scene& scene,
+            const std::vector<ui::DecorationConfig>& decorationConfigList);
 
         std::optional<engine::Error> CreateTitle(ui::Scene& scene, const ui::LabelConfig& titleConfig);
 
         std::optional<engine::Error> CreateMenu(ui::Scene& scene, const ui::MenuConfig& menuConfig);
 
-        std::optional<engine::Error> CacheFonts(ui::Scene& scene,
-                                                const std::vector<FontProperties>& fontPropertiesList);
+        std::optional<engine::Error> CacheFonts(
+            ui::Scene& scene,
+            const std::vector<FontProperties>& fontPropertiesList);
 
-        std::optional<engine::Error> CacheTextures(ui::Scene& scene,
-                                                   const std::vector<TextureProperties>& texturePropertiesList);
+        std::optional<engine::Error> CacheTextures(
+            ui::Scene& scene,
+            const std::vector<TextureProperties>& texturePropertiesList);
 
-        std::optional<engine::Error> CacheRepeatingTextures(ui::Scene& scene,
-                                                            const std::vector<RepeatingTextureProperties>&
-                                                            texturePropertiesList);
+        std::optional<engine::Error> CacheRepeatingTextures(
+            ui::Scene& scene,
+            const std::vector<RepeatingTextureProperties>& texturePropertiesList);
 
-        std::optional<engine::Error> CacheSegmentedTextures(ui::Scene& scene,
-                                                            const std::vector<SegmentedTextureProperties>&
-                                                            texturePropertiesList);
+        std::optional<engine::Error> CacheSegmentedTextures(
+            ui::Scene& scene,
+            const std::vector<SegmentedTextureProperties>& texturePropertiesList);
+
+        std::optional<engine::Error> CacheBorderTexture(
+            ui::Scene& scene,
+            const BorderTextureProperties& borderProperties);
 
         Status status;
         engine::Engine& engine;

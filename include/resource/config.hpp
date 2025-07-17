@@ -10,6 +10,7 @@
 #include <SFML/Graphics/Color.hpp>
 #include "resource.hpp"
 #include "../engine/error.hpp"
+#include "../geometry.hpp"
 
 namespace farcical {
 
@@ -126,10 +127,22 @@ namespace farcical {
         ~SegmentedTextureProperties() = default;
     };
 
+    struct BorderTextureProperties {
+        ResourceID id;
+        std::string path;
+        float scale;
+        sf::Vector2u percentSize;
+        sf::Vector2u outputSize;
+        std::array<TextureProperties, static_cast<int>(Rectangle::Corner::NumCorners)> cornerTextures;
+        std::array<TextureProperties, static_cast<int>(Rectangle::Edge::NumEdges)> edgeTextures;
+        TextureProperties centerTexture;
+    };
+
     std::expected<FontProperties, engine::Error>    LoadFontProperties(const nlohmann::json& json);
     std::expected<TextureProperties, engine::Error> LoadTextureProperties(const nlohmann::json& json, bool isSegment = false, std::string_view path = "");
     std::expected<RepeatingTextureProperties, engine::Error> LoadRepeatingTextureProperties(const nlohmann::json& json);
     std::expected<SegmentedTextureProperties, engine::Error> LoadSegmentedTextureProperties(const nlohmann::json& json);
+    std::expected<BorderTextureProperties, engine::Error> LoadBorderTextureProperties(const nlohmann::json& json);
 }
 
 #endif //RESOURCE_CONFIG_HPP

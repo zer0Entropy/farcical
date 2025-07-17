@@ -305,7 +305,6 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
 
 std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::CreateSplicedTexture(
     ResourceID id, const std::vector<ResourceID>& inputTextureIDs) {
-
     sf::Vector2u totalSize{0, 0};
     // Compute the total size of all textures spliced together (horizontally)
     for(const auto& textureID : inputTextureIDs) {
@@ -349,7 +348,6 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
 
 std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::CreateRepeatingTexture(
     ResourceID id, const sf::Vector2u& outputSize, ResourceID inputID, sf::IntRect inputRect) {
-
     ResourceHandle* inputHandle{GetResourceHandle(inputID)};
     // If a ResourceHandle with inputID has not been created previously, return Error{ResourceNotFound}
     if(!inputHandle) {
@@ -453,7 +451,6 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
     const std::vector<ResourceID>& cornerTextureIDs,
     const std::vector<ResourceID>& edgeTextureIDs,
     ResourceID centerTextureID) {
-
     ResourceHandle* borderHandle{GetResourceHandle(id)};
     // If a ResourceHandle with this ID has not been created previously, create it
     if(!borderHandle) {
@@ -466,14 +463,14 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
     } // if handle does not exist
 
     // Ensure all cornerTextures and edgeTextures have valid handles and are ready to use
-    for(const auto& cornerTextureID : cornerTextureIDs) {
+    for(const auto& cornerTextureID: cornerTextureIDs) {
         ResourceHandle* cornerHandle{GetResourceHandle(cornerTextureID)};
         if(!cornerHandle || cornerHandle->status != ResourceHandle::Status::IsReady) {
             const std::string failMsg{"Resource not found: Texture (id=" + cornerTextureID + "\")."};
             return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
         } // if !cornerHandle or cornerHandle->status != IsReady
     } // for each cornerTextureID
-    for(const auto& edgeTextureID : edgeTextureIDs) {
+    for(const auto& edgeTextureID: edgeTextureIDs) {
         ResourceHandle* edgeHandle{GetResourceHandle(edgeTextureID)};
         if(!edgeHandle || edgeHandle->status != ResourceHandle::Status::IsReady) {
             const std::string failMsg{"Resource not found: Texture (id=" + edgeTextureID + "\")."};
@@ -488,8 +485,9 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
     } // if !centerHandle or centerHandle->status != IsReady
 
     // Prepare our input Textures
-    std::vector<sf::Texture*> cornerTextures;
-    for(int index = static_cast<int>(Rectangle::Corner::TopLeft); index < static_cast<int>(Rectangle::Corner::NumCorners); ++index) {
+    std::array<sf::Texture*, static_cast<int>(Rectangle::Corner::NumCorners)> cornerTextures;
+    for(int index = static_cast<int>(Rectangle::Corner::TopLeft);
+        index < static_cast<int>(Rectangle::Corner::NumCorners); ++index) {
         const auto& requestTexture{GetTexture(cornerTextureIDs[index])};
         if(!requestTexture.has_value()) {
             const std::string failMsg{"Resource not found: Texture (id=" + cornerTextureIDs[index] + "\")."};
@@ -497,8 +495,10 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
         } // if requestTexture failed
         cornerTextures[index] = requestTexture.value();
     } // for each Corner
-    std::vector<sf::Texture*> edgeTextures;
-    for(int index = static_cast<int>(Rectangle::Edge::Left); index < static_cast<int>(Rectangle::Edge::NumEdges); ++index) {
+
+    std::array<sf::Texture*, static_cast<int>(Rectangle::Edge::NumEdges)> edgeTextures;
+    for(int index = static_cast<int>(Rectangle::Edge::Left); index < static_cast<int>(Rectangle::Edge::NumEdges); ++
+        index) {
         const auto& requestTexture{GetTexture(edgeTextureIDs[index])};
         if(!requestTexture.has_value()) {
             const std::string failMsg{"Resource not found: Texture (id=" + cornerTextureIDs[index] + "\")."};
@@ -524,16 +524,19 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
         if(findOutputTexture == textures.end()) {
             const std::string failMsg{"Resource not found: " + id + "."};
             return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
-
         } // if outputTexture not found
         outputTexture = &findOutputTexture->second;
 
         // Copy corners into the outputTexture
         const sf::Vector2u topLeftPosition{0, 0};
         outputTexture->update(*cornerTextures[static_cast<int>(Rectangle::Corner::TopLeft)], topLeftPosition);
-        const sf::Vector2u topRightPosition{outputSize.x - cornerTextures[static_cast<int>(Rectangle::Corner::TopRight)]->getSize().x, 0};
+        const sf::Vector2u topRightPosition{
+            outputSize.x - cornerTextures[static_cast<int>(Rectangle::Corner::TopRight)]->getSize().x, 0
+        };
         outputTexture->update(*cornerTextures[static_cast<int>(Rectangle::Corner::TopRight)], topRightPosition);
-        const sf::Vector2u bottomLeftPosition{0, outputSize.y - cornerTextures[static_cast<int>(Rectangle::Corner::BottomLeft)]->getSize().y};
+        const sf::Vector2u bottomLeftPosition{
+            0, outputSize.y - cornerTextures[static_cast<int>(Rectangle::Corner::BottomLeft)]->getSize().y
+        };
         outputTexture->update(*cornerTextures[static_cast<int>(Rectangle::Corner::BottomLeft)], bottomLeftPosition);
         const sf::Vector2u bottomRightPosition{
             outputSize.x - cornerTextures[static_cast<int>(Rectangle::Corner::TopRight)]->getSize().x,
@@ -543,25 +546,60 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
 
         // Create edges of the appropriate size by repeating our input edge Textures
         // Vertical edges - Left and Right
+        /*const sf::Vector2u vEdgeSize{
+            edgeTextures[static_cast<int>(Rectangle::Edge::Left)]->getSize().x,
+            bottomLeftPosition.y - topLeftPosition.y - cornerTextures[static_cast<int>(Rectangle::Corner::TopLeft)]->
+            getSize().y
+        };
+        */
         const sf::Vector2u vEdgeSize{
             edgeTextures[static_cast<int>(Rectangle::Edge::Left)]->getSize().x,
-            bottomLeftPosition.y - topLeftPosition.y - cornerTextures[static_cast<int>(Rectangle::Corner::TopLeft)]->getSize().y,
-
+            outputSize.y
+            - cornerTextures[static_cast<int>(Rectangle::Corner::TopLeft)]->getSize().y
+            - cornerTextures[static_cast<int>(Rectangle::Corner::BottomLeft)]->getSize().y
         };
         // Horizontal edges - Top and Bottom
+        /*
         const sf::Vector2u hEdgeSize{
-            topRightPosition.x - topLeftPosition.x - cornerTextures[static_cast<int>(Rectangle::Corner::TopLeft)]->getSize().x,
+            topRightPosition.x - topLeftPosition.x - cornerTextures[static_cast<int>(Rectangle::Corner::TopLeft)]->
+            getSize().x,
+            edgeTextures[static_cast<int>(Rectangle::Edge::Top)]->getSize().y
+        };
+        */
+        const sf::Vector2u hEdgeSize{
+            outputSize.x
+            - cornerTextures[static_cast<int>(Rectangle::Corner::TopLeft)]->getSize().x
+            - cornerTextures[static_cast<int>(Rectangle::Corner::TopRight)]->getSize().x,
             edgeTextures[static_cast<int>(Rectangle::Edge::Top)]->getSize().y
         };
         sf::Texture topTexture{hEdgeSize, false};
         sf::Texture bottomTexture{hEdgeSize, false};
         sf::Texture leftTexture{vEdgeSize, false};
         sf::Texture rightTexture{vEdgeSize, false};
+
         // Create the edges
         RepeatTexture(*edgeTextures[static_cast<int>(Rectangle::Edge::Top)], topTexture);
         RepeatTexture(*edgeTextures[static_cast<int>(Rectangle::Edge::Bottom)], bottomTexture);
         RepeatTexture(*edgeTextures[static_cast<int>(Rectangle::Edge::Left)], leftTexture);
         RepeatTexture(*edgeTextures[static_cast<int>(Rectangle::Edge::Right)], rightTexture);
+
+        // Check to see whether the tiles filled the Texture evenly, or if there are "slices" missing
+        // If so, fill in those slices
+        unsigned int widthInTiles{hEdgeSize.x / edgeTextures[static_cast<int>(Rectangle::Edge::Top)]->getSize().x};
+        unsigned int heightInTiles{vEdgeSize.y / edgeTextures[static_cast<int>(Rectangle::Edge::Left)]->getSize().y};
+        if(edgeTextures[static_cast<int>(Rectangle::Edge::Top)]->getSize().x * widthInTiles < hEdgeSize.x) {
+            RepeatSliceHorizontal(*edgeTextures[static_cast<int>(Rectangle::Edge::Top)], topTexture);
+        } // if edge tile width * widthInTiles < edge width
+        if(edgeTextures[static_cast<int>(Rectangle::Edge::Bottom)]->getSize().x * widthInTiles < hEdgeSize.x) {
+            RepeatSliceHorizontal(*edgeTextures[static_cast<int>(Rectangle::Edge::Bottom)], bottomTexture);
+        }// if edge tile with * widthInTiles < edge width
+        if(edgeTextures[static_cast<int>(Rectangle::Edge::Left)]->getSize().y * heightInTiles< vEdgeSize.y) {
+            RepeatSliceVertical(*edgeTextures[static_cast<int>(Rectangle::Edge::Left)], leftTexture);
+        } // if edge tile height * heightInTiles < edge height
+        if(edgeTextures[static_cast<int>(Rectangle::Edge::Top)]->getSize().y * heightInTiles < vEdgeSize.y) {
+            RepeatSliceVertical(*edgeTextures[static_cast<int>(Rectangle::Edge::Right)], rightTexture);
+        } // if edge tile height * heightInTiles < edge height
+
         // Copy them into the outputTexture
         const sf::Vector2u topPosition{
             topLeftPosition.x + cornerTextures[static_cast<int>(Rectangle::Corner::TopLeft)]->getSize().x,
@@ -591,6 +629,18 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
         };
         sf::Texture bigCenterTexture{centerSize, false};
         RepeatTexture(*centerTexture, bigCenterTexture);
+
+        // Check to see whether the tiles filled the Texture evenly, or if there are "slices" missing
+        // If so, fill those slices in
+        unsigned int centerWidthInTiles{centerSize.x / centerTexture->getSize().x};
+        unsigned int centerHeightInTiles{centerSize.y / centerTexture->getSize().y};
+        if(centerTexture->getSize().x * centerWidthInTiles < centerSize.x) {
+            RepeatSliceHorizontal(*centerTexture, bigCenterTexture);
+        } // if center tile width * widthInTiles < center width
+        if(centerTexture->getSize().y * centerHeightInTiles < centerSize.y) {
+            RepeatSliceVertical(*centerTexture, bigCenterTexture);
+        } // if center tile height * heightInTiles < center height
+
         // Copy it into the outputTexture
         sf::Vector2u centerPosition{
             leftPosition.x + leftTexture.getSize().x,

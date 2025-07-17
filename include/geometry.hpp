@@ -6,14 +6,12 @@
 #define GEOMETRY_HPP
 
 namespace farcical {
-
   enum class Orientation {
     Horizontal,
     Vertical
   };
 
   struct Rectangle {
-
     enum class Corner {
       TopLeft       = 0,
       TopRight      = 1,

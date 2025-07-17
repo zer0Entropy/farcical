@@ -118,7 +118,7 @@ namespace farcical::ui {
             const std::vector<engine::EntityID>& itemIDs,
             const std::vector<std::string>& itemContents,
             const std::vector<engine::Event::Type>& itemEventTypes,
-            const std::vector<std::vector<std::any>>& itemEventArgs,
+            const std::vector<std::vector<std::any> >& itemEventArgs,
             Widget* parent) {
             if(!parent || !parent->IsContainer()) {
                 const std::string failMsg{"Invalid configuration: Label with missing or invalid parent."};

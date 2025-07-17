@@ -8,9 +8,8 @@
 #include "../../include/ui/menu.hpp"
 #include "../../include/ui/decoration.hpp"
 
-farcical::game::GameController::GameController(Game& game):
-    EventHandler(),
-    game{game} {
+farcical::game::GameController::GameController(Game& game): EventHandler(),
+                                                            game{game} {
 }
 
 void farcical::game::GameController::HandleEvent(const engine::Event& event) {
@@ -64,10 +63,9 @@ void farcical::game::GameController::HandleEvent(const engine::Event& event) {
     } // else if event.type == DestroyScene
 }
 
-farcical::game::Game::Game(engine::Engine& engine):
-    status{Status::Uninitialized},
-    engine{engine},
-    controller{*this} {
+farcical::game::Game::Game(engine::Engine& engine): status{Status::Uninitialized},
+                                                    engine{engine},
+                                                    controller{*this} {
 }
 
 farcical::game::Game::Status farcical::game::Game::GetStatus() const {
@@ -173,6 +171,14 @@ std::expected<std::unique_ptr<farcical::ui::Scene>, farcical::engine::Error> far
     CacheRepeatingTextures(*scene, config.repeatingTextures);
     /*  SEGMENTED TEXTURES  */
     CacheSegmentedTextures(*scene, config.segmentedTextures);
+    /* BORDER TEXTURE */
+    config.borderTexture.outputSize = {
+        static_cast<unsigned int>(config.borderTexture.percentSize.x * windowSize.x / 100 / config.borderTexture.scale),
+        static_cast<unsigned int>(config.borderTexture.percentSize.y * windowSize.y / 100 / config.borderTexture.scale)
+    };
+    //config.borderTexture.outputSize.x /= config.borderTexture.scale;
+    //config.borderTexture.outputSize.y /= config.borderTexture.scale;
+    CacheBorderTexture(*scene, config.borderTexture);
     /*****************************************************************/
 
     /*  CREATE THE LAYOUT   */
@@ -501,8 +507,8 @@ std::optional<farcical::engine::Error> farcical::game::Game::CacheSegmentedTextu
                                                              textureProperties.path)
         };
 
-        std::vector<ResourceID> segmentIDList;
         if(createHandle.has_value()) {
+            std::vector<ResourceID> segmentIDList;
             // Iterate through each Segment of the SegmentedTexture
             for(const auto& segmentProperties: textureProperties.segments) {
                 // Create ResourceHandle for the Segment
@@ -528,15 +534,107 @@ std::optional<farcical::engine::Error> farcical::game::Game::CacheSegmentedTextu
             if(createTexture.has_value()) {
                 // Cache the splicedTexture
                 scene.CacheTexture(textureProperties.id, createTexture.value());
-                scene.CacheTextureProperties(textureProperties.id, TextureProperties{
-                                                 textureProperties.id,
-                                                 textureProperties.path,
-                                                 textureProperties.scale,
-                                                 sf::IntRect{{0, 0}, {0, 0}}
-                                             });
-            }
+                scene.CacheTextureProperties(
+                    textureProperties.id, TextureProperties{
+                        textureProperties.id,
+                        textureProperties.path,
+                           textureProperties.scale,
+                           sf::IntRect{{0, 0}, {0, 0}}});
+            } // if createTexture == success
         } // createHandle == success
     } // for each segmentedTexture in config.segmentedTextures
+    return std::nullopt;
+}
+
+std::optional<farcical::engine::Error> farcical::game::Game::CacheBorderTexture(ui::Scene& scene,
+    const BorderTextureProperties& borderProperties) {
+
+    if(borderProperties.id.empty()) {
+        return std::nullopt;
+    }
+    ResourceManager& resourceManager{engine.GetResourceManager()};
+
+    // Create ResourceHandle for the Texture
+    const auto& createHandle{
+        resourceManager.CreateResourceHandle(borderProperties.id, ResourceHandle::Type::Texture,borderProperties.path)
+    };
+    if(createHandle.has_value()) {
+        std::vector<ResourceID> cornerTextureIDs;
+        std::vector<ResourceID> edgeTextureIDs;
+
+        // Corners
+        for(const auto& corner: borderProperties.cornerTextures) {
+            // Create ResourceHandle for each corner Texture
+            const auto& createCornerHandle{
+                resourceManager.CreateResourceHandle(corner.id, ResourceHandle::Type::Texture, corner.path)
+            };
+            if(createCornerHandle.has_value()) {
+                const auto& loadCornerTexture{
+                    resourceManager.GetTexture(corner)
+                };
+                if(loadCornerTexture.has_value()) {
+                    scene.CacheTexture(corner.id, loadCornerTexture.value());
+                    scene.CacheTextureProperties(corner.id, corner);
+                    cornerTextureIDs.emplace_back(corner.id);
+                } // if loadCornerTexture == success
+            } // if createCornerHandle == success
+        } // for each corner
+
+        // Edges
+        for(const auto& edge: borderProperties.edgeTextures) {
+            // Create ResourceHandle for each edge Texture
+            const auto& createEdgeHandle{
+                resourceManager.CreateResourceHandle(edge.id, ResourceHandle::Type::Texture, edge.path)
+            };
+            if(createEdgeHandle.has_value()) {
+                const auto& loadEdgeTexture{
+                    resourceManager.GetTexture(edge)
+                };
+                if(loadEdgeTexture.has_value()) {
+                    scene.CacheTexture(edge.id, loadEdgeTexture.value());
+                    scene.CacheTextureProperties(edge.id, edge);
+                    edgeTextureIDs.emplace_back(edge.id);
+                } // if loadEdgeTexture == success
+            } // if createEdgeHandle == success
+        } // for each edge
+
+        // Center
+        const auto& createCenterHandle{
+            resourceManager.CreateResourceHandle(
+                borderProperties.centerTexture.id,
+                ResourceHandle::Type::Texture,
+                borderProperties.centerTexture.path)
+        };
+        if(createCenterHandle.has_value()) {
+            const auto& loadCenterTexture{
+                resourceManager.GetTexture(borderProperties.centerTexture)
+            };
+            if(loadCenterTexture.has_value()) {
+                scene.CacheTexture(borderProperties.centerTexture.id, loadCenterTexture.value());
+                scene.CacheTextureProperties(borderProperties.centerTexture.id, borderProperties.centerTexture);
+            } // if loadCenterTexture == success
+        } // if createCenterHandle == success
+
+        const auto& createBorderTexture{
+            resourceManager.CreateBorderTexture(
+                borderProperties.id,
+                borderProperties.outputSize,
+                cornerTextureIDs,
+                edgeTextureIDs,
+                borderProperties.centerTexture.id)
+        };
+        if(!createBorderTexture.has_value()) {
+            const std::string failMsg{"Unexpected nullptr: Failed to create borderTexture."};
+            return engine::Error{engine::Error::Signal::NullPtr, failMsg};
+        }
+        scene.CacheTexture(borderProperties.id, createBorderTexture.value());
+        scene.CacheTextureProperties(borderProperties.id, TextureProperties{
+            borderProperties.id,
+            borderProperties.path,
+            borderProperties.scale,
+            sf::IntRect{{0, 0}, {0, 0}}});
+    } // if createHandle == success
+
     return std::nullopt;
 }
 

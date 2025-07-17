@@ -229,3 +229,166 @@ std::expected<farcical::SegmentedTextureProperties, farcical::engine::Error> far
 
     return properties;
 }
+
+std::expected<farcical::BorderTextureProperties, farcical::engine::Error> farcical::LoadBorderTextureProperties(
+    const nlohmann::json& json) {
+
+    BorderTextureProperties properties;
+    const auto& findID{json.find("id")};
+    const auto& findPath{json.find("path")};
+    const auto& findScale{json.find("scale")};
+    const auto& findPercentSize{json.find("percentSize")};
+    const auto& findCorners{json.find("corners")};
+    const auto& findEdges{json.find("edges")};
+    const auto& findCenter{json.find("center")};
+    if(findID == json.end()) {
+        const std::string failMsg{"Invalid configuration: ResourceID not found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if ResourceID not found
+    properties.id = findID.value().get<std::string>();
+
+    if(findPath == json.end()) {
+        const std::string failMsg{"Invalid configuration: Path not found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if path not found
+    properties.path = findPath.value().get<std::string>();
+
+    if(findScale != json.end()) {
+        properties.scale = findScale.value().get<float>();
+    } // if scale found
+
+    if(findCorners == json.end()) {
+        const std::string failMsg{"Invalid configuration: Corners not found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if corners not found
+    const auto& cornersJSON{findCorners.value()};
+    int cornerIndex{0};
+    for(const auto& cornerJSON: cornersJSON) {
+        const auto& findCornerID{cornerJSON.find("id")};
+        const auto& findCornerPosition{cornerJSON.find("position")};
+        const auto& findInputSize{cornerJSON.find("inputSize")};
+
+        if(findCornerID == cornerJSON.end()) {
+            const std::string failMsg{"Invalid configuration: CornerID not found."};
+            return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+        } // if corners not found
+        std::string cornerDump{cornerJSON.dump()};
+        properties.cornerTextures[cornerIndex].id = findCornerID.value().get<std::string>();
+        properties.cornerTextures[cornerIndex].id += "CornerTexture";
+
+        if(findCornerPosition == cornerJSON.end()) {
+            const std::string failMsg{"Invalid configuration: Position not found."};
+            return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+        } // if position not found
+        const auto& positionJSON{findCornerPosition.value()};
+        const auto& findX{positionJSON.find("x")};
+        const auto& findY{positionJSON.find("y")};
+        properties.cornerTextures[cornerIndex].inputRect.position.x = findX.value().get<int>();
+        properties.cornerTextures[cornerIndex].inputRect.position.y = findY.value().get<int>();
+
+        if(findInputSize == cornerJSON.end()) {
+            const std::string failMsg{"Invalid configuration: InputSize not found."};
+            return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+        } // if inputSize not found
+        const auto& sizeJSON{findInputSize.value()};
+        const auto& findWidth{sizeJSON.find("width")};
+        const auto& findHeight{sizeJSON.find("height")};
+        properties.cornerTextures[cornerIndex].inputRect.size.x = findWidth.value().get<int>();
+        properties.cornerTextures[cornerIndex].inputRect.size.y = findHeight.value().get<int>();
+        properties.cornerTextures[cornerIndex].path = properties.path;
+        properties.cornerTextures[cornerIndex].scale = properties.scale;
+        ++cornerIndex;
+    } // for each corner in cornersJSON
+
+    if(findEdges == json.end()) {
+        const std::string failMsg{"Invalid configuration: Edges not found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if edges not found
+    int edgeIndex{0};
+    const auto& edgesJSON{findEdges.value()};
+    for(const auto& edgeJSON: edgesJSON) {
+        const auto& findEdgeID{edgeJSON.find("id")};
+        const auto& findEdgePosition{edgeJSON.find("position")};
+        const auto& findInputSize{edgeJSON.find("inputSize")};
+
+        if(findEdgeID == edgeJSON.end()) {
+            const std::string failMsg{"Invalid configuration: EdgeID not found."};
+            return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+        } // if corners not found
+        properties.edgeTextures[edgeIndex].id = findEdgeID.value().get<std::string>();
+        properties.edgeTextures[edgeIndex].id += "EdgeTexture";
+
+        if(findEdgePosition == edgeJSON.end()) {
+            const std::string failMsg{"Invalid configuration: Position not found."};
+            return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+        } // if position not found
+        const auto& positionJSON{findEdgePosition.value()};
+        const auto& findX{positionJSON.find("x")};
+        const auto& findY{positionJSON.find("y")};
+        properties.edgeTextures[edgeIndex].inputRect.position.x = findX.value().get<int>();
+        properties.edgeTextures[edgeIndex].inputRect.position.y = findY.value().get<int>();
+
+        if(findInputSize == edgeJSON.end()) {
+            const std::string failMsg{"Invalid configuration: InputSize not found."};
+            return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+        } // if position not found
+        const auto& sizeJSON{findInputSize.value()};
+        const auto& findWidth{sizeJSON.find("width")};
+        const auto& findHeight{sizeJSON.find("height")};
+        properties.edgeTextures[edgeIndex].inputRect.size.x = findWidth.value().get<int>();
+        properties.edgeTextures[edgeIndex].inputRect.size.y = findHeight.value().get<int>();
+        properties.edgeTextures[edgeIndex].path = properties.path;
+        properties.edgeTextures[edgeIndex].scale = properties.scale;
+        edgeIndex++;
+    } // for each edge in edgesJSON
+
+    if(findCenter == json.end()) {
+        const std::string failMsg{"Invalid configuration: Center not found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if center not found
+    const auto& centerJSON{findCenter.value()};
+    const auto& findCenterID{centerJSON.find("id")};
+    if(findCenterID == centerJSON.end()) {
+        const std::string failMsg{"Invalid configuration: ResourceID not found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if ResourceID not found
+    properties.centerTexture.id = findCenterID.value().get<std::string>();
+    properties.centerTexture.id += "Texture";
+
+    const auto& findPosition{centerJSON.find("position")};
+    if(findPosition == centerJSON.end()) {
+        const std::string failMsg{"Invalid configuration: Position not found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if position not found
+    const auto& positionJSON{findPosition.value()};
+    const auto& findX{positionJSON.find("x")};
+    const auto& findY{positionJSON.find("y")};
+    properties.centerTexture.inputRect.position.x = findX.value().get<int>();
+    properties.centerTexture.inputRect.position.y = findY.value().get<int>();
+
+    const auto& findInputSize{centerJSON.find("inputSize")};
+    if(findInputSize == centerJSON.end()) {
+        const std::string failMsg{"Invalid configuration: InputSize not found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if inputSize not found
+    const auto& inputSizeJSON{findInputSize.value()};
+    const auto& findCenterWidth{inputSizeJSON.find("width")};
+    const auto& findCenterHeight{inputSizeJSON.find("height")};
+    properties.centerTexture.inputRect.size.x = findCenterWidth.value().get<int>();
+    properties.centerTexture.inputRect.size.y = findCenterHeight.value().get<int>();
+
+    properties.centerTexture.path = properties.path;
+    properties.centerTexture.scale = properties.scale;
+
+    if(findPercentSize == json.end()) {
+        const std::string failMsg{"Invalid configuration: percentSize not found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if percentSize not found
+    const auto& percentSizeJSON{findPercentSize.value()};
+    const auto& findWidth{percentSizeJSON.find("width")};
+    const auto& findHeight{percentSizeJSON.find("height")};
+    properties.percentSize.x = findWidth.value();
+    properties.percentSize.y = findHeight.value();
+
+    return properties;
+}

@@ -16,7 +16,6 @@ namespace farcical::game {
 }
 
 namespace farcical::engine {
-
     struct Event {
         enum class Type {
             CreateScene,
@@ -29,8 +28,7 @@ namespace farcical::engine {
 
         Event() = delete;
 
-        explicit Event(Type type, const std::vector<std::any>& args = {}):
-            type{type} {
+        explicit Event(Type type, const std::vector<std::any>& args = {}): type{type} {
             // For some reason, copying arg directly results in an extra layer of indirection :(
             for(const auto& arg: args) {
                 this->args.emplace_back(arg);

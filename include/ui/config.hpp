@@ -99,6 +99,7 @@ namespace farcical::ui {
         std::vector<TextureProperties> textures;
         std::vector<RepeatingTextureProperties> repeatingTextures;
         std::vector<SegmentedTextureProperties> segmentedTextures;
+        BorderTextureProperties borderTexture;
         LayoutConfig layout;
 
         SceneConfig(): id{""} {
@@ -112,6 +113,33 @@ namespace farcical::ui {
                     return fontProperties;
                 }
             } // for each fontProperties in fonts
+            return std::nullopt;
+        }
+
+        std::optional<TextureProperties> FindTextureProperties(ResourceID id) const {
+            for(const auto& textureProperties: textures) {
+                if(textureProperties.id == id) {
+                    return textureProperties;
+                }
+            } // for each textureProperties in textures
+            return std::nullopt;
+        }
+
+        std::optional<RepeatingTextureProperties> FindRepeatingTextureProperties(ResourceID id) const {
+            for(const auto& textureProperties: repeatingTextures) {
+                if(textureProperties.outputID == id) {
+                    return textureProperties;
+                }
+            } // for each repeatingTexture in repeatingTextures
+            return std::nullopt;
+        }
+
+        std::optional<SegmentedTextureProperties> FindSegmentedTextureProperties(ResourceID id) const {
+            for(const auto& textureProperties: segmentedTextures) {
+                if(textureProperties.id == id) {
+                    return textureProperties;
+                }
+            } // for each segmentedTexture in segmentedTextures
             return std::nullopt;
         }
     };
