@@ -62,6 +62,10 @@ namespace farcical::game {
 
         std::expected<std::unique_ptr<ui::Scene>, engine::Error> CreateScene(ui::SceneConfig config, ui::Scene* parent);
 
+        std::optional<engine::Error> StartScene(ui::Scene* scene, ui::SceneConfig& config);
+
+        std::optional<engine::Error> StopScene(ui::Scene* scene);
+
         std::expected<ResourceParameters, engine::Error> FindSceneResource(engine::EntityID sceneID) const;
 
     private:

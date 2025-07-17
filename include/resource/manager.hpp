@@ -36,13 +36,13 @@ namespace farcical {
         std::expected<sf::Texture*, engine::Error> CreateSplicedTexture(
             ResourceID id, const std::vector<ResourceID>& inputTextureIDs);
 
-        std::expected<sf::Texture*, engine::Error>      CreateRepeatingTexture(
+        std::expected<sf::Texture*, engine::Error> CreateRepeatingTexture(
             ResourceID id,
             const sf::Vector2u& outputSize,
             ResourceID inputID,
             sf::IntRect inputRect = {{0, 0}, {0, 0}});
 
-        std::expected<sf::Texture*, engine::Error>      CreateBorderTexture(
+        std::expected<sf::Texture*, engine::Error> CreateBorderTexture(
             ResourceID id,
             const sf::Vector2u& outputSize,
             const std::vector<ResourceID>& cornerTextureIDs,
@@ -52,7 +52,8 @@ namespace farcical {
     private:
         void                                            RepeatTexture(sf::Texture& input, sf::Texture& output);
 
-        void                                            RepeatSliceHorizontal(sf::Texture& input, sf::Texture& output);
+        void RepeatSliceHorizontal(sf::Texture& input, sf::Texture& output);
+
         void                                            RepeatSliceVertical(sf::Texture& input, sf::Texture& output);
 
         std::unordered_map<ResourceID, ResourceHandle> registry;

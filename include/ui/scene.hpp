@@ -9,6 +9,7 @@
 #include <nlohmann/json.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Text.hpp>
+#include "config.hpp"
 #include "container.hpp"
 #include "layout.hpp"
 #include "menu.hpp"
@@ -71,9 +72,18 @@ namespace farcical::ui {
 
     struct SceneHierarchy {
         std::unique_ptr<Scene> root;
+        std::unordered_map<engine::EntityID, ui::SceneConfig> sceneConfigs;
 
         Scene* currentScene;
         std::unique_ptr<MenuController> menuController;
+
+        std::optional<ui::SceneConfig> FindSceneConfig(engine::EntityID id) {
+            const auto& findConfig{sceneConfigs.find(id)};
+            if(findConfig != sceneConfigs.end()) {
+                return findConfig->second;
+            } // if findConfig == success
+            return std::nullopt;
+        }
 
         Scene* FindScene(engine::EntityID id, Scene* parent = nullptr) {
             if(!parent) {

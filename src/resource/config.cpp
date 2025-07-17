@@ -232,7 +232,6 @@ std::expected<farcical::SegmentedTextureProperties, farcical::engine::Error> far
 
 std::expected<farcical::BorderTextureProperties, farcical::engine::Error> farcical::LoadBorderTextureProperties(
     const nlohmann::json& json) {
-
     BorderTextureProperties properties;
     const auto& findID{json.find("id")};
     const auto& findPath{json.find("path")};

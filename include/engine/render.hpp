@@ -40,6 +40,11 @@ namespace farcical::engine {
         std::vector<RenderComponent*> componentList;
     };
 
+    struct RenderContext {
+        engine::EntityID sceneID;
+        std::array<RenderLayer, static_cast<int>(ui::Layout::Layer::ID::NumLayers)> layers;
+    };
+
     class RenderSystem final : public System {
     public:
         RenderSystem() = delete;
@@ -58,23 +63,35 @@ namespace farcical::engine {
 
         void Stop() override;
 
+        // Create RenderContext to encapsulate RenderLayers
+        std::expected<RenderContext*, Error> CreateRenderContext(engine::EntityID sceneID);
+
+        // Destroy RenderContext and all RenderComponents it contains
+        std::optional<Error> DestroyRenderContext(engine::EntityID sceneID);
+
+        std::optional<RenderContext*> GetRenderContext(engine::EntityID sceneID) const;
+
         // Create RenderComponent for Sprite
-        std::expected<RenderComponent*, Error> CreateRenderComponent(ui::Layout::Layer::ID layerID, EntityID parentID,
-                                                                     sf::Texture* texture);
+        std::expected<RenderComponent*, Error> CreateRenderComponent(
+            ui::Layout::Layer::ID layerID,
+            EntityID sceneID,
+            EntityID parentID,
+            sf::Texture* texture);
 
         // Create RenderComponent for Text
         std::expected<RenderComponent*, Error> CreateRenderComponent(
             ui::Layout::Layer::ID layerID,
+            EntityID sceneID,
             EntityID parentID,
             sf::Font* font,
             const FontProperties& fontProperties,
             std::string_view contents);
 
-        std::optional<Error> DestroyRenderComponent(EntityID parentID);
+        std::optional<Error> DestroyRenderComponent(EntityID sceneID, EntityID parentID);
 
     private:
         sf::RenderWindow& window;
-        RenderLayer layers[static_cast<int>(ui::Layout::Layer::ID::NumLayers)];
+        std::vector<RenderContext> contexts;
         std::unordered_map<EntityID, std::unique_ptr<RenderComponent> > components;
     };
 };

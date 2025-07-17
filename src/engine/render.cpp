@@ -7,12 +7,7 @@
 #include "../../include/engine/render.hpp"
 
 farcical::engine::RenderSystem::RenderSystem(sf::RenderWindow& window): System{ID::RenderSystem},
-                                                                        window{window},
-                                                                        layers{
-                                                                          {.id = ui::Layout::Layer::ID::Background},
-                                                                          {.id = ui::Layout::Layer::ID::Foreground},
-                                                                          {.id = ui::Layout::Layer::ID::Overlay}
-                                                                        } {
+                                                                        window{window} {
 }
 
 void farcical::engine::RenderSystem::Init() {
@@ -21,28 +16,30 @@ void farcical::engine::RenderSystem::Init() {
 void farcical::engine::RenderSystem::Update() {
   if(window.isOpen()) {
     window.clear();
-    for(int layerIndex = static_cast<int>(ui::Layout::Layer::ID::Background);
-        layerIndex < static_cast<int>(ui::Layout::Layer::ID::NumLayers); ++layerIndex) {
-      RenderLayer& layer{layers[layerIndex]};
-      for(const auto& component: layer.componentList) {
-        if(component->texture) {
-          sf::Sprite sprite{*component->texture};
-          sprite.setScale(component->scale);
-          sprite.setPosition(component->position);
-          window.draw(sprite);
-        } // if texture
-        else if(component->font) {
-          const FontProperties& fontProperties{component->fontProperties};
-          sf::Text text{*component->font, component->contents, fontProperties.characterSize};
-          text.setScale(component->scale);
-          text.setPosition(component->position);
-          text.setFillColor(fontProperties.color);
-          text.setOutlineColor(fontProperties.outlineColor);
-          text.setOutlineThickness(fontProperties.outlineThickness);
-          window.draw(text);
-        } // else if font
-      }
-    }
+
+    for(const auto& context: contexts) {
+      for(const auto& layer: context.layers) {
+        for(const auto& component: layer.componentList) {
+          if(component->texture) {
+            sf::Sprite sprite{*component->texture};
+            sprite.setScale(component->scale);
+            sprite.setPosition(component->position);
+            window.draw(sprite);
+          } // if texture
+          else if(component->font) {
+            const FontProperties& fontProperties{component->fontProperties};
+            sf::Text text{*component->font, component->contents, fontProperties.characterSize};
+            text.setScale(component->scale);
+            text.setPosition(component->position);
+            text.setFillColor(fontProperties.color);
+            text.setOutlineColor(fontProperties.outlineColor);
+            text.setOutlineThickness(fontProperties.outlineThickness);
+            window.draw(text);
+          } // else if font
+        } // for each Component in componentList
+      } // for each RenderLayer in RenderContext
+    } // for each RenderContext
+
     window.display();
   }
 }
@@ -53,16 +50,77 @@ void farcical::engine::RenderSystem::Stop() {
   }
 }
 
+std::expected<farcical::engine::RenderContext*, farcical::engine::Error>
+farcical::engine::RenderSystem::CreateRenderContext(engine::EntityID sceneID) {
+  const auto existingContext{GetRenderContext(sceneID)};
+  if(existingContext.has_value()) {
+    const auto& failMsg{
+      "Invalid Configuration: Attempted to create a RenderContext with sceneID=\"" + sceneID +
+      "\", but a RenderContext with that ID already exists!"
+    };
+    return std::unexpected(engine::Error{Error::Signal::InvalidConfiguration, failMsg});
+  } // if this RenderContext already exists
+  RenderContext& context{contexts.emplace_back(RenderContext{sceneID})};
+  for(int index = 0; index < context.layers.size(); ++index) {
+    context.layers[index].id = static_cast<ui::Layout::Layer::ID>(index);
+  } // assign each Layer its correct LayerID
+  return &context;
+}
+
+std::optional<farcical::engine::Error> farcical::engine::RenderSystem::DestroyRenderContext(engine::EntityID sceneID) {
+  // Loop through each RenderContext to find the one in question
+  for(auto contextIter = contexts.begin(); contextIter != contexts.end(); ++contextIter) {
+    // If we find it, loop through each of its RenderLayers and remove all RenderComponents therein
+    if(contextIter->sceneID == sceneID) {
+      // Remove RenderComponents before erasing
+      for(const auto& layer: contextIter->layers) {
+        for(const auto& component: layer.componentList) {
+          DestroyRenderComponent(sceneID, component->parentID);
+        } // for each RenderComponent* in layer.componentList
+      } // for each RenderLayer in (*contextIter).layers
+
+      contexts.erase(contextIter);
+      return std::nullopt;
+    } // if (*contextIter) is the RenderContext we're meant to destroy
+  } // for each RenderContext in contexts
+
+  const auto& failMsg{
+    "Invalid Configuration: Attempted to destroy a RenderContext with sceneID=\"" + sceneID +
+    "\", but no such RenderContext exists!"
+  };
+  return engine::Error{Error::Signal::InvalidConfiguration, failMsg};
+}
+
+std::optional<farcical::engine::RenderContext*> farcical::engine::RenderSystem::GetRenderContext(
+  engine::EntityID sceneID) const {
+  for(const auto& context: contexts) {
+    if(context.sceneID == sceneID) {
+      return const_cast<RenderContext*>(&context);
+    } // if context.sceneID == sceneID
+  } // for each RenderContext in contexts
+  return std::nullopt;
+}
+
 std::expected<farcical::engine::RenderComponent*, farcical::engine::Error>
 farcical::engine::RenderSystem::CreateRenderComponent(
-  ui::Layout::Layer::ID layerID, EntityID parentID, sf::Texture* texture) {
+  ui::Layout::Layer::ID layerID,
+  EntityID sceneID,
+  EntityID parentID,
+  sf::Texture* texture) {
+  const auto& findContext{GetRenderContext(sceneID)};
+  if(!findContext.has_value() && findContext.value() != nullptr) {
+    const std::string failMsg{"Invalid configuration: RenderContext with id=\"" + sceneID + "\" not found."};
+    return std::unexpected(Error{Error::Signal::InvalidConfiguration, failMsg});
+  } // if RenderContext not found
+  RenderContext& context{*findContext.value()};
+
   const auto& createComponent{
     components.insert(std::make_pair(parentID, std::make_unique<RenderComponent>(parentID)))
   };
   if(createComponent.second) {
     RenderComponent* component{createComponent.first->second.get()};
     component->texture = texture;
-    layers[static_cast<int>(layerID)].componentList.push_back(component);
+    context.layers[static_cast<int>(layerID)].componentList.push_back(component);
     return component;
   } // if createComponent == success
   const std::string failMsg{"Invalid configuration: Failed to create RenderComponent for " + parentID + "."};
@@ -71,8 +129,19 @@ farcical::engine::RenderSystem::CreateRenderComponent(
 
 std::expected<farcical::engine::RenderComponent*, farcical::engine::Error>
 farcical::engine::RenderSystem::CreateRenderComponent(
-  ui::Layout::Layer::ID layerID, EntityID parentID, sf::Font* font, const FontProperties& fontProperties,
+  ui::Layout::Layer::ID layerID,
+  EntityID sceneID,
+  EntityID parentID,
+  sf::Font* font,
+  const FontProperties& fontProperties,
   std::string_view contents) {
+  const auto& findContext{GetRenderContext(sceneID)};
+  if(!findContext.has_value() && findContext.value() != nullptr) {
+    const std::string failMsg{"Invalid configuration: RenderContext with id=\"" + sceneID + "\" not found."};
+    return std::unexpected(Error{Error::Signal::InvalidConfiguration, failMsg});
+  } // if RenderContext not found
+  RenderContext& context{*findContext.value()};
+
   const auto& createComponent{
     components.insert(std::make_pair(parentID, std::make_unique<RenderComponent>(parentID)))
   };
@@ -81,22 +150,30 @@ farcical::engine::RenderSystem::CreateRenderComponent(
     component->font = font;
     component->fontProperties = fontProperties;
     component->contents = contents;
-    layers[static_cast<int>(layerID)].componentList.push_back(component);
+    context.layers[static_cast<int>(layerID)].componentList.push_back(component);
     return component;
   } // if createComponent == success
   const std::string failMsg{"Invalid configuration: Failed to create RenderComponent for " + parentID + "."};
   return std::unexpected(Error{Error::Signal::InvalidConfiguration, failMsg});
 }
 
-std::optional<farcical::engine::Error> farcical::engine::RenderSystem::DestroyRenderComponent(EntityID parentID) {
+std::optional<farcical::engine::Error> farcical::engine::RenderSystem::DestroyRenderComponent(
+  EntityID sceneID, EntityID parentID) {
+  const auto& findContext{GetRenderContext(sceneID)};
+  if(!findContext.has_value() && findContext.value() != nullptr) {
+    const std::string failMsg{"Invalid Configuration: Failed to find RenderContext with sceneID=\"" + sceneID + "\"."};
+    return Error{Error::Signal::InvalidConfiguration, failMsg};
+  }
+  RenderContext& context{*findContext.value()};
+
   const auto& findComponent{components.find(parentID)};
   if(findComponent != components.end()) {
     for(int index = 0; index < static_cast<int>(ui::Layout::Layer::ID::NumLayers); ++index) {
       bool found{false};
-      for(auto componentIter = layers[index].componentList.begin();
-          !found && componentIter != layers[index].componentList.end(); ++componentIter) {
+      for(auto componentIter = context.layers[index].componentList.begin();
+          !found && componentIter != context.layers[index].componentList.end(); ++componentIter) {
         if((*componentIter)->parentID == parentID) {
-          layers[index].componentList.erase(componentIter);
+          context.layers[index].componentList.erase(componentIter);
           found = true;
         } // if Component found
       } // for each Component in componentList

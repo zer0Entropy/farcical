@@ -592,8 +592,8 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
         } // if edge tile width * widthInTiles < edge width
         if(edgeTextures[static_cast<int>(Rectangle::Edge::Bottom)]->getSize().x * widthInTiles < hEdgeSize.x) {
             RepeatSliceHorizontal(*edgeTextures[static_cast<int>(Rectangle::Edge::Bottom)], bottomTexture);
-        }// if edge tile with * widthInTiles < edge width
-        if(edgeTextures[static_cast<int>(Rectangle::Edge::Left)]->getSize().y * heightInTiles< vEdgeSize.y) {
+        } // if edge tile with * widthInTiles < edge width
+        if(edgeTextures[static_cast<int>(Rectangle::Edge::Left)]->getSize().y * heightInTiles < vEdgeSize.y) {
             RepeatSliceVertical(*edgeTextures[static_cast<int>(Rectangle::Edge::Left)], leftTexture);
         } // if edge tile height * heightInTiles < edge height
         if(edgeTextures[static_cast<int>(Rectangle::Edge::Top)]->getSize().y * heightInTiles < vEdgeSize.y) {

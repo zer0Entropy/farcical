@@ -49,11 +49,13 @@ void farcical::game::GameController::HandleEvent(const engine::Event& event) {
                 const auto& sceneJSON{requestJSONDoc.value()};
                 const auto& loadSceneConfig{ui::LoadSceneConfig(*sceneJSON)};
                 if(loadSceneConfig.has_value()) {
-                    const auto& sceneConfig{loadSceneConfig.value()};
+                    auto sceneConfig{loadSceneConfig.value()};
                     ui::SceneHierarchy& sceneHierarchy{game.GetSceneHierarchy()};
                     const auto& createScene{game.CreateScene(sceneConfig, sceneHierarchy.currentScene)};
                     // Once the Scene has been created, set the hierarchy's currentScene to this one
-                    sceneHierarchy.currentScene = createScene.value().get();
+                    ui::Scene* scene{createScene.value().get()};
+                    sceneHierarchy.currentScene = scene;
+                    const auto& startScene{game.StartScene(scene, sceneConfig)};
                 } // if loadScene == success
             } // if requestJSONDoc == success
 
@@ -123,12 +125,17 @@ std::optional<farcical::engine::Error> farcical::game::Game::Init(const Resource
     const auto& requestJSONDoc{engine.GetResourceManager().GetJSONDoc(documentHandle->id)};
     if(requestJSONDoc.has_value()) {
         const auto& sceneJSON{requestJSONDoc.value()};
-        const auto& loadSceneConfig{ui::LoadSceneConfig(*sceneJSON)};
+        auto loadSceneConfig{ui::LoadSceneConfig(*sceneJSON)};
         if(loadSceneConfig.has_value()) {
-            const auto& sceneConfig{loadSceneConfig.value()};
+            auto& sceneConfig{loadSceneConfig.value()};
             auto createScene{CreateScene(sceneConfig, nullptr)};
             sceneHierarchy.root = std::move(createScene.value());
-            sceneHierarchy.currentScene = sceneHierarchy.root.get();
+            ui::Scene* scene{sceneHierarchy.root.get()};
+            sceneHierarchy.currentScene = scene;
+            const auto& startScene{StartScene(scene, sceneConfig)};
+            if(startScene.has_value()) {
+                return startScene.value();
+            }
             status = Status::IsRunning;
         } // if loadScene == success
     } // if requestJSONDoc == success
@@ -158,37 +165,21 @@ std::unique_ptr<farcical::game::Player> farcical::game::Game::CreatePlayer() {
 std::expected<std::unique_ptr<farcical::ui::Scene>, farcical::engine::Error> farcical::game::Game::CreateScene(
     ui::SceneConfig config, ui::Scene* parent) {
     std::unique_ptr<ui::Scene> scene{std::make_unique<ui::Scene>(config.id, parent, sceneHierarchy)};
-    std::unordered_map<ResourceID, sf::Texture*> textureCache;
-    std::unordered_map<ResourceID, TextureProperties> texturePropertiesCache;
-    const sf::Vector2u& windowSize{engine.GetConfig().windowProperties.sizeInPixels};
-
-    /***************           CACHE RESOURCES         ***************/
-    /*  FONTS  */
-    CacheFonts(*scene, config.fonts);
-    /*  TEXTURES  */
-    CacheTextures(*scene, config.textures);
-    /*  REPEATING TEXTURES  */
-    CacheRepeatingTextures(*scene, config.repeatingTextures);
-    /*  SEGMENTED TEXTURES  */
-    CacheSegmentedTextures(*scene, config.segmentedTextures);
-    /* BORDER TEXTURE */
-    config.borderTexture.outputSize = {
-        static_cast<unsigned int>(config.borderTexture.percentSize.x * windowSize.x / 100 / config.borderTexture.scale),
-        static_cast<unsigned int>(config.borderTexture.percentSize.y * windowSize.y / 100 / config.borderTexture.scale)
-    };
-    //config.borderTexture.outputSize.x /= config.borderTexture.scale;
-    //config.borderTexture.outputSize.y /= config.borderTexture.scale;
-    CacheBorderTexture(*scene, config.borderTexture);
-    /*****************************************************************/
-
-    /*  CREATE THE LAYOUT   */
-    CreateSceneLayout(*scene, config.layout);
-
+    sceneHierarchy.sceneConfigs.insert(std::make_pair(config.id, config));
     return std::move(scene);
 }
 
 std::optional<farcical::engine::Error> farcical::game::Game::CreateSceneLayout(
     ui::Scene& scene, const ui::LayoutConfig& layoutConfig) {
+    // Create the RenderContext that will encapsulate our RenderComponents
+    const auto& createRenderContext{
+        engine.GetRenderSystem().CreateRenderContext(scene.GetID())
+    };
+    if(!createRenderContext.has_value()) {
+        return createRenderContext.error();
+    } // if createRenderContext failed, return Error
+    engine::RenderContext& context{*createRenderContext.value()};
+
     for(const auto& layerConfig: layoutConfig.layers) {
         std::string layerName{layerConfig.layerID};
         ui::Layout::Layer::ID layerID{ui::Layout::Layer::GetLayerIDByName(layerName)};
@@ -200,8 +191,11 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateSceneLayout(
             if(widgetType == ui::Widget::Type::Decoration) {
                 ui::Decoration* decoration{dynamic_cast<ui::Decoration*>(child)};
                 const auto& createRenderCmp{
-                    engine.GetRenderSystem().CreateRenderComponent(layerID, decoration->GetID(),
-                                                                   decoration->GetTexture())
+                    engine.GetRenderSystem().CreateRenderComponent(
+                        layerID,
+                        scene.GetID(),
+                        decoration->GetID(),
+                        decoration->GetTexture())
                 };
                 if(createRenderCmp.has_value()) {
                     engine::RenderComponent* renderCmp{createRenderCmp.value()};
@@ -213,8 +207,13 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateSceneLayout(
             else if(widgetType == ui::Widget::Type::Label) {
                 ui::Label* label{dynamic_cast<ui::Label*>(child)};
                 const auto& createRenderCmp{
-                    engine.GetRenderSystem().CreateRenderComponent(layerID, label->GetID(), label->GetFont(),
-                                                                   label->GetFontProperties(), label->GetContents())
+                    engine.GetRenderSystem().CreateRenderComponent(
+                        layerID,
+                        scene.GetID(),
+                        label->GetID(),
+                        label->GetFont(),
+                        label->GetFontProperties(),
+                        label->GetContents())
                 };
                 if(createRenderCmp.has_value()) {
                     engine::RenderComponent* renderCmp{createRenderCmp.value()};
@@ -230,7 +229,11 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateSceneLayout(
                     ui::Button* button{item->GetButton()};
                     ui::Label* label{item->GetLabel()};
                     const auto& createButtonRenderCmp{
-                        engine.GetRenderSystem().CreateRenderComponent(layerID, button->GetID(), button->GetTexture())
+                        engine.GetRenderSystem().CreateRenderComponent(
+                            layerID,
+                            scene.GetID(),
+                            button->GetID(),
+                            button->GetTexture())
                     };
                     if(createButtonRenderCmp.has_value()) {
                         engine::RenderComponent* buttonRenderCmp{createButtonRenderCmp.value()};
@@ -239,8 +242,13 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateSceneLayout(
                         button->AddComponent(buttonRenderCmp);
                     } // if createButtonRenderCmp == success
                     const auto& createLabelRenderCmp{
-                        engine.GetRenderSystem().CreateRenderComponent(layerID, label->GetID(), label->GetFont(),
-                                                                       label->GetFontProperties(), label->GetContents())
+                        engine.GetRenderSystem().CreateRenderComponent(
+                            layerID,
+                            scene.GetID(),
+                            label->GetID(),
+                            label->GetFont(),
+                            label->GetFontProperties(),
+                            label->GetContents())
                     };
                     if(createLabelRenderCmp.has_value()) {
                         engine::RenderComponent* labelRenderCmp{createLabelRenderCmp.value()};
@@ -538,8 +546,9 @@ std::optional<farcical::engine::Error> farcical::game::Game::CacheSegmentedTextu
                     textureProperties.id, TextureProperties{
                         textureProperties.id,
                         textureProperties.path,
-                           textureProperties.scale,
-                           sf::IntRect{{0, 0}, {0, 0}}});
+                        textureProperties.scale,
+                        sf::IntRect{{0, 0}, {0, 0}}
+                    });
             } // if createTexture == success
         } // createHandle == success
     } // for each segmentedTexture in config.segmentedTextures
@@ -548,7 +557,6 @@ std::optional<farcical::engine::Error> farcical::game::Game::CacheSegmentedTextu
 
 std::optional<farcical::engine::Error> farcical::game::Game::CacheBorderTexture(ui::Scene& scene,
     const BorderTextureProperties& borderProperties) {
-
     if(borderProperties.id.empty()) {
         return std::nullopt;
     }
@@ -556,7 +564,7 @@ std::optional<farcical::engine::Error> farcical::game::Game::CacheBorderTexture(
 
     // Create ResourceHandle for the Texture
     const auto& createHandle{
-        resourceManager.CreateResourceHandle(borderProperties.id, ResourceHandle::Type::Texture,borderProperties.path)
+        resourceManager.CreateResourceHandle(borderProperties.id, ResourceHandle::Type::Texture, borderProperties.path)
     };
     if(createHandle.has_value()) {
         std::vector<ResourceID> cornerTextureIDs;
@@ -629,12 +637,73 @@ std::optional<farcical::engine::Error> farcical::game::Game::CacheBorderTexture(
         }
         scene.CacheTexture(borderProperties.id, createBorderTexture.value());
         scene.CacheTextureProperties(borderProperties.id, TextureProperties{
-            borderProperties.id,
-            borderProperties.path,
-            borderProperties.scale,
-            sf::IntRect{{0, 0}, {0, 0}}});
+                                         borderProperties.id,
+                                         borderProperties.path,
+                                         borderProperties.scale,
+                                         sf::IntRect{{0, 0}, {0, 0}}
+                                     });
     } // if createHandle == success
 
+    return std::nullopt;
+}
+
+std::optional<farcical::engine::Error> farcical::game::Game::StartScene(ui::Scene* scene, ui::SceneConfig& config) {
+    const sf::Vector2u& windowSize{engine.GetConfig().windowProperties.sizeInPixels};
+
+    /***************           CACHE RESOURCES         ***************/
+    /*  FONTS  */
+    const auto& cacheFontsResult{
+        CacheFonts(*scene, config.fonts)
+    };
+    if(cacheFontsResult.has_value()) {
+        return cacheFontsResult.value();
+    } // if cacheFontsResult == failure
+    /*  TEXTURES  */
+    const auto& cacheTexturesResult{
+        CacheTextures(*scene, config.textures)
+    };
+    if(cacheTexturesResult.has_value()) {
+        return cacheTexturesResult;
+    } // if cacheTexturesResult == failure
+    /*  REPEATING TEXTURES  */
+    const auto& cacheRepeatingResult{
+        CacheRepeatingTextures(*scene, config.repeatingTextures)
+    };
+    if(cacheRepeatingResult.has_value()) {
+        return cacheRepeatingResult;
+    } // if cacheRepeatingResult == failure
+    /*  SEGMENTED TEXTURES  */
+    const auto& cacheSegmentedResult{
+        CacheSegmentedTextures(*scene, config.segmentedTextures)
+    };
+    if(cacheSegmentedResult.has_value()) {
+        return cacheSegmentedResult;
+    } // if cacheSegmentedResult == failure
+    /* BORDER TEXTURE */
+    config.borderTexture.outputSize = {
+        static_cast<unsigned int>(config.borderTexture.percentSize.x * windowSize.x / 100 / config.borderTexture.scale),
+        static_cast<unsigned int>(config.borderTexture.percentSize.y * windowSize.y / 100 / config.borderTexture.scale)
+    };
+    const auto& cacheBorderResult{
+        CacheBorderTexture(*scene, config.borderTexture)
+    };
+    if(cacheBorderResult.has_value()) {
+        return cacheBorderResult.value();
+    } // if cacheBorderResult == failure
+    /*****************************************************************/
+
+    /*  CREATE THE LAYOUT   */
+    const auto& createLayoutResult{
+        CreateSceneLayout(*scene, config.layout)
+    };
+    if(createLayoutResult.has_value()) {
+        return createLayoutResult.value();
+    } // if createLayoutResult == failure
+
+    return std::nullopt;
+}
+
+std::optional<farcical::engine::Error> farcical::game::Game::StopScene(ui::Scene* scene) {
     return std::nullopt;
 }
 
