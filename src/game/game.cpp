@@ -290,11 +290,17 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateDecorations(
                     static_cast<unsigned int>(tempSprite.getGlobalBounds().size.x),
                     static_cast<unsigned int>(tempSprite.getGlobalBounds().size.y)
                 });
-                const sf::Vector2f position{
-                    static_cast<float>(windowSize.x * decorationConfig.relativePosition.x) / 100.0f,
-                    static_cast<float>(windowSize.y * decorationConfig.relativePosition.y) / 100.0f
-                };
-                decoration->SetPosition(position);
+                if(decorationConfig.relativePosition.x == 0 && decorationConfig.relativePosition.y == 0) {
+                    decoration->SetPosition(sf::Vector2f{0.0f, 0.0f});
+                } else {
+                    const sf::Vector2f position{
+                        static_cast<float>(windowSize.x * decorationConfig.relativePosition.x) / 100.0f - static_cast<
+                            float>(decoration->GetSize().x) / 2.0f,
+                        static_cast<float>(windowSize.y * decorationConfig.relativePosition.y) / 100.0f - static_cast<
+                            float>(decoration->GetSize().y) / 2.0f
+                    };
+                    decoration->SetPosition(position);
+                }
             } // if createDecoration == success
         } // if decorationConfig has valid ID
     } // for each decorationConfig in layerConfig.decorations
