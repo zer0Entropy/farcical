@@ -97,6 +97,7 @@ namespace farcical::ui {
                 layers[index].id = static_cast<Layout::Layer::ID>(index);
             } // for each layer
         }
+
         ~LayoutConfig() = default;
     };
 

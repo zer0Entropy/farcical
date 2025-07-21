@@ -70,19 +70,23 @@ namespace farcical::game {
 
     private:
         std::optional<engine::Error> CreateSceneLayout(ui::Scene& scene, const ui::LayoutConfig& layoutConfig);
+
         std::optional<engine::Error> DestroySceneLayout(ui::Scene& scene, const ui::LayoutConfig& layoutConfig);
 
         std::optional<engine::Error> CreateDecorations(
             ui::Scene& scene,
             const std::vector<ui::DecorationConfig>& decorationConfigList);
+
         std::optional<engine::Error> DestroyDecorations(
             ui::Scene& scene,
             const std::vector<ui::DecorationConfig>& decorationConfigList);
 
         std::optional<engine::Error> CreateTitle(ui::Scene& scene, const ui::LabelConfig& titleConfig);
+
         std::optional<engine::Error> DestroyTitle(ui::Scene& scene, const ui::LabelConfig& titleConfig);
 
         std::optional<engine::Error> CreateMenu(ui::Scene& scene, const ui::MenuConfig& menuConfig);
+
         std::optional<engine::Error> DestroyMenu(ui::Scene& scene, const ui::MenuConfig& menuConfig);
 
         std::optional<engine::Error> CacheFonts(

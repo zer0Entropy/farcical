@@ -265,7 +265,8 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateSceneLayout(
     return std::nullopt;
 }
 
-std::optional<farcical::engine::Error> farcical::game::Game::DestroySceneLayout(ui::Scene& scene, const ui::LayoutConfig& layoutConfig) {
+std::optional<farcical::engine::Error> farcical::game::Game::DestroySceneLayout(
+    ui::Scene& scene, const ui::LayoutConfig& layoutConfig) {
     for(const auto& layerConfig: layoutConfig.layers) {
         DestroyDecorations(scene, layerConfig.decorations);
         DestroyTitle(scene, layerConfig.title);
@@ -321,14 +322,13 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateDecorations(
 std::optional<farcical::engine::Error> farcical::game::Game::DestroyDecorations(
     ui::Scene& scene,
     const std::vector<ui::DecorationConfig>& decorationConfigList) {
-
     engine::RenderContext* context{engine.GetRenderSystem().GetRenderContext(scene.GetID())};
 
-     for(auto& decorationConfig: decorationConfigList) {
-         // Test length of decorationID to determine if this config is valid
-         if(!decorationConfig.id.empty()) {
+    for(const auto& decorationConfig: decorationConfigList) {
+        // Test length of decorationID to determine if this config is valid
+        if(!decorationConfig.id.empty()) {
             // First, remove RenderComponent from RenderContext
-            for(auto layer: context->layers) {
+            for(auto& layer: context->layers) {
                 layer.Remove(decorationConfig.id);
             } // for each layer in RenderContext
 
@@ -354,7 +354,8 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateTitle(
         } // if font == null
         if(fontProperties.id != titleConfig.fontProperties.id) {
             const std::string failMsg{
-                "Invalid configuration: fontID does not match expected value (\"" + titleConfig.fontProperties.id + "\")"
+                "Invalid configuration: fontID does not match expected value (\"" + titleConfig.fontProperties.id +
+                "\")"
             };
             return engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg};
         } // if fontProperties.id does not match correct ResourceID
@@ -382,8 +383,8 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateTitle(
     return std::nullopt;
 }
 
-std::optional<farcical::engine::Error> farcical::game::Game::DestroyTitle(ui::Scene& scene, const ui::LabelConfig& titleConfig) {
-
+std::optional<farcical::engine::Error> farcical::game::Game::DestroyTitle(
+    ui::Scene& scene, const ui::LabelConfig& titleConfig) {
     engine::RenderContext* context{engine.GetRenderSystem().GetRenderContext(scene.GetID())};
 
     // Test length of labelID to determine if this config is valid
@@ -495,8 +496,8 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateMenu(
     return std::nullopt;
 }
 
-std::optional<farcical::engine::Error> farcical::game::Game::DestroyMenu(ui::Scene& scene, const ui::MenuConfig& menuConfig) {
-
+std::optional<farcical::engine::Error> farcical::game::Game::DestroyMenu(
+    ui::Scene& scene, const ui::MenuConfig& menuConfig) {
     engine::RenderContext* context{engine.GetRenderSystem().GetRenderContext(scene.GetID())};
 
     // Test length of labelID to determine if this config is valid
