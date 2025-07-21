@@ -59,9 +59,10 @@ std::optional<farcical::engine::Error> farcical::engine::Engine::Init(game::Game
     windowProperties.sizeInPixels = window->getSize();
 
     // Create Systems
+    logSystem = std::make_unique<LogSystem>(std::string{engineLogID}, config.logPath, resourceManager);
     eventSystem = std::make_unique<EventSystem>(*game, *this);
-    renderSystem = std::make_unique<RenderSystem>(*window);
-    inputSystem = std::make_unique<InputSystem>(*window);
+    renderSystem = std::make_unique<RenderSystem>(*window, *logSystem);
+    inputSystem = std::make_unique<InputSystem>(*window, *logSystem);
 
     // Initialize Systems
     renderSystem->Init();
@@ -154,6 +155,11 @@ sf::RenderWindow& farcical::engine::Engine::GetWindow() const {
 
 farcical::ResourceManager& farcical::engine::Engine::GetResourceManager() const {
   return const_cast<ResourceManager&>(resourceManager);
+}
+
+farcical::engine::LogSystem& farcical::engine::Engine::GetLogSystem() const {
+  assert(logSystem != nullptr && "Unexpected nullptr: logsystem");
+  return *logSystem;
 }
 
 farcical::engine::RenderSystem& farcical::engine::Engine::GetRenderSystem() const {

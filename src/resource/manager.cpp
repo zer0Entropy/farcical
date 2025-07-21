@@ -29,6 +29,12 @@ std::expected<farcical::ResourceHandle*, farcical::engine::Error> farcical::Reso
 
 std::optional<farcical::engine::Error> farcical::ResourceManager::DestroyResourceHandle(ResourceID id, ResourceHandle::Type type) {
     switch(type) {
+        case ResourceHandle::Type::Log: {
+            const auto& findLog{logs.find(id)};
+            if(findLog != logs.end()) {
+                logs.erase(findLog);
+            }
+        } break;
         case ResourceHandle::Type::JSONDocument: {
             const auto& findJSONDoc{jsonDocs.find(id)};
             if(findJSONDoc != jsonDocs.end()) {
@@ -61,6 +67,49 @@ std::optional<farcical::engine::Error> farcical::ResourceManager::DestroyResourc
     return std::nullopt;
 }
 
+std::expected<farcical::engine::Log*, farcical::engine::Error> farcical::ResourceManager::GetLog(ResourceID id) {
+    ResourceHandle* handle{GetResourceHandle(id)};
+    // If a ResourceHandle with this ResourceID has not been created previously, return Error{ResourceNotFound}
+    if(!handle) {
+        const std::string failMsg{"Resource not found: " + id + "."};
+        return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+    } // if handle does not exist
+    if(handle->status == ResourceHandle::Status::IsReady) {
+        // Confirm this Log has already been created
+        const auto& logIter{logs.find(id)};
+        if(logIter != logs.end()) {
+            return &logIter->second;
+        } // if Log found
+        // If it wasn't found, mark the ResourceHandle with an Error status & return Error{ResourceNotFound}
+        handle->status = ResourceHandle::Status::Error;
+        const std::string failMsg{"Resource not found: " + id + "."};
+        return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+    } // if ResourceHandle is marked IsReady
+    if(handle->status == ResourceHandle::Status::Uninitialized) {
+        // Create the Log and load it from file
+        const auto& createLog{logs.emplace(handle->id, engine::Log{{handle->id, handle->path}, {}})};
+        const auto& logIter{createLog.first};
+        std::ifstream inputFromFile{handle->path};
+        while(inputFromFile.good()) {
+            std::string nextLine{""};
+            std::getline(inputFromFile, nextLine);
+            logIter->second.contents.push_back(nextLine);
+        } // if inputFromFile.good()
+        // If the file was successfully opened, close it
+        if(inputFromFile.is_open()) {
+            inputFromFile.close();
+            handle->status = ResourceHandle::Status::IsReady;
+            return &logIter->second;
+        } // if inputFromFile.is_open()
+        // Otherwise, return Error{InvalidPath}
+        const std::string failMsg{"Invalid path: Could not open Log at " + handle->path + "."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidPath, failMsg});
+    } // if ResourceHandle is marked Uninitialized
+    // If we reach this code path, an Error has occurred!
+    const std::string failMsg{"Resource not found: " + id + "."};
+    return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+}
+
 std::expected<nlohmann::json*, farcical::engine::Error> farcical::ResourceManager::GetJSONDoc(ResourceID id) {
     ResourceHandle* handle{GetResourceHandle(id)};
     // If a ResourceHandle with this ResourceID has not been created previously, return Error{ResourceNotFound}
@@ -74,7 +123,7 @@ std::expected<nlohmann::json*, farcical::engine::Error> farcical::ResourceManage
         if(jsonDocIter != jsonDocs.end()) {
             return &jsonDocIter->second;
         } // if jsonDocument found
-        // If it hasn't, mark the ResourceHandle with an Error status & return Error{ResourceNotFound}
+        // If it wasn't found, mark the ResourceHandle with an Error status & return Error{ResourceNotFound}
         handle->status = ResourceHandle::Status::Error;
         const std::string failMsg{"Resource not found: " + id + "."};
         return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
@@ -90,7 +139,6 @@ std::expected<nlohmann::json*, farcical::engine::Error> farcical::ResourceManage
         if(inputFromFile.is_open()) {
             inputFromFile.close();
             handle->status = ResourceHandle::Status::IsReady;
-            //const std::string dump{jsonDocIter->second.dump()};
             return &jsonDocIter->second;
         } // if inputFromFile.is_open()
         // Otherwise, return Error{InvalidPath}
@@ -312,6 +360,40 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
     // If we reach this code path, an Error has occurred!
     const std::string failMsg{"Resource not found: " + properties.id};
     return std::unexpected{engine::Error{engine::Error::Signal::ResourceNotFound, failMsg}};
+}
+
+std::optional<farcical::engine::Error> farcical::ResourceManager::WriteLog(ResourceID id, const std::vector<std::string>& messages) {
+    ResourceHandle* handle{GetResourceHandle(id)};
+    if(!handle) {
+        const std::string failMsg{"Resource not found: " + id + "."};
+        return engine::Error{engine::Error::Signal::ResourceNotFound, failMsg};
+    } // if ResourceHandle not found
+    std::ofstream outputFile{handle->path, std::ios_base::out};
+    if(outputFile.good()) {
+        for(const auto& message: messages) {
+            outputFile << message << std::endl;
+        } // for each message
+    } // if outputFile.good()
+    if(outputFile.is_open()) {
+        outputFile.close();
+    }
+    return std::nullopt;
+}
+
+std::optional<farcical::engine::Error> farcical::ResourceManager::AppendToLog(ResourceID id, std::string_view message) {
+    ResourceHandle* handle{GetResourceHandle(id)};
+    if(!handle) {
+        const std::string failMsg{"Resource not found: " + id + "."};
+        return engine::Error{engine::Error::Signal::ResourceNotFound, failMsg};
+    } // if ResourceHandle not found
+    std::ofstream outputFile{handle->path, std::ios_base::app};
+    if(outputFile.good()) {
+        outputFile << message << std::endl;
+    } // if outputFile.good()
+    if(outputFile.is_open()) {
+        outputFile.close();
+    }
+    return std::nullopt;
 }
 
 std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::CreateSplicedTexture(

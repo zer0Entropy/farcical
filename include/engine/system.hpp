@@ -5,22 +5,27 @@
 #ifndef SYSTEM_HPP
 #define SYSTEM_HPP
 
+#include "logInterface.hpp"
+
 namespace farcical::engine {
-    class System
+    class System: public LogInterface
     {
     public:
 
         enum class ID {
+            LogSystem,
             RenderSystem,
             InputSystem,
             EventSystem
         };
 
         System() = delete;
-        explicit System(const System::ID id): id(id) {}
+        explicit System(const System::ID id, LogSystem& logSystem):
+            LogInterface(logSystem),
+            id{id} {}
         virtual ~System() = default;
 
-        [[nodiscard]] System::ID GetID() const;
+        [[nodiscard]] System::ID GetID() const { return id; }
 
         virtual void Init() = 0;
 

@@ -13,6 +13,7 @@
 #include "resource.hpp"
 #include "../engine/error.hpp"
 #include "config.hpp"
+#include "../engine/log.hpp"
 
 namespace farcical {
 
@@ -26,12 +27,16 @@ namespace farcical {
 
         std::optional<engine::Error>                    DestroyResourceHandle(ResourceID id, ResourceHandle::Type type);
 
+        std::expected<engine::Log*, engine::Error>      GetLog(ResourceID id);
         std::expected<nlohmann::json*, engine::Error>   GetJSONDoc(ResourceID id);
         std::expected<sf::Font*, engine::Error>         GetFont(ResourceID id);
         std::expected<sf::Texture*, engine::Error>      GetTexture(ResourceID id);
         std::expected<sf::Texture*, engine::Error>      GetTexture(TextureProperties properties);
         std::expected<sf::Texture*, engine::Error>      GetTexture(RepeatingTextureProperties properties);
         std::expected<sf::Texture*, engine::Error>      GetTexture(SegmentedTextureProperties properties);
+
+        std::optional<engine::Error>                    WriteLog(ResourceID id, const std::vector<std::string>& messages);
+        std::optional<engine::Error>                    AppendToLog(ResourceID id, std::string_view message);
 
         std::expected<sf::Texture*, engine::Error> CreateSplicedTexture(
             ResourceID id, const std::vector<ResourceID>& inputTextureIDs);
@@ -50,13 +55,14 @@ namespace farcical {
             ResourceID centerTextureID);
 
     private:
-        void                                            RepeatTexture(sf::Texture& input, sf::Texture& output);
+        void RepeatTexture(sf::Texture& input, sf::Texture& output);
 
         void RepeatSliceHorizontal(sf::Texture& input, sf::Texture& output);
 
-        void                                            RepeatSliceVertical(sf::Texture& input, sf::Texture& output);
+        void RepeatSliceVertical(sf::Texture& input, sf::Texture& output);
 
         std::unordered_map<ResourceID, ResourceHandle> registry;
+        std::unordered_map<ResourceID, engine::Log> logs;
         std::unordered_map<ResourceID, nlohmann::json> jsonDocs;
         std::unordered_map<ResourceID, sf::Font> fonts;
         std::unordered_map<ResourceID, sf::Texture> textures;

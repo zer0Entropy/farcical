@@ -6,6 +6,8 @@
 #define INPUT_HPP
 
 #include <SFML/Graphics/RenderWindow.hpp>
+
+#include "log.hpp"
 #include "system.hpp"
 #include "../keyboard.hpp"
 #include "../mouse.hpp"
@@ -17,7 +19,7 @@ namespace farcical::engine {
         InputSystem(InputSystem&) = delete;
         InputSystem(const InputSystem&) = delete;
 
-        explicit InputSystem(sf::RenderWindow& window);
+        explicit InputSystem(sf::RenderWindow& window, LogSystem& logSystem);
 
         ~InputSystem() override = default;
 

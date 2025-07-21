@@ -3,8 +3,9 @@
 //
 #include "../../include/engine/input.hpp"
 
-farcical::engine::InputSystem::InputSystem(sf::RenderWindow& window): System(System::ID::InputSystem),
-                                                              window{window} {
+farcical::engine::InputSystem::InputSystem(sf::RenderWindow& window, LogSystem& logSystem):
+    System(System::ID::InputSystem, logSystem),
+    window{window} {
 }
 
 void farcical::engine::InputSystem::Init() {

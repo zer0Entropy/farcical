@@ -6,8 +6,9 @@
 #include <SFML/Graphics/Text.hpp>
 #include "../../include/engine/render.hpp"
 
-farcical::engine::RenderSystem::RenderSystem(sf::RenderWindow& window): System{ID::RenderSystem},
-                                                                        window{window} {
+farcical::engine::RenderSystem::RenderSystem(sf::RenderWindow& window, LogSystem& logSystem):
+  System{ID::RenderSystem, logSystem},
+  window{window} {
 }
 
 void farcical::engine::RenderSystem::Init() {

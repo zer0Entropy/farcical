@@ -24,6 +24,7 @@ namespace farcical {
         };
 
         enum class Type {
+            Log,
             JSONDocument,
             Font,
             Texture,

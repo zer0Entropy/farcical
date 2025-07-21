@@ -9,6 +9,7 @@
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include "component.hpp"
+#include "log.hpp"
 #include "system.hpp"
 #include "../ui/layout.hpp"
 #include "../resource/config.hpp"
@@ -71,7 +72,7 @@ namespace farcical::engine {
 
         RenderSystem(const RenderSystem&) = delete;
 
-        explicit RenderSystem(sf::RenderWindow& window);
+        explicit RenderSystem(sf::RenderWindow& window, LogSystem& logSystem);
 
         ~RenderSystem() override = default;
 

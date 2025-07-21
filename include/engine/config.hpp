@@ -14,6 +14,7 @@ namespace farcical::engine {
     struct Config {
         WindowProperties windowProperties;
         std::string scenePath;
+        std::string logPath;
     };
 
     std::expected<Config, Error> LoadConfig(const nlohmann::json& json);

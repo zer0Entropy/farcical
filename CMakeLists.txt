@@ -36,6 +36,8 @@ add_executable( main
         src/resource/parser.cpp
         src/resource/config.cpp
         src/ui/config.cpp
+        src/engine/log.cpp
+        src/engine/logInterface.cpp
 )
 target_compile_features(main PRIVATE cxx_std_23)
 target_link_libraries(main PRIVATE SFML::Graphics nlohmann_json::nlohmann_json)

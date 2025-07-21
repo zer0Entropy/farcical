@@ -5,7 +5,7 @@
 #include "../../include/game/game.hpp"
 
 farcical::engine::EventSystem::EventSystem(game::Game& game, Engine& engine):
-    System(ID::EventSystem),
+    System(ID::EventSystem, engine.GetLogSystem()),
     game{game}, engine{engine} {
 }
 

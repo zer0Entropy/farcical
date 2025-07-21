@@ -11,6 +11,7 @@
 
 #include "config.hpp"
 #include "error.hpp"
+#include "log.hpp"
 #include "render.hpp"
 #include "input.hpp"
 #include "event.hpp"
@@ -59,6 +60,8 @@ namespace farcical {
 
             [[nodiscard]] ResourceManager& GetResourceManager() const;
 
+            [[nodiscard]] LogSystem& GetLogSystem() const;
+
             [[nodiscard]] RenderSystem& GetRenderSystem() const;
 
             [[nodiscard]] InputSystem& GetInputSystem() const;
@@ -74,6 +77,8 @@ namespace farcical {
 
             ResourceManager resourceManager;
 
+            std::unique_ptr<LogSystem> logSystem;
+
             std::unique_ptr<RenderSystem> renderSystem;
 
             std::unique_ptr<InputSystem> inputSystem;
@@ -84,6 +89,7 @@ namespace farcical {
 
             static constexpr std::string_view configDocumentID = "engineConfig";
             static constexpr std::string_view sceneIndexDocumentID = "sceneConfigIndex";
+            static constexpr std::string_view engineLogID = "farcicalLog";
         };
     }
 }
