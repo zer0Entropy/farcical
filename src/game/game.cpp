@@ -268,9 +268,20 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateSceneLayout(
 std::optional<farcical::engine::Error> farcical::game::Game::DestroySceneLayout(
     ui::Scene& scene, const ui::LayoutConfig& layoutConfig) {
     for(const auto& layerConfig: layoutConfig.layers) {
-        DestroyDecorations(scene, layerConfig.decorations);
-        DestroyTitle(scene, layerConfig.title);
-        DestroyMenu(scene, layerConfig.menu);
+        const auto& destroyDecorationResult{DestroyDecorations(scene, layerConfig.decorations)};
+        if(destroyDecorationResult.has_value()) {
+            return destroyDecorationResult.value();
+        } // if destroyDecorationResult == failure
+
+        const auto& destroyTitleResult{DestroyTitle(scene, layerConfig.title)};
+        if(destroyTitleResult.has_value()) {
+            return destroyTitleResult.value();
+        } // if destroyTitleResult == failure
+
+        const auto& destroyMenuResult{DestroyMenu(scene, layerConfig.menu)};
+        if(destroyMenuResult.has_value()) {
+            return destroyMenuResult.value();
+        } // if destroyMenuResult == failure
     } // for each layer in layoutConfig
     return std::nullopt;
 }
@@ -390,7 +401,7 @@ std::optional<farcical::engine::Error> farcical::game::Game::DestroyTitle(
     // Test length of labelID to determine if this config is valid
     if(!titleConfig.id.empty()) {
         // First, remove RenderComponent from RenderContext
-        for(auto layer: context->layers) {
+        for(auto& layer: context->layers) {
             layer.Remove(titleConfig.id);
         } // for each layer in RenderContext
 
@@ -805,18 +816,22 @@ std::optional<farcical::engine::Error> farcical::game::Game::StopScene(ui::Scene
                 if(destroyLayoutResult.has_value()) {
                     return destroyLayoutResult;
                 } // if destroyLayoutResult == failure
+                // Unload all Textures and destroy their ResourceHandles
                 for(const auto& texture: sceneConfig.textures) {
                     engine.GetResourceManager().DestroyResourceHandle(texture.id, ResourceHandle::Type::Texture);
                 } // for each texture
                 for(const auto& repeatingTexture: sceneConfig.repeatingTextures) {
-                    engine.GetResourceManager().DestroyResourceHandle(repeatingTexture.inputID, ResourceHandle::Type::Texture);
-                    engine.GetResourceManager().DestroyResourceHandle(repeatingTexture.outputID, ResourceHandle::Type::Texture);
+                    engine.GetResourceManager().DestroyResourceHandle(repeatingTexture.inputID,
+                                                                      ResourceHandle::Type::Texture);
+                    engine.GetResourceManager().DestroyResourceHandle(repeatingTexture.outputID,
+                                                                      ResourceHandle::Type::Texture);
                 } // for each repeatingTexture
                 for(const auto& segmentedTexture: sceneConfig.segmentedTextures) {
                     for(const auto& segment: segmentedTexture.segments) {
                         engine.GetResourceManager().DestroyResourceHandle(segment.id, ResourceHandle::Type::Texture);
                     }
-                    engine.GetResourceManager().DestroyResourceHandle(segmentedTexture.id, ResourceHandle::Type::Texture);
+                    engine.GetResourceManager().DestroyResourceHandle(segmentedTexture.id,
+                                                                      ResourceHandle::Type::Texture);
                 } // for each segmentedTexture
                 if(!sceneConfig.borderTexture.id.empty()) {
                     for(const auto& corner: sceneConfig.borderTexture.cornerTextures) {
@@ -825,9 +840,15 @@ std::optional<farcical::engine::Error> farcical::game::Game::StopScene(ui::Scene
                     for(const auto& edge: sceneConfig.borderTexture.edgeTextures) {
                         engine.GetResourceManager().DestroyResourceHandle(edge.id, ResourceHandle::Type::Texture);
                     } // for each edge
-                    engine.GetResourceManager().DestroyResourceHandle(sceneConfig.borderTexture.centerTexture.id, ResourceHandle::Type::Texture);
-                    engine.GetResourceManager().DestroyResourceHandle(sceneConfig.borderTexture.id, ResourceHandle::Type::Texture);
+                    engine.GetResourceManager().DestroyResourceHandle(sceneConfig.borderTexture.centerTexture.id,
+                                                                      ResourceHandle::Type::Texture);
+                    engine.GetResourceManager().DestroyResourceHandle(sceneConfig.borderTexture.id,
+                                                                      ResourceHandle::Type::Texture);
                 } // if borderTexture.id != empty
+                // Unload all Fonts and destroy their ResourceHandles
+                for(const auto& font: sceneConfig.fonts) {
+                    engine.GetResourceManager().DestroyResourceHandle(font.id, ResourceHandle::Type::Font);
+                } // for each Font in sceneConfig
             } // if loadSceneConfig == success
         } // if requestJSONDoc == success
     } // if findSceneResource == success
