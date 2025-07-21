@@ -805,6 +805,29 @@ std::optional<farcical::engine::Error> farcical::game::Game::StopScene(ui::Scene
                 if(destroyLayoutResult.has_value()) {
                     return destroyLayoutResult;
                 } // if destroyLayoutResult == failure
+                for(const auto& texture: sceneConfig.textures) {
+                    engine.GetResourceManager().DestroyResourceHandle(texture.id, ResourceHandle::Type::Texture);
+                } // for each texture
+                for(const auto& repeatingTexture: sceneConfig.repeatingTextures) {
+                    engine.GetResourceManager().DestroyResourceHandle(repeatingTexture.inputID, ResourceHandle::Type::Texture);
+                    engine.GetResourceManager().DestroyResourceHandle(repeatingTexture.outputID, ResourceHandle::Type::Texture);
+                } // for each repeatingTexture
+                for(const auto& segmentedTexture: sceneConfig.segmentedTextures) {
+                    for(const auto& segment: segmentedTexture.segments) {
+                        engine.GetResourceManager().DestroyResourceHandle(segment.id, ResourceHandle::Type::Texture);
+                    }
+                    engine.GetResourceManager().DestroyResourceHandle(segmentedTexture.id, ResourceHandle::Type::Texture);
+                } // for each segmentedTexture
+                if(!sceneConfig.borderTexture.id.empty()) {
+                    for(const auto& corner: sceneConfig.borderTexture.cornerTextures) {
+                        engine.GetResourceManager().DestroyResourceHandle(corner.id, ResourceHandle::Type::Texture);
+                    } // for each corner
+                    for(const auto& edge: sceneConfig.borderTexture.edgeTextures) {
+                        engine.GetResourceManager().DestroyResourceHandle(edge.id, ResourceHandle::Type::Texture);
+                    } // for each edge
+                    engine.GetResourceManager().DestroyResourceHandle(sceneConfig.borderTexture.centerTexture.id, ResourceHandle::Type::Texture);
+                    engine.GetResourceManager().DestroyResourceHandle(sceneConfig.borderTexture.id, ResourceHandle::Type::Texture);
+                } // if borderTexture.id != empty
             } // if loadSceneConfig == success
         } // if requestJSONDoc == success
     } // if findSceneResource == success
