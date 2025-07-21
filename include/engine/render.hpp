@@ -38,6 +38,24 @@ namespace farcical::engine {
     struct RenderLayer {
         ui::Layout::Layer::ID id;
         std::vector<RenderComponent*> componentList;
+
+        void Add(RenderComponent* component) {
+            componentList.push_back(component);
+        }
+
+        void Remove(EntityID parentID) {
+            for(auto componentIter = componentList.begin();
+                componentIter != componentList.end(); ++componentIter) {
+                if((*componentIter)->parentID == parentID) {
+                    componentList.erase(componentIter);
+                    return;
+                } // if IDs match
+            } // for each component in componentList
+        }
+
+        void Clear() {
+            componentList.clear();
+        }
     };
 
     struct RenderContext {
@@ -69,7 +87,7 @@ namespace farcical::engine {
         // Destroy RenderContext and all RenderComponents it contains
         std::optional<Error> DestroyRenderContext(engine::EntityID sceneID);
 
-        std::optional<RenderContext*> GetRenderContext(engine::EntityID sceneID) const;
+        RenderContext* GetRenderContext(engine::EntityID sceneID) const;
 
         // Create RenderComponent for Sprite
         std::expected<RenderComponent*, Error> CreateRenderComponent(

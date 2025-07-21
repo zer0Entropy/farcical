@@ -52,8 +52,8 @@ void farcical::engine::RenderSystem::Stop() {
 
 std::expected<farcical::engine::RenderContext*, farcical::engine::Error>
 farcical::engine::RenderSystem::CreateRenderContext(engine::EntityID sceneID) {
-  const auto existingContext{GetRenderContext(sceneID)};
-  if(existingContext.has_value()) {
+  RenderContext* existingContext{GetRenderContext(sceneID)};
+  if(existingContext) {
     const auto& failMsg{
       "Invalid Configuration: Attempted to create a RenderContext with sceneID=\"" + sceneID +
       "\", but a RenderContext with that ID already exists!"
@@ -91,14 +91,16 @@ std::optional<farcical::engine::Error> farcical::engine::RenderSystem::DestroyRe
   return engine::Error{Error::Signal::InvalidConfiguration, failMsg};
 }
 
-std::optional<farcical::engine::RenderContext*> farcical::engine::RenderSystem::GetRenderContext(
+farcical::engine::RenderContext* farcical::engine::RenderSystem::GetRenderContext(
   engine::EntityID sceneID) const {
+  RenderContext* contextPtr{nullptr};
   for(const auto& context: contexts) {
     if(context.sceneID == sceneID) {
-      return const_cast<RenderContext*>(&context);
+      contextPtr = const_cast<RenderContext*>(&context);
+      break;
     } // if context.sceneID == sceneID
   } // for each RenderContext in contexts
-  return std::nullopt;
+  return contextPtr;
 }
 
 std::expected<farcical::engine::RenderComponent*, farcical::engine::Error>
@@ -107,12 +109,11 @@ farcical::engine::RenderSystem::CreateRenderComponent(
   EntityID sceneID,
   EntityID parentID,
   sf::Texture* texture) {
-  const auto& findContext{GetRenderContext(sceneID)};
-  if(!findContext.has_value() && findContext.value() != nullptr) {
+  RenderContext* context{GetRenderContext(sceneID)};
+  if(!context) {
     const std::string failMsg{"Invalid configuration: RenderContext with id=\"" + sceneID + "\" not found."};
     return std::unexpected(Error{Error::Signal::InvalidConfiguration, failMsg});
   } // if RenderContext not found
-  RenderContext& context{*findContext.value()};
 
   const auto& createComponent{
     components.insert(std::make_pair(parentID, std::make_unique<RenderComponent>(parentID)))
@@ -120,9 +121,10 @@ farcical::engine::RenderSystem::CreateRenderComponent(
   if(createComponent.second) {
     RenderComponent* component{createComponent.first->second.get()};
     component->texture = texture;
-    context.layers[static_cast<int>(layerID)].componentList.push_back(component);
+    context->layers[static_cast<int>(layerID)].componentList.push_back(component);
     return component;
   } // if createComponent == success
+
   const std::string failMsg{"Invalid configuration: Failed to create RenderComponent for " + parentID + "."};
   return std::unexpected(Error{Error::Signal::InvalidConfiguration, failMsg});
 }
@@ -135,12 +137,11 @@ farcical::engine::RenderSystem::CreateRenderComponent(
   sf::Font* font,
   const FontProperties& fontProperties,
   std::string_view contents) {
-  const auto& findContext{GetRenderContext(sceneID)};
-  if(!findContext.has_value() && findContext.value() != nullptr) {
+  RenderContext* context{GetRenderContext(sceneID)};
+  if(!context) {
     const std::string failMsg{"Invalid configuration: RenderContext with id=\"" + sceneID + "\" not found."};
     return std::unexpected(Error{Error::Signal::InvalidConfiguration, failMsg});
   } // if RenderContext not found
-  RenderContext& context{*findContext.value()};
 
   const auto& createComponent{
     components.insert(std::make_pair(parentID, std::make_unique<RenderComponent>(parentID)))
@@ -150,7 +151,7 @@ farcical::engine::RenderSystem::CreateRenderComponent(
     component->font = font;
     component->fontProperties = fontProperties;
     component->contents = contents;
-    context.layers[static_cast<int>(layerID)].componentList.push_back(component);
+    context->layers[static_cast<int>(layerID)].componentList.push_back(component);
     return component;
   } // if createComponent == success
   const std::string failMsg{"Invalid configuration: Failed to create RenderComponent for " + parentID + "."};
@@ -159,21 +160,20 @@ farcical::engine::RenderSystem::CreateRenderComponent(
 
 std::optional<farcical::engine::Error> farcical::engine::RenderSystem::DestroyRenderComponent(
   EntityID sceneID, EntityID parentID) {
-  const auto& findContext{GetRenderContext(sceneID)};
-  if(!findContext.has_value() && findContext.value() != nullptr) {
+  RenderContext* context{GetRenderContext(sceneID)};
+  if(!context) {
     const std::string failMsg{"Invalid Configuration: Failed to find RenderContext with sceneID=\"" + sceneID + "\"."};
     return Error{Error::Signal::InvalidConfiguration, failMsg};
   }
-  RenderContext& context{*findContext.value()};
 
   const auto& findComponent{components.find(parentID)};
   if(findComponent != components.end()) {
     for(int index = 0; index < static_cast<int>(ui::Layout::Layer::ID::NumLayers); ++index) {
       bool found{false};
-      for(auto componentIter = context.layers[index].componentList.begin();
-          !found && componentIter != context.layers[index].componentList.end(); ++componentIter) {
+      for(auto componentIter = context->layers[index].componentList.begin();
+          !found && componentIter != context->layers[index].componentList.end(); ++componentIter) {
         if((*componentIter)->parentID == parentID) {
-          context.layers[index].componentList.erase(componentIter);
+          context->layers[index].componentList.erase(componentIter);
           found = true;
         } // if Component found
       } // for each Component in componentList

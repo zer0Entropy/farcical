@@ -235,7 +235,8 @@ std::expected<farcical::ui::LayoutLayerConfig, farcical::engine::Error> farcical
         const std::string failMsg{"Invalid configuration: LayerID could not be found."};
         return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
     } // if LayerID not found
-    config.layerID = findID.value().get<std::string>();
+    const std::string layerName{findID.value().get<std::string>()};
+    config.id = Layout::Layer::GetLayerIDByName(layerName);
 
     if(findDecorations != json.end()) {
         const auto& decorationsJSON{findDecorations.value()};
@@ -272,16 +273,8 @@ std::expected<farcical::ui::LayoutConfig, farcical::engine::Error> farcical::ui:
     for(const auto& layerJSON: json.items()) {
         const auto& loadLayerResult{LoadLayoutLayerConfig(layerJSON.value())};
         if(loadLayerResult.has_value()) {
-            std::string layerID{loadLayerResult.value().layerID};
-            int layerIndex{0};
-            if(layerID == "background") {
-                layerIndex = static_cast<int>(Layout::Layer::ID::Background);
-            } else if(layerID == "foreground") {
-                layerIndex = static_cast<int>(Layout::Layer::ID::Foreground);
-            } else if(layerID == "overlay") {
-                layerIndex = static_cast<int>(Layout::Layer::ID::Overlay);
-            }
-            config.layers[layerIndex] = loadLayerResult.value();
+            const LayoutLayerConfig& layerConfig{loadLayerResult.value()};
+            config.layers[static_cast<int>(layerConfig.id)] = layerConfig;
         } // if loadLayerResult == success
     } // for each layer in layoutJSON
     return config;

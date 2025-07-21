@@ -78,12 +78,12 @@ namespace farcical::ui {
     };
 
     struct LayoutLayerConfig {
-        std::string layerID;
+        Layout::Layer::ID id;
         std::vector<DecorationConfig> decorations;
         LabelConfig title;
         MenuConfig menu;
 
-        LayoutLayerConfig(): layerID{""} {
+        LayoutLayerConfig(): id{Layout::Layer::ID::NumLayers} {
         }
 
         ~LayoutLayerConfig() = default;
@@ -91,6 +91,13 @@ namespace farcical::ui {
 
     struct LayoutConfig {
         std::array<LayoutLayerConfig, static_cast<int>(Layout::Layer::ID::NumLayers)> layers;
+
+        LayoutConfig() {
+            for(int index = 0; index < static_cast<int>(Layout::Layer::ID::NumLayers); ++index) {
+                layers[index].id = static_cast<Layout::Layer::ID>(index);
+            } // for each layer
+        }
+        ~LayoutConfig() = default;
     };
 
     struct SceneConfig {

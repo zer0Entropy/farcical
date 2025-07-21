@@ -109,6 +109,7 @@ std::expected<sf::Font*, farcical::engine::Error> farcical::ResourceManager::Get
         const std::string failMsg{"Resource not found: " + id + "."};
         return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
     } // if handle does not exist
+
     if(handle->status == ResourceHandle::Status::IsReady) {
         // Confirm this Font has already been created
         const auto& fontIter{fonts.find(id)};
@@ -122,18 +123,18 @@ std::expected<sf::Font*, farcical::engine::Error> farcical::ResourceManager::Get
             return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
         } // else Font not found
     } // if ResourceHandle is marked IsReady
-    else if(handle->status == ResourceHandle::Status::Uninitialized) {
+
+    if(handle->status == ResourceHandle::Status::Uninitialized) {
         // Create the Font and load it from file
         const auto& fontResult{fonts.emplace(id, sf::Font{handle->path})};
         if(!fontResult.second) {
             const std::string failMsg{"Invalid path: Could not open Font at " + handle->path + "."};
             return std::unexpected(engine::Error{engine::Error::Signal::InvalidPath, failMsg});
         } // if fontResult.second == false
-        else {
-            handle->status = ResourceHandle::Status::IsReady;
-            return &fontResult.first->second;
-        } // else fontResult.second == true
-    } // else if ResourceHandle is marked Uninitialized
+        handle->status = ResourceHandle::Status::IsReady;
+        return &fontResult.first->second;
+    } // if ResourceHandle is marked Uninitialized
+
     // If we reach this code path, an Error has occurred!
     const std::string failMsg{"Resource not found: " + id};
     return std::unexpected{engine::Error{engine::Error::Signal::ResourceNotFound, failMsg}};
@@ -146,6 +147,7 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
         const std::string failMsg{"Resource not found: " + id + "."};
         return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
     } // if handle does not exist
+
     if(handle->status == ResourceHandle::Status::IsReady) {
         // Confirm this Texture has already been created
         const auto& textureIter{textures.find(id)};
@@ -157,6 +159,7 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
         const std::string failMsg{"Resource not found: " + id + "."};
         return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
     } // if ResourceHandle is marked IsReady
+
     if(handle->status == ResourceHandle::Status::Uninitialized) {
         // Create the Texture and load it from file
         const auto& textureResult{textures.emplace(id, sf::Texture{handle->path, false})};
@@ -166,7 +169,8 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
         } // if textureResult.second == false
         handle->status = ResourceHandle::Status::IsReady;
         return &textureResult.first->second;
-    } // else if ResourceHandle is marked Uninitialized
+    } // if ResourceHandle is marked Uninitialized
+
     // If we reach this code path, an Error has occurred!
     const std::string failMsg{"Resource not found: " + id};
     return std::unexpected{engine::Error{engine::Error::Signal::ResourceNotFound, failMsg}};
@@ -179,6 +183,7 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
         const std::string failMsg{"Resource not found: " + properties.id + "."};
         return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
     } // if handle does not exist
+
     if(handle->status == ResourceHandle::Status::IsReady) {
         // Confirm this Texture has already been created
         const auto& textureIter{textures.find(properties.id)};
@@ -190,6 +195,7 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
         const std::string failMsg{"Resource not found: " + properties.id + "."};
         return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
     } // if ResourceHandle is marked IsReady
+
     if(handle->status == ResourceHandle::Status::Uninitialized) {
         if(properties.inputRect.size.x > 0 && properties.inputRect.size.y > 0) {
             const auto& textureResult{textures.emplace(properties.id, sf::Texture{handle->path, false, properties.inputRect})};
@@ -200,16 +206,15 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
             handle->status = ResourceHandle::Status::IsReady;
             return &textureResult.first->second;
         } // if inputRect.size > 0
-        else {
-            const auto& textureResult{textures.emplace(properties.id, sf::Texture{handle->path, false})};
-            if(!textureResult.second) {
-                const std::string failMsg{"Invalid path: Could not open Texture at " + handle->path + "."};
-                return std::unexpected(engine::Error{engine::Error::Signal::InvalidPath, failMsg});
-            } // if textureResult.second == false
-            handle->status = ResourceHandle::Status::IsReady;
-            return &textureResult.first->second;
-        } // else inputRect.size == 0
-    } // else if ResourceHandle is marked Uninitialized
+        const auto& textureResult{textures.emplace(properties.id, sf::Texture{handle->path, false})};
+        if(!textureResult.second) {
+            const std::string failMsg{"Invalid path: Could not open Texture at " + handle->path + "."};
+            return std::unexpected(engine::Error{engine::Error::Signal::InvalidPath, failMsg});
+        } // if textureResult.second == false
+        handle->status = ResourceHandle::Status::IsReady;
+        return &textureResult.first->second;
+    } // if ResourceHandle is marked Uninitialized
+
     // If we reach this code path, an Error has occurred!
     const std::string failMsg{"Resource not found: " + properties.id};
     return std::unexpected{engine::Error{engine::Error::Signal::ResourceNotFound, failMsg}};
@@ -227,6 +232,7 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
         const std::string failMsg{"Resource not found: " + properties.outputID + "."};
         return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
     } // if outputHandle does not exist
+
     if(outputHandle->status == ResourceHandle::Status::IsReady) {
         // Confirm this Texture has already been created
         const auto& textureIter{textures.find(properties.outputID)};
@@ -238,6 +244,7 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
         const std::string failMsg{"Resource not found: " + properties.outputID + "."};
         return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
     } // if outputHandle is marked IsReady
+
     if(outputHandle->status == ResourceHandle::Status::Uninitialized) {
         if(inputHandle->status == ResourceHandle::Status::Uninitialized) {
             TextureProperties inputProperties;
@@ -258,6 +265,7 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
             } // if outputTexture == success
         } // if inputHandle is marked IsReady
     } // if outputHandle is Uninitialized
+
     // If we reach this code path, an Error has occurred!
     const std::string failMsg{"Resource not found: " + properties.outputID};
     return std::unexpected{engine::Error{engine::Error::Signal::ResourceNotFound, failMsg}};
@@ -270,6 +278,7 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
         const std::string failMsg{"Resource not found: " + properties.id + "."};
         return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
     } // if handle does not exist
+
     if(handle->status == ResourceHandle::Status::IsReady) {
         // Confirm this Texture has already been created
         const auto& textureIter{textures.find(properties.id)};
@@ -281,6 +290,7 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
         const std::string failMsg{"Resource not found: " + properties.id + "."};
         return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
     } // if ResourceHandle is marked IsReady
+
     if(handle->status == ResourceHandle::Status::Uninitialized) {
         std::vector<ResourceID> segmentList;
         for(const auto& segment: properties.segments) {
@@ -298,6 +308,7 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
             return createSegmentedTexture.value();
         } // if createSegmentedTexture == success
     } // else if ResourceHandle is marked Uninitialized
+
     // If we reach this code path, an Error has occurred!
     const std::string failMsg{"Resource not found: " + properties.id};
     return std::unexpected{engine::Error{engine::Error::Signal::ResourceNotFound, failMsg}};
@@ -546,12 +557,6 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
 
         // Create edges of the appropriate size by repeating our input edge Textures
         // Vertical edges - Left and Right
-        /*const sf::Vector2u vEdgeSize{
-            edgeTextures[static_cast<int>(Rectangle::Edge::Left)]->getSize().x,
-            bottomLeftPosition.y - topLeftPosition.y - cornerTextures[static_cast<int>(Rectangle::Corner::TopLeft)]->
-            getSize().y
-        };
-        */
         const sf::Vector2u vEdgeSize{
             edgeTextures[static_cast<int>(Rectangle::Edge::Left)]->getSize().x,
             outputSize.y
@@ -559,13 +564,6 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
             - cornerTextures[static_cast<int>(Rectangle::Corner::BottomLeft)]->getSize().y
         };
         // Horizontal edges - Top and Bottom
-        /*
-        const sf::Vector2u hEdgeSize{
-            topRightPosition.x - topLeftPosition.x - cornerTextures[static_cast<int>(Rectangle::Corner::TopLeft)]->
-            getSize().x,
-            edgeTextures[static_cast<int>(Rectangle::Edge::Top)]->getSize().y
-        };
-        */
         const sf::Vector2u hEdgeSize{
             outputSize.x
             - cornerTextures[static_cast<int>(Rectangle::Corner::TopLeft)]->getSize().x

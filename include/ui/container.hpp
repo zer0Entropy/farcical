@@ -34,7 +34,28 @@ namespace farcical::ui {
             }
             return childList;
         }
+
+        [[nodiscard]] Widget* FindChild(engine::EntityID childID) const {
+            Widget* childPtr{nullptr};
+            for(const auto& child: children) {
+                if(child->GetID() == childID) {
+                    childPtr = child.get();
+                    break;
+                } // if IDs match
+            } // for each child in children
+            return childPtr;
+        }
+
         virtual void AddChild(std::unique_ptr<Widget> child) { children.push_back(std::move(child)); }
+
+        virtual void RemoveChild(engine::EntityID childID) {
+            for(auto it = children.begin(); it != children.end(); ++it) {
+                if((*it)->GetID() == childID) {
+                    children.erase(it);
+                    return;
+                } // if IDs match
+            } // for each child in children
+        }
 
         virtual void DoAction(Action action) override = 0;
 
