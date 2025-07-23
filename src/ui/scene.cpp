@@ -4,9 +4,8 @@
 #include "../../include/ui/scene.hpp"
 #include "../../include/ui/decoration.hpp"
 
-farcical::ui::Scene::Scene(engine::EntityID id, Widget* parent,
-                           SceneHierarchy& hierarchy): Container(id, Widget::Type::Scene, parent),
-                                                       hierarchy{hierarchy} {
+farcical::ui::Scene::Scene(engine::EntityID id):
+    Container(id, Widget::Type::Scene, nullptr) {
 }
 
 void farcical::ui::Scene::DoAction(Action action) {

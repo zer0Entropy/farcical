@@ -6,12 +6,14 @@
 #include <SFML/Graphics/Text.hpp>
 #include "../../include/engine/render.hpp"
 
-farcical::engine::RenderSystem::RenderSystem(sf::RenderWindow& window, LogSystem& logSystem):
-  System{ID::RenderSystem, logSystem},
+farcical::engine::RenderSystem::RenderSystem(sf::RenderWindow& window, LogSystem& logSystem): System{
+    ID::RenderSystem, logSystem
+  },
   window{window} {
 }
 
 void farcical::engine::RenderSystem::Init() {
+  WriteToLog("RenderSystem initialized.");
 }
 
 void farcical::engine::RenderSystem::Update() {
@@ -48,6 +50,7 @@ void farcical::engine::RenderSystem::Update() {
 void farcical::engine::RenderSystem::Stop() {
   if(window.isOpen()) {
     window.close();
+    WriteToLog("RenderSystem successfully shut down.");
   }
 }
 

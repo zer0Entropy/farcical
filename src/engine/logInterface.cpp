@@ -4,8 +4,7 @@
 #include "../../include/engine/logInterface.hpp"
 #include "../../include/engine/log.hpp"
 
-farcical::engine::LogInterface::LogInterface(LogSystem& logSystem):
-    logSystem{logSystem} {
+farcical::engine::LogInterface::LogInterface(LogSystem& logSystem): logSystem{logSystem} {
 }
 
 void farcical::engine::LogInterface::WriteToLog(std::string_view message) const {

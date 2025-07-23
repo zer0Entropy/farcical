@@ -8,8 +8,7 @@
 #include "logInterface.hpp"
 
 namespace farcical::engine {
-    class System: public LogInterface
-    {
+    class System : public LogInterface {
     public:
 
         enum class ID {
@@ -20,9 +19,11 @@ namespace farcical::engine {
         };
 
         System() = delete;
-        explicit System(const System::ID id, LogSystem& logSystem):
-            LogInterface(logSystem),
-            id{id} {}
+
+        explicit System(const System::ID id, LogSystem& logSystem): LogInterface(logSystem),
+                                                                    id{id} {
+        }
+
         virtual ~System() = default;
 
         [[nodiscard]] System::ID GetID() const { return id; }

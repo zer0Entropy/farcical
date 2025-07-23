@@ -18,6 +18,8 @@ namespace farcical::game {
 namespace farcical::engine {
     struct Event {
         enum class Type {
+            Unknown = -1,
+            ApplyEngineConfig,
             CreateScene,
             DestroyScene,
             QuitGame
@@ -36,6 +38,48 @@ namespace farcical::engine {
         }
 
         virtual ~Event() = default;
+
+        constexpr static std::string_view GetTypeName(Type type) {
+            std::string_view name{"?"};
+            switch(type) {
+                case Type::Unknown: {
+                    name = "?";
+                } break;
+                case Type::ApplyEngineConfig: {
+                    name = "ApplyEngineConfig";
+                } break;
+                case Type::CreateScene: {
+                    name = "CreateScene";
+                } break;
+                case Type::DestroyScene: {
+                    name = "DestroyScene";
+                } break;
+                case Type::QuitGame: {
+                    name = "QuitGame";
+                } break;
+            } // switch(type)
+            return name;
+        }
+
+        constexpr static Type GetTypeByName(std::string_view name) {
+            Type type{Type::Unknown};
+            if(name == "ApplyEngineConfig") {
+                type = Type::ApplyEngineConfig;
+            } // ApplyEngineConfig
+            else if(name == "CreateScene") {
+                type = Type::CreateScene;
+            } // CreateScene
+            else if(name == "DestroyScene") {
+                type = Type::DestroyScene;
+            } // DestroyScene
+            else if(name == "QuitGame") {
+                type = Type::QuitGame;
+            }
+            else {
+                type = Type::Unknown;
+            } // Unknown
+            return type;
+        }
     };
 
     class EventHandler {

@@ -17,7 +17,6 @@
 #include "../resource/manager.hpp"
 
 namespace farcical::ui {
-    struct SceneHierarchy;
 
     class Scene final : public Container {
     public:
@@ -27,7 +26,7 @@ namespace farcical::ui {
         Scene(Scene&&) = delete;
         Scene& operator=(const Scene&) = delete;
 
-        explicit Scene(engine::EntityID id, Widget* parent, SceneHierarchy& hierarchy);
+        explicit Scene(engine::EntityID id);
 
         ~Scene() override = default;
 
@@ -54,7 +53,6 @@ namespace farcical::ui {
         void CacheTextureProperties(ResourceID id, const TextureProperties& textureProperties);
 
     private:
-        SceneHierarchy& hierarchy;
 
         Widget* focusedWidget;
 
@@ -70,42 +68,6 @@ namespace farcical::ui {
         spriteLayers;
     };
 
-    struct SceneHierarchy {
-        std::unique_ptr<Scene> root;
-        std::unordered_map<engine::EntityID, ui::SceneConfig> sceneConfigs;
-
-        Scene* currentScene;
-        std::unique_ptr<MenuController> menuController;
-
-        std::optional<ui::SceneConfig> FindSceneConfig(engine::EntityID id) {
-            const auto& findConfig{sceneConfigs.find(id)};
-            if(findConfig != sceneConfigs.end()) {
-                return findConfig->second;
-            } // if findConfig == success
-            return std::nullopt;
-        }
-
-        Scene* FindScene(engine::EntityID id, Scene* parent = nullptr) {
-            if(!parent) {
-                parent = root.get();
-                if(!parent) {
-                    return nullptr;
-                }
-            }
-            if(parent->GetID() == id) {
-                return parent;
-            }
-            for(int n = 0; n < parent->GetNumChildren(); ++n) {
-                Widget* child{parent->GetChild(n)};
-                if(child->GetType() == Widget::Type::Scene) {
-                    if(Scene* scene{FindScene(id, dynamic_cast<Scene*>(child))}) {
-                        return scene;
-                    }
-                }
-            }
-            return nullptr;
-        }
-    };
 }
 
 #endif //SCENE_HPP

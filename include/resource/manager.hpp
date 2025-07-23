@@ -19,24 +19,34 @@ namespace farcical {
 
     class ResourceManager final {
     public:
-        ResourceHandle*                                 GetResourceHandle(ResourceID id) const;
+        ResourceManager();
+        ~ResourceManager() = default;
 
-        std::expected<ResourceHandle*, engine::Error>   CreateResourceHandle(   ResourceID id,
-                                                                                ResourceHandle::Type type,
-                                                                                std::string_view path);
+        void AddLogSystem(engine::LogSystem* logSystem);
 
-        std::optional<engine::Error>                    DestroyResourceHandle(ResourceID id, ResourceHandle::Type type);
+        ResourceHandle* GetResourceHandle(ResourceID id) const;
 
-        std::expected<engine::Log*, engine::Error>      GetLog(ResourceID id);
-        std::expected<nlohmann::json*, engine::Error>   GetJSONDoc(ResourceID id);
-        std::expected<sf::Font*, engine::Error>         GetFont(ResourceID id);
-        std::expected<sf::Texture*, engine::Error>      GetTexture(ResourceID id);
-        std::expected<sf::Texture*, engine::Error>      GetTexture(TextureProperties properties);
-        std::expected<sf::Texture*, engine::Error>      GetTexture(RepeatingTextureProperties properties);
-        std::expected<sf::Texture*, engine::Error>      GetTexture(SegmentedTextureProperties properties);
+        std::expected<ResourceHandle*, engine::Error> CreateResourceHandle(
+            ResourceID id,
+            ResourceHandle::Type type,
+            std::string_view path);
 
-        std::optional<engine::Error>                    WriteLog(ResourceID id, const std::vector<std::string>& messages);
-        std::optional<engine::Error>                    AppendToLog(ResourceID id, std::string_view message);
+        std::optional<engine::Error> DestroyResourceHandle(ResourceID id, ResourceHandle::Type type);
+
+        std::expected<engine::Log*, engine::Error> GetLog(ResourceID id);
+
+        std::expected<nlohmann::json*, engine::Error> GetJSONDoc(ResourceID id);
+        std::expected<sf::Font*, engine::Error> GetFont(ResourceID id);
+        std::expected<sf::Texture*, engine::Error> GetTexture(ResourceID id);
+        std::expected<sf::Texture*, engine::Error> GetTexture(TextureProperties properties);
+        std::expected<sf::Texture*, engine::Error> GetTexture(RepeatingTextureProperties properties);
+        std::expected<sf::Texture*, engine::Error> GetTexture(SegmentedTextureProperties properties);
+
+        std::optional<engine::Error> WriteLog(ResourceID id, const std::vector<std::string>& messages);
+
+        std::optional<engine::Error> AppendToLog(ResourceID id, const std::vector<std::string>& messages);
+
+        std::optional<engine::Error> AppendToLog(engine::Log* log, const std::vector<std::string>& messages);
 
         std::expected<sf::Texture*, engine::Error> CreateSplicedTexture(
             ResourceID id, const std::vector<ResourceID>& inputTextureIDs);
@@ -67,9 +77,7 @@ namespace farcical {
         std::unordered_map<ResourceID, sf::Font> fonts;
         std::unordered_map<ResourceID, sf::Texture> textures;
 
-        //ApplicationConfig appConfig;
-        //UIConfig globalUIConfig;
-        //SceneConfig currentSceneConfig;
+        engine::LogSystem* logSystem;
     };
 
 }

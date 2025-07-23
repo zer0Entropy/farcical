@@ -3,12 +3,13 @@
 //
 #include "../../include/engine/input.hpp"
 
-farcical::engine::InputSystem::InputSystem(sf::RenderWindow& window, LogSystem& logSystem):
-    System(System::ID::InputSystem, logSystem),
-    window{window} {
+farcical::engine::InputSystem::InputSystem(sf::RenderWindow& window,
+                                           LogSystem& logSystem): System(System::ID::InputSystem, logSystem),
+                                                                  window{window} {
 }
 
 void farcical::engine::InputSystem::Init() {
+    WriteToLog("InputSystem initialized.");
 }
 
 void farcical::engine::InputSystem::Update() {
@@ -47,20 +48,24 @@ void farcical::engine::InputSystem::Update() {
 }
 
 void farcical::engine::InputSystem::Stop() {
+    WriteToLog("InputSystem successfully shut down.");
 }
 
 void farcical::engine::InputSystem::AddMouseListener(MouseInterface* listener) {
     mouseListeners.push_back(listener);
+    WriteToLog("MouseListener added to InputSystem.");
 }
 
 void farcical::engine::InputSystem::AddKeyListener(KeyboardInterface* listener) {
     keyListeners.push_back(listener);
+    WriteToLog("KeyListener added to InputSystem.");
 }
 
 void farcical::engine::InputSystem::RemoveMouseListener(MouseInterface* listener) {
     for(auto listenIter = mouseListeners.begin(); listenIter != mouseListeners.end(); ++listenIter) {
         if(*listenIter == listener) {
             mouseListeners.erase(listenIter);
+            WriteToLog("MouseListener removed from InputSystem.");
             return;
         }
     }
@@ -70,6 +75,7 @@ void farcical::engine::InputSystem::RemoveKeyListener(KeyboardInterface* listene
     for(auto listenIter = keyListeners.begin(); listenIter != keyListeners.end(); ++listenIter) {
         if(*listenIter == listener) {
             keyListeners.erase(listenIter);
+            WriteToLog("KeyListener removed from InputSystem.");
             return;
         }
     }

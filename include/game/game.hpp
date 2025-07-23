@@ -10,11 +10,12 @@
 #include "world.hpp"
 #include "player.hpp"
 #include "../ui/config.hpp"
+#include "../engine/logInterface.hpp"
 
 namespace farcical::game {
     class Game;
 
-    class GameController final : public engine::EventHandler {
+    class GameController final : public engine::EventHandler, public engine::LogInterface {
     public:
         GameController() = delete;
 
@@ -48,8 +49,6 @@ namespace farcical::game {
 
         engine::Engine& GetEngine() const;
 
-        ui::SceneHierarchy& GetSceneHierarchy() const;
-
         std::optional<engine::Error> Init(const ResourceList& sceneResourceList);
 
         std::optional<engine::Error> Update();
@@ -60,59 +59,49 @@ namespace farcical::game {
 
         std::unique_ptr<Player> CreatePlayer();
 
-        std::expected<std::unique_ptr<ui::Scene>, engine::Error> CreateScene(ui::SceneConfig config, ui::Scene* parent);
+        std::expected<ui::Scene*, engine::Error> CreateScene(ui::SceneConfig config);
 
-        std::optional<engine::Error> StartScene(ui::Scene* scene, ui::SceneConfig& config);
+        std::optional<engine::Error> StartCurrentScene(ui::SceneConfig& config);
 
-        std::optional<engine::Error> StopScene(ui::Scene* scene);
+        std::optional<engine::Error> StopCurrentScene();
+
+        ui::Scene* GetCurrentScene() const;
 
         std::expected<ResourceParameters, engine::Error> FindSceneResource(engine::EntityID sceneID) const;
 
     private:
-        std::optional<engine::Error> CreateSceneLayout(ui::Scene& scene, const ui::LayoutConfig& layoutConfig);
+        std::optional<engine::Error> CreateSceneLayout(const ui::LayoutConfig& layoutConfig);
 
-        std::optional<engine::Error> DestroySceneLayout(ui::Scene& scene, const ui::LayoutConfig& layoutConfig);
+        std::optional<engine::Error> DestroySceneLayout(const ui::LayoutConfig& layoutConfig);
 
-        std::optional<engine::Error> CreateDecorations(
-            ui::Scene& scene,
-            const std::vector<ui::DecorationConfig>& decorationConfigList);
+        std::optional<engine::Error> CreateDecorations(const std::vector<ui::DecorationConfig>& decorationConfigList);
 
-        std::optional<engine::Error> DestroyDecorations(
-            ui::Scene& scene,
-            const std::vector<ui::DecorationConfig>& decorationConfigList);
+        std::optional<engine::Error> DestroyDecorations(const std::vector<ui::DecorationConfig>& decorationConfigList);
 
-        std::optional<engine::Error> CreateTitle(ui::Scene& scene, const ui::LabelConfig& titleConfig);
+        std::optional<engine::Error> CreateTitle(const ui::LabelConfig& titleConfig);
 
-        std::optional<engine::Error> DestroyTitle(ui::Scene& scene, const ui::LabelConfig& titleConfig);
+        std::optional<engine::Error> DestroyTitle(const ui::LabelConfig& titleConfig);
 
-        std::optional<engine::Error> CreateMenu(ui::Scene& scene, const ui::MenuConfig& menuConfig);
+        std::optional<engine::Error> CreateMenu(const ui::MenuConfig& menuConfig);
 
-        std::optional<engine::Error> DestroyMenu(ui::Scene& scene, const ui::MenuConfig& menuConfig);
+        std::optional<engine::Error> DestroyMenu(const ui::MenuConfig& menuConfig);
 
-        std::optional<engine::Error> CacheFonts(
-            ui::Scene& scene,
-            const std::vector<FontProperties>& fontPropertiesList);
+        std::optional<engine::Error> CacheFonts(const std::vector<FontProperties>& fontPropertiesList);
 
-        std::optional<engine::Error> CacheTextures(
-            ui::Scene& scene,
-            const std::vector<TextureProperties>& texturePropertiesList);
+        std::optional<engine::Error> CacheTextures(const std::vector<TextureProperties>& texturePropertiesList);
 
-        std::optional<engine::Error> CacheRepeatingTextures(
-            ui::Scene& scene,
-            const std::vector<RepeatingTextureProperties>& texturePropertiesList);
+        std::optional<engine::Error> CacheRepeatingTextures(const std::vector<RepeatingTextureProperties>& texturePropertiesList);
 
-        std::optional<engine::Error> CacheSegmentedTextures(
-            ui::Scene& scene,
-            const std::vector<SegmentedTextureProperties>& texturePropertiesList);
+        std::optional<engine::Error> CacheSegmentedTextures(const std::vector<SegmentedTextureProperties>& texturePropertiesList);
 
-        std::optional<engine::Error> CacheBorderTexture(
-            ui::Scene& scene,
-            const BorderTextureProperties& borderProperties);
+        std::optional<engine::Error> CacheBorderTexture(const BorderTextureProperties& borderProperties);
 
         Status status;
         engine::Engine& engine;
-        GameController controller;
-        ui::SceneHierarchy sceneHierarchy;
+        std::unique_ptr<GameController> controller;
+        std::unique_ptr<ui::Scene> currentScene;
+        std::unique_ptr<ui::MenuController> menuController;
+        std::unordered_map<engine::EntityID, ui::SceneConfig> sceneConfigs;
         std::unordered_map<engine::EntityID, ResourceParameters> sceneResources;
     };
 }

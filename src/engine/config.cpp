@@ -21,6 +21,11 @@ std::expected<farcical::engine::Config, farcical::engine::Error> farcical::engin
         config.scenePath = findScenePath.value().get<std::string>();
     } // if scenePath found
 
+    const auto& findLogPath{json.find("logPath")};
+    if(findLogPath != json.end()) {
+        config.logPath = findLogPath.value().get<std::string>();
+    } // if logPath found
+
     const auto& findWindow{json.find("window")};
     if(findWindow == json.end()) {
         const std::string failMsg{"Invalid configuration: Window could not be found."};

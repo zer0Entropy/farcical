@@ -4,13 +4,14 @@
 #include "../../include/engine/event.hpp"
 #include "../../include/game/game.hpp"
 
-farcical::engine::EventSystem::EventSystem(game::Game& game, Engine& engine):
-    System(ID::EventSystem, engine.GetLogSystem()),
-    game{game}, engine{engine} {
+farcical::engine::EventSystem::EventSystem(game::Game& game, Engine& engine): System(ID::EventSystem,
+                                                                                  engine.GetLogSystem()),
+                                                                              game{game}, engine{engine} {
 }
 
 void farcical::engine::EventSystem::RegisterHandler(Event::Type type, EventHandler* handler) {
     handlers.insert(std::make_pair(type, handler));
+    return;
 }
 
 void farcical::engine::EventSystem::UnregisterHandler(Event::Type type, EventHandler* handler) {
@@ -18,13 +19,17 @@ void farcical::engine::EventSystem::UnregisterHandler(Event::Type type, EventHan
     if(findHandler != handlers.end()) {
         handlers.erase(findHandler);
     } // if handler found
+    return;
 }
 
 void farcical::engine::EventSystem::Enqueue(const Event& event) {
     eventQueue.push_back(event);
+    return;
 }
 
 void farcical::engine::EventSystem::Init() {
+    WriteToLog("EventSystem initialized.");
+    return;
 }
 
 void farcical::engine::EventSystem::Update() {
@@ -38,38 +43,11 @@ void farcical::engine::EventSystem::Update() {
             findHandler->second->HandleEvent(event);
         } // if handler found
     } // for each Event in queueCopy
-
-    /*
-    // Iterate through a copy of the eventQueue, to prevent changes to the queue from messing up our iteration
-    const auto queueCopy{eventQueue};
-    eventQueue.clear();
-    for(const auto& event: queueCopy) {
-        switch(event.type) {
-            case Event::Type::QuitGame: {
-                engine.Stop();
-            }
-            break;
-            case Event::Type::TransitionMainMenu: {
-                //game.TransitionToState(game::Game::State::ID::MainMenu);
-            }
-            break;
-            case Event::Type::TransitionNewGame: {
-                //game.TransitionToState(game::Game::State::ID::StartNewGame);
-            }
-            break;
-            case Event::Type::TransitionLoadGame: {
-                //game.TransitionToState(game::Game::State::ID::LoadSavedGame);
-            }
-            break;
-            case Event::Type::TransitionOptions: {
-                //game.TransitionToState(game::Game::State::ID::OptionsMenu);
-            }
-            break;
-        }
-    }
-    */
+    return;
 }
 
 void farcical::engine::EventSystem::Stop() {
     eventQueue.clear();
+    WriteToLog("EventSystem successfully shut down.");
+    return;
 }

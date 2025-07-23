@@ -50,6 +50,10 @@ namespace farcical {
 
             [[nodiscard]] const Config& GetConfig() const;
 
+            std::expected<Config, Error> CreateConfig();
+
+            std::optional<Error> ApplyConfig(const Config& config);
+
             std::optional<Error> Init(game::Game* game);
 
             void Update();
@@ -72,6 +76,7 @@ namespace farcical {
             Status status;
 
             Config config;
+            std::string configPath;
 
             std::unique_ptr<sf::RenderWindow> window;
 
@@ -90,6 +95,11 @@ namespace farcical {
             static constexpr std::string_view configDocumentID = "engineConfig";
             static constexpr std::string_view sceneIndexDocumentID = "sceneConfigIndex";
             static constexpr std::string_view engineLogID = "farcicalLog";
+
+            std::optional<Error> CreateLogSystem();
+            std::optional<Error> CreateWindow();
+            std::optional<Error> CreateSystems();
+            std::optional<Error> InitSystems();
         };
     }
 }

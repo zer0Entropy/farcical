@@ -134,16 +134,10 @@ std::expected<farcical::ui::MenuItemConfig, farcical::engine::Error> farcical::u
         const std::string failMsg{"Invalid configuration: MenuItem EventType could not be found."};
         return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
     } // if eventArgs not found
-    const std::string eventTypeString{findEventType.value().get<std::string>()};
-    if(eventTypeString == "CreateScene") {
-        config.activationEventType = engine::Event::Type::CreateScene;
-    } // if CreateScene
-    else if(eventTypeString == "DestroyScene") {
-        config.activationEventType = engine::Event::Type::DestroyScene;
-    } // else if DestroyScene
-    else if(eventTypeString == "QuitGame") {
-        config.activationEventType = engine::Event::Type::QuitGame;
-    } // else if QuitGame
+
+    const std::string eventTypeName{findEventType.value().get<std::string>()};
+    config.activationEventType = engine::Event::GetTypeByName(eventTypeName);
+
     const auto& eventArgsJSON{findEventArgs.value()};
     for(const auto& arg: eventArgsJSON) {
         if(arg.type() == nlohmann::json::value_t::string) {

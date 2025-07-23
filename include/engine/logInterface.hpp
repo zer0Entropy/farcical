@@ -8,19 +8,21 @@
 #include <string>
 
 namespace farcical::engine {
-
     class LogSystem;
+
     class LogInterface {
     public:
         LogInterface() = delete;
+
         explicit LogInterface(LogSystem& logSystem);
+
         virtual ~LogInterface() = default;
 
         void WriteToLog(std::string_view message) const;
+
     private:
         LogSystem& logSystem;
     };
-
 }
 
 #endif //LOG_INTERFACE_HPP
