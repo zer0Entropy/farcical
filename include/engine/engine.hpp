@@ -97,8 +97,11 @@ namespace farcical {
             static constexpr std::string_view engineLogID = "farcicalLog";
 
             std::optional<Error> CreateLogSystem();
+
             std::optional<Error> CreateWindow();
+
             std::optional<Error> CreateSystems();
+
             std::optional<Error> InitSystems();
         };
     }

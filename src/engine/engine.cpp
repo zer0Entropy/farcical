@@ -6,17 +6,15 @@
 #include "../../include/game/game.hpp"
 #include <cassert>
 
-farcical::engine::Engine::Engine(std::string_view configPath):
-  status{Status::Uninitialized},
-  config{},
-  configPath{configPath},
-  window{nullptr},
-  logSystem{nullptr},
-  renderSystem{nullptr},
-  inputSystem{nullptr},
-  eventSystem{nullptr},
-  game{nullptr} {
-
+farcical::engine::Engine::Engine(std::string_view configPath): status{Status::Uninitialized},
+                                                               config{},
+                                                               configPath{configPath},
+                                                               window{nullptr},
+                                                               logSystem{nullptr},
+                                                               renderSystem{nullptr},
+                                                               inputSystem{nullptr},
+                                                               eventSystem{nullptr},
+                                                               game{nullptr} {
 }
 
 farcical::engine::Engine::Status farcical::engine::Engine::GetStatus() const {
@@ -50,7 +48,9 @@ std::expected<farcical::engine::Config, farcical::engine::Error> farcical::engin
       if(loadConfig.has_value()) {
         return loadConfig.value();
       } // if loadConfig == success
-      const std::string failMsg{"Failed to load config file (id=" + jsonDocHandle->id + "path=" + jsonDocHandle->path + ")!"};
+      const std::string failMsg{
+        "Failed to load config file (id=" + jsonDocHandle->id + "path=" + jsonDocHandle->path + ")!"
+      };
       return std::unexpected(Error{Error::Signal::InvalidConfiguration, failMsg});
     } // if requestJSONDoc == success
 
@@ -58,7 +58,9 @@ std::expected<farcical::engine::Config, farcical::engine::Error> farcical::engin
     return std::unexpected(Error{Error::Signal::ResourceNotFound, failMsg});
   } // if createConfigHandle == success
 
-  const std::string failMsg{"Failed to create ResourceHandle for JSONDocument with id=" + std::string{configDocumentID} + "!"};
+  const std::string failMsg{
+    "Failed to create ResourceHandle for JSONDocument with id=" + std::string{configDocumentID} + "!"
+  };
   return std::unexpected(Error{Error::Signal::InvalidConfiguration, failMsg});
 }
 

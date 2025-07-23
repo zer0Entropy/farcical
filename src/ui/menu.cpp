@@ -88,15 +88,15 @@ void farcical::ui::MenuItem::DoAction(Action action) {
 }
 
 
-farcical::ui::Menu::Menu(engine::EntityID id, Widget* parent):
+farcical::ui::Menu::Menu(engine::EntityID id, const MenuItemLayout& layout, Widget* parent):
   Container(id, Type::Menu, parent, false),
+  layout{layout},
   buttonTextureNormal{nullptr},
   buttonTextureHighlighted{nullptr},
   buttonTexturePressed{nullptr},
   labelFont{nullptr},
   titleFont{nullptr},
-  selectedIndex{-1},
-  buttonSpacing{0.0f} {
+  selectedIndex{-1} {
 }
 
 void farcical::ui::Menu::AddChild(std::unique_ptr<Widget> child) {
@@ -183,10 +183,6 @@ void farcical::ui::Menu::SetTitleFont(sf::Font& font) {
 
 void farcical::ui::Menu::SetSelectedIndex(int index) {
   selectedIndex = index;
-}
-
-void farcical::ui::Menu::SetButtonSpacing(float spacing) {
-  buttonSpacing = spacing;
 }
 
 void farcical::ui::Menu::DoAction(Action action) {

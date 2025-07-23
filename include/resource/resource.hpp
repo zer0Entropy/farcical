@@ -52,7 +52,7 @@ namespace farcical {
             else if(name == "texture") {
                 type = Type::Texture;
             } // texture
-            else if (name == "music") {
+            else if(name == "music") {
                 type = Type::Music;
             } // music
             else if(name == "sound") {
@@ -69,29 +69,34 @@ namespace farcical {
             switch(type) {
                 case Type::Log: {
                     name = "log";
-                } break;
+                }
+                break;
                 case Type::JSONDocument: {
                     name = "jsonDocument";
-                } break;
+                }
+                break;
                 case Type::Font: {
                     name = "font";
-                } break;
+                }
+                break;
                 case Type::Texture: {
                     name = "texture";
-                } break;
+                }
+                break;
                 case Type::Music: {
                     name = "music";
-                } break;
+                }
+                break;
                 case Type::Sound: {
                     name = "sound";
-                } break;
+                }
+                break;
                 case Type::Unknown: {
                     name = "?";
                 }
             } // switch(type)
             return name;
         }
-
     };
 
 }

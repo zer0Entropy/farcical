@@ -7,8 +7,7 @@
 #include "../../include/resource/manager.hpp"
 #include "../../include/geometry.hpp"
 
-farcical::ResourceManager::ResourceManager():
-    logSystem{nullptr} {
+farcical::ResourceManager::ResourceManager(): logSystem{nullptr} {
 }
 
 void farcical::ResourceManager::AddLogSystem(engine::LogSystem* logSystem) {
@@ -23,7 +22,9 @@ farcical::ResourceHandle* farcical::ResourceManager::GetResourceHandle(ResourceI
     if(resourceIter != registry.end()) {
         const ResourceHandle* handle{&resourceIter->second};
         if(logSystem) {
-            logSystem->AddMessage("Resource with id=\"" + id + "\" found (type=" + std::string{ResourceHandle::GetTypeName(handle->type)} + ").");
+            logSystem->AddMessage("Resource with id=\"" + id + "\" found (type=" + std::string{
+                                      ResourceHandle::GetTypeName(handle->type)
+                                  } + ").");
         }
         return const_cast<ResourceHandle*>(handle);
     }
@@ -438,7 +439,8 @@ std::optional<farcical::engine::Error> farcical::ResourceManager::AppendToLog(Re
     return std::nullopt;
 }
 
-std::optional<farcical::engine::Error> farcical::ResourceManager::AppendToLog(engine::Log* log, const std::vector<std::string>& messages) {
+std::optional<farcical::engine::Error> farcical::ResourceManager::AppendToLog(
+    engine::Log* log, const std::vector<std::string>& messages) {
     if(!log) {
         const std::string failMsg{"Unexpected nullptr: log"};
         return engine::Error{engine::Error::Signal::NullPtr, failMsg};

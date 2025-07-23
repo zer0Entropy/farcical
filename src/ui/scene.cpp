@@ -4,8 +4,7 @@
 #include "../../include/ui/scene.hpp"
 #include "../../include/ui/decoration.hpp"
 
-farcical::ui::Scene::Scene(engine::EntityID id):
-    Container(id, Widget::Type::Scene, nullptr) {
+farcical::ui::Scene::Scene(engine::EntityID id): Container(id, Widget::Type::Scene, nullptr) {
 }
 
 void farcical::ui::Scene::DoAction(Action action) {

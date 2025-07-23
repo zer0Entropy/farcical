@@ -20,6 +20,7 @@ namespace farcical {
     class ResourceManager final {
     public:
         ResourceManager();
+
         ~ResourceManager() = default;
 
         void AddLogSystem(engine::LogSystem* logSystem);
@@ -36,10 +37,15 @@ namespace farcical {
         std::expected<engine::Log*, engine::Error> GetLog(ResourceID id);
 
         std::expected<nlohmann::json*, engine::Error> GetJSONDoc(ResourceID id);
+
         std::expected<sf::Font*, engine::Error> GetFont(ResourceID id);
+
         std::expected<sf::Texture*, engine::Error> GetTexture(ResourceID id);
+
         std::expected<sf::Texture*, engine::Error> GetTexture(TextureProperties properties);
+
         std::expected<sf::Texture*, engine::Error> GetTexture(RepeatingTextureProperties properties);
+
         std::expected<sf::Texture*, engine::Error> GetTexture(SegmentedTextureProperties properties);
 
         std::optional<engine::Error> WriteLog(ResourceID id, const std::vector<std::string>& messages);

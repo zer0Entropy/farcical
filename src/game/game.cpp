@@ -9,10 +9,9 @@
 #include "../../include/ui/decoration.hpp"
 #include "../../include/engine/log.hpp"
 
-farcical::game::GameController::GameController(Game& game):
-    EventHandler(),
-    LogInterface(game.GetEngine().GetLogSystem()),
-    game{game} {
+farcical::game::GameController::GameController(Game& game): EventHandler(),
+                                                            LogInterface(game.GetEngine().GetLogSystem()),
+                                                            game{game} {
 }
 
 void farcical::game::GameController::HandleEvent(const engine::Event& event) {
@@ -71,11 +70,8 @@ void farcical::game::GameController::HandleEvent(const engine::Event& event) {
                 if(loadSceneConfig.has_value()) {
                     // The previous Scene needs to be stopped before we start this one
                     const auto& stopSceneResult{game.StopCurrentScene()};
-                    game.GetEngine().GetLogSystem().Update();
                     // Now set currentScene to the new Scene and start it
                     if(!stopSceneResult.has_value()) {
-                        //ui::Scene* scene{createScene.value().get()};
-                        //sceneHierarchy.currentScene = scene;
                         ui::SceneConfig& sceneConfig{const_cast<ui::SceneConfig&>(loadSceneConfig.value())};
                         const auto& createScene{game.CreateScene(sceneConfig)};
                         const auto& startSceneResult{game.StartCurrentScene(sceneConfig)};
@@ -112,8 +108,7 @@ std::optional<farcical::engine::Error> farcical::game::Game::Init(const Resource
     if(status != Status::Uninitialized) {
         if(status == Status::IsRunning) {
             logSystem.AddMessage("Error: Game.Init() called, but Game is already initialized!");
-        }
-        else if(status == Status::Error) {
+        } else if(status == Status::Error) {
             logSystem.AddMessage("Unknown error occurred in game.Init() [game.status == Error]");
         }
         return std::nullopt;
@@ -211,11 +206,11 @@ std::unique_ptr<farcical::game::Player> farcical::game::Game::CreatePlayer() {
 
 std::expected<farcical::ui::Scene*, farcical::engine::Error> farcical::game::Game::CreateScene(ui::SceneConfig config) {
     std::unique_ptr<ui::Scene> scene{std::make_unique<ui::Scene>(config.id)};
-    const auto& createSceneResult{sceneConfigs.insert(std::make_pair(config.id, config))};
-    if(!createSceneResult.second) {
-        const std::string failMsg{"Failed to create Scene (id=" + config.id + ")."};
-        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
-    }
+    const auto& findConfig{sceneConfigs.find(config.id)};
+    if(findConfig != sceneConfigs.end()) {
+        sceneConfigs.erase(findConfig);
+    } // if a config for this Scene already exists, erase it
+    const auto& createSceneResult{sceneConfigs.emplace(std::make_pair(config.id, config))};
     engine.GetLogSystem().AddMessage("Scene created successfully.");
     currentScene = std::move(scene);
     return currentScene.get();
@@ -329,6 +324,10 @@ std::optional<farcical::engine::Error> farcical::game::Game::DestroySceneLayout(
             return destroyMenuResult.value();
         } // if destroyMenuResult == failure
     } // for each layer in layoutConfig
+
+    // Destroy RenderContext
+    engine.GetRenderSystem().DestroyRenderContext(currentScene->GetID());
+
     return std::nullopt;
 }
 
@@ -377,19 +376,14 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateDecorations(c
     return std::nullopt;
 }
 
-std::optional<farcical::engine::Error> farcical::game::Game::DestroyDecorations(const std::vector<ui::DecorationConfig>& decorationConfigList) {
+std::optional<farcical::engine::Error> farcical::game::Game::DestroyDecorations(
+    const std::vector<ui::DecorationConfig>& decorationConfigList) {
     engine::LogSystem& logSystem{engine.GetLogSystem()};
-    engine::RenderContext* context{engine.GetRenderSystem().GetRenderContext(currentScene->GetID())};
 
     for(const auto& decorationConfig: decorationConfigList) {
         // Test length of decorationID to determine if this config is valid
         if(!decorationConfig.id.empty()) {
-            // First, remove RenderComponent from RenderContext
-            for(auto& layer: context->layers) {
-                layer.Remove(decorationConfig.id);
-            } // for each layer in RenderContext
-
-            // Destroy the Decoration
+            engine.GetRenderSystem().DestroyRenderComponent(currentScene->GetID(), decorationConfig.id);
             currentScene->RemoveChild(decorationConfig.id);
             logSystem.AddMessage("Decoration destroyed (id=" + decorationConfig.id + ").");
         } // if decorationConfig has valid ID
@@ -437,23 +431,16 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateTitle(const u
             };
             label->SetPosition(position);
         } // if createTitle == success
-
     } // if title has valid ID
     return std::nullopt;
 }
 
 std::optional<farcical::engine::Error> farcical::game::Game::DestroyTitle(const ui::LabelConfig& titleConfig) {
     engine::LogSystem& logSystem{engine.GetLogSystem()};
-    engine::RenderContext* context{engine.GetRenderSystem().GetRenderContext(currentScene->GetID())};
 
     // Test length of labelID to determine if this config is valid
     if(!titleConfig.id.empty()) {
-        // First, remove RenderComponent from RenderContext
-        for(auto& layer: context->layers) {
-            layer.Remove(titleConfig.id);
-        } // for each layer in RenderContext
-
-        // Destroy Title
+        engine.GetRenderSystem().DestroyRenderComponent(currentScene->GetID(), titleConfig.id);
         currentScene->RemoveChild(titleConfig.id);
         logSystem.AddMessage("Title destroyed (id=" + titleConfig.id + ").");
     } // if title has valid ID
@@ -471,38 +458,53 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateMenu(const ui
 
         // Create a list of all Button Textures
         std::vector<sf::Texture*> buttonTextures;
+        sf::Vector2u textureSize{0, 0};
         for(const auto& textureProperties: menuConfig.buttonConfig.textureProperties | std::views::values) {
             const ResourceID textureID{textureProperties.id + "Texture"};
             sf::Texture* texture{currentScene->GetCachedTexture(textureID)};
             if(texture) {
                 buttonTextures.push_back(texture);
+                if(texture->getSize().x > textureSize.x && texture->getSize().y > textureSize.y) {
+                    textureSize = texture->getSize();
+                }
             } // if texture
         } // for each texture in buttonConfig
 
         // Create 3 lists: names, contents, and onSelection Events for all MenuItems
-        std::vector<std::string> nameList;
+        std::vector<std::string> idList;
         std::vector<std::string> contentsList;
         std::vector<engine::Event::Type> eventTypeList;
         std::vector<std::vector<std::any>> eventArgsList;
         for(const auto& itemConfig: menuConfig.menuItemConfigs) {
-            nameList.push_back(itemConfig.id);
+            idList.push_back(itemConfig.id);
             contentsList.push_back(itemConfig.labelConfig.contents);
             eventTypeList.push_back(itemConfig.activationEventType);
             eventArgsList.push_back(itemConfig.activationEventArgs);
         } // for each itemConfig in layerConfig.menu.menuItemConfigs
 
+        farcical::ui::MenuItemCollection menuItems{
+            idList,
+            contentsList,
+            eventTypeList,
+            eventArgsList
+        };
+
+        farcical::ui::MenuItemLayout menuLayout{
+            ui::MenuItemLayout::Orientation::Vertical,
+            textureSize.x / 2,
+            {}
+        };
+
         // Create the Menu using the above lists
         const auto& createMenu{
             ui::Menu::Create(
                 menuConfig.id,
+                currentScene.get(),
                 font,
                 fontProperties,
                 buttonTextures,
-                nameList,
-                contentsList,
-                eventTypeList,
-                eventArgsList,
-                currentScene.get())
+                menuItems,
+                menuLayout)
         };
         if(createMenu.has_value()) {
             ui::Menu* menu{createMenu.value()};
@@ -570,12 +572,10 @@ std::optional<farcical::engine::Error> farcical::game::Game::DestroyMenu(const u
         menuController.reset();
         logSystem.AddMessage("MenuController destroyed.");
 
-        // Loop through each MenuItem and destroy each one
+        // Loop through each MenuItem and destroy all its RenderComponents
         for(auto& itemConfig: menuConfig.menuItemConfigs) {
-            for(auto& layer: context->layers) {
-                layer.Remove(itemConfig.buttonConfig.id);
-                layer.Remove(itemConfig.labelConfig.id);
-            } // for each layer in RenderContext
+            engine.GetRenderSystem().DestroyRenderComponent(currentScene->GetID(), itemConfig.buttonConfig.id);
+            engine.GetRenderSystem().DestroyRenderComponent(currentScene->GetID(), itemConfig.labelConfig.id);
         } // for each itemConfig in menuItemConfigs
 
         // Destroy Menu
@@ -639,11 +639,11 @@ std::optional<farcical::engine::Error> farcical::game::Game::CacheRepeatingTextu
             // Cache the Texture and its TextureProperties in the Scene
             currentScene->CacheTexture(textureProperties.outputID, loadTexture.value());
             currentScene->CacheTextureProperties(textureProperties.outputID, TextureProperties{
-             textureProperties.outputID,
-             textureProperties.path,
-                textureProperties.scale,
-                textureProperties.inputRect
-            });
+                                                     textureProperties.outputID,
+                                                     textureProperties.path,
+                                                     textureProperties.scale,
+                                                     textureProperties.inputRect
+                                                 });
         } // createHandle == success
     } // for each repeatingTexture in config.repeatingTextures
     return std::nullopt;
@@ -778,11 +778,11 @@ std::optional<farcical::engine::Error> farcical::game::Game::CacheBorderTexture(
         }
         currentScene->CacheTexture(borderProperties.id, createBorderTexture.value());
         currentScene->CacheTextureProperties(borderProperties.id, TextureProperties{
-         borderProperties.id,
-         borderProperties.path,
-            borderProperties.scale,
-            sf::IntRect{{0, 0}, {0, 0}}
-        });
+                                                 borderProperties.id,
+                                                 borderProperties.path,
+                                                 borderProperties.scale,
+                                                 sf::IntRect{{0, 0}, {0, 0}}
+                                             });
     } // if createHandle == success
 
     return std::nullopt;
@@ -908,6 +908,7 @@ std::optional<farcical::engine::Error> farcical::game::Game::StopCurrentScene() 
             } // if loadSceneConfig == success
         } // if requestJSONDoc == success
     } // if findSceneResource == success
+    currentScene.reset();
     engine.GetLogSystem().AddMessage("Scene stopped successfully.");
     return std::nullopt;
 }

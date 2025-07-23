@@ -90,9 +90,11 @@ namespace farcical::game {
 
         std::optional<engine::Error> CacheTextures(const std::vector<TextureProperties>& texturePropertiesList);
 
-        std::optional<engine::Error> CacheRepeatingTextures(const std::vector<RepeatingTextureProperties>& texturePropertiesList);
+        std::optional<engine::Error> CacheRepeatingTextures(
+            const std::vector<RepeatingTextureProperties>& texturePropertiesList);
 
-        std::optional<engine::Error> CacheSegmentedTextures(const std::vector<SegmentedTextureProperties>& texturePropertiesList);
+        std::optional<engine::Error> CacheSegmentedTextures(
+            const std::vector<SegmentedTextureProperties>& texturePropertiesList);
 
         std::optional<engine::Error> CacheBorderTexture(const BorderTextureProperties& borderProperties);
 

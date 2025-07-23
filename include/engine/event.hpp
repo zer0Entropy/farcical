@@ -44,19 +44,24 @@ namespace farcical::engine {
             switch(type) {
                 case Type::Unknown: {
                     name = "?";
-                } break;
+                }
+                break;
                 case Type::ApplyEngineConfig: {
                     name = "ApplyEngineConfig";
-                } break;
+                }
+                break;
                 case Type::CreateScene: {
                     name = "CreateScene";
-                } break;
+                }
+                break;
                 case Type::DestroyScene: {
                     name = "DestroyScene";
-                } break;
+                }
+                break;
                 case Type::QuitGame: {
                     name = "QuitGame";
-                } break;
+                }
+                break;
             } // switch(type)
             return name;
         }
@@ -74,8 +79,7 @@ namespace farcical::engine {
             } // DestroyScene
             else if(name == "QuitGame") {
                 type = Type::QuitGame;
-            }
-            else {
+            } else {
                 type = Type::Unknown;
             } // Unknown
             return type;
