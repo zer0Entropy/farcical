@@ -251,15 +251,16 @@ std::optional<farcical::engine::Error> farcical::engine::Engine::CreateWindow() 
   window = std::make_unique<sf::RenderWindow>();
   auto& windowProperties{config.windowProperties};
   if(windowProperties.fullscreen) {
-    window->create(sf::VideoMode{windowProperties.displayMode}, windowProperties.title, sf::State::Fullscreen);
-  } else {
     window->create(sf::VideoMode{windowProperties.displayMode}, windowProperties.title, sf::Style::None);
-    window->setPosition(windowProperties.position);
+  } else {
+    window->create(sf::VideoMode{windowProperties.displayMode}, windowProperties.title);
   }
   if(!window->isOpen()) {
     const std::string failMsg{"Invalid configuration: Failed to open window."};
     return Error{Error::Signal::InvalidConfiguration, failMsg};
   }
+  window->setPosition(windowProperties.position);
+  window->setFramerateLimit(60);
   windowProperties.sizeInPixels = window->getSize();
   return std::nullopt;
 }

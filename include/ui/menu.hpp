@@ -86,7 +86,8 @@ namespace farcical::ui {
         };
 
         Orientation orientation;
-        unsigned int minSpacing;
+        int relativeSpacing;
+        float actualSpacing;
         std::unordered_map<engine::EntityID, sf::Vector2f> positions;
     };
 

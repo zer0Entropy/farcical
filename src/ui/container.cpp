@@ -4,8 +4,8 @@
 
 #include "../../include/ui/container.hpp"
 
-farcical::ui::RootContainer::RootContainer(engine::EntityID id):
-    Container(id, ui::Widget::Type::RootContainer, nullptr) {
+farcical::ui::RootContainer::RootContainer(engine::EntityID id): Container(
+    id, ui::Widget::Type::RootContainer, nullptr) {
 }
 
 void farcical::ui::RootContainer::DoAction(Action action) {

@@ -11,7 +11,6 @@
 #include "../resource/manager.hpp"
 
 namespace farcical::ui {
-
     class Scene final {
     public:
         Scene() = delete;
@@ -20,6 +19,7 @@ namespace farcical::ui {
         Scene(Scene&&) = delete;
         Scene& operator=(const Scene&) = delete;
         explicit Scene(engine::EntityID id);
+
         ~Scene() = default;
 
         [[nodiscard]] engine::EntityID GetID() const;
@@ -51,7 +51,6 @@ namespace farcical::ui {
         void CacheTextureProperties(ResourceID id, const TextureProperties& textureProperties);
 
     private:
-
         engine::EntityID id;
         std::unique_ptr<RootContainer> widgetContainer;
 
@@ -62,7 +61,6 @@ namespace farcical::ui {
         std::unordered_map<ResourceID, TextureProperties> texturePropertiesCache;
 
         static constexpr std::string_view rootContainerID = "rootContainer";
-
     };
 
 }
