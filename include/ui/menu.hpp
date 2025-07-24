@@ -94,12 +94,13 @@ namespace farcical::ui {
         const std::vector<engine::EntityID>& ids;
         const std::vector<std::string>& contents;
         const std::vector<engine::Event::Type>& eventTypes;
-        const std::vector<std::vector<std::any>>& eventArgs;
+        const std::vector<std::vector<std::any> >& eventArgs;
     };
 
     class Menu final : public Container {
     public:
         explicit Menu(engine::EntityID id, const MenuItemLayout& layout, Widget* parent = nullptr);
+
         ~Menu() override = default;
 
         void AddChild(std::unique_ptr<Widget> child) override;
@@ -134,7 +135,6 @@ namespace farcical::ui {
             const std::vector<sf::Texture*>& buttonTextures,
             const MenuItemCollection& items,
             const MenuItemLayout& layout) {
-
             if(!parent || !parent->IsContainer()) {
                 const std::string failMsg{"Invalid configuration: Menu with missing or invalid parent."};
                 return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});

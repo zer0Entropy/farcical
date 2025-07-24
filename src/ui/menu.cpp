@@ -88,8 +88,7 @@ void farcical::ui::MenuItem::DoAction(Action action) {
 }
 
 
-farcical::ui::Menu::Menu(engine::EntityID id, const MenuItemLayout& layout, Widget* parent):
-  Container(id, Type::Menu, parent, false),
+farcical::ui::Menu::Menu(engine::EntityID id, const MenuItemLayout& layout, Widget* parent): Container(id, Type::Menu, parent, false),
   layout{layout},
   buttonTextureNormal{nullptr},
   buttonTextureHighlighted{nullptr},

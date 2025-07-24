@@ -5,36 +5,34 @@
 #ifndef SCENE_HPP
 #define SCENE_HPP
 
-#include <expected>
 #include <nlohmann/json.hpp>
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/Text.hpp>
-#include "config.hpp"
+
 #include "container.hpp"
-#include "layout.hpp"
-#include "menu.hpp"
-#include "../engine/error.hpp"
 #include "../resource/manager.hpp"
 
 namespace farcical::ui {
 
-    class Scene final : public Container {
+    class Scene final {
     public:
         Scene() = delete;
         Scene(const Scene&) = delete;
         Scene(Scene&) = delete;
         Scene(Scene&&) = delete;
         Scene& operator=(const Scene&) = delete;
-
         explicit Scene(engine::EntityID id);
+        ~Scene() = default;
 
-        ~Scene() override = default;
+        [[nodiscard]] engine::EntityID GetID() const;
 
-        void DoAction(Action action) override;
+        [[nodiscard]] ui::RootContainer& GetWidgetContainer() const;
 
-        [[nodiscard]] std::vector<sf::Text*> GetTextLayer(Layout::Layer::ID layerID) const;
+        [[nodiscard]] std::vector<ui::Widget*> GetTopLevelWidgets() const;
 
-        [[nodiscard]] std::vector<sf::Sprite*> GetSpriteLayer(Layout::Layer::ID layerID) const;
+        [[nodiscard]] ui::Widget* FindWidget(engine::EntityID widgetID) const;
+
+        void AddWidget(std::unique_ptr<ui::Widget> widget, ui::Widget* parent = nullptr);
+
+        void RemoveWidget(engine::EntityID widgetID, ui::Widget* parent = nullptr);
 
         [[nodiscard]] sf::Font* GetCachedFont(ResourceID id) const;
 
@@ -54,7 +52,8 @@ namespace farcical::ui {
 
     private:
 
-        Widget* focusedWidget;
+        engine::EntityID id;
+        std::unique_ptr<RootContainer> widgetContainer;
 
         std::unordered_map<ResourceID, sf::Font*> fontCache;
         std::unordered_map<ResourceID, FontProperties> fontPropertiesCache;
@@ -62,10 +61,8 @@ namespace farcical::ui {
         std::unordered_map<ResourceID, sf::Texture*> textureCache;
         std::unordered_map<ResourceID, TextureProperties> texturePropertiesCache;
 
-        std::array<std::unordered_map<std::string, sf::Text>, static_cast<int>(Layout::Layer::ID::NumLayers)>
-        textLayers;
-        std::array<std::unordered_map<std::string, sf::Sprite>, static_cast<int>(ui::Layout::Layer::ID::NumLayers)>
-        spriteLayers;
+        static constexpr std::string_view rootContainerID = "rootContainer";
+
     };
 
 }

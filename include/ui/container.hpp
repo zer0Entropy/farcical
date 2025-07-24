@@ -5,6 +5,7 @@
 #ifndef CONTAINER_HPP
 #define CONTAINER_HPP
 
+#include <memory>
 #include <vector>
 #include "widget.hpp"
 
@@ -40,8 +41,14 @@ namespace farcical::ui {
             for(const auto& child: children) {
                 if(child->GetID() == childID) {
                     childPtr = child.get();
-                    break;
                 } // if IDs match
+                else if(child->IsContainer()) {
+                    Container* container = dynamic_cast<Container*>(child.get());
+                    childPtr = container->FindChild(childID);
+                }
+                if(childPtr) {
+                    break;
+                }
             } // for each child in children
             return childPtr;
         }
@@ -62,6 +69,21 @@ namespace farcical::ui {
     protected:
         std::vector<std::unique_ptr<Widget> > children;
     };
+
+    class RootContainer final: public Container {
+    public:
+        RootContainer() = delete;
+        RootContainer(const RootContainer&) = delete;
+        RootContainer(RootContainer&) = delete;
+        RootContainer(RootContainer&&) = delete;
+        RootContainer& operator=(const RootContainer&) = delete;
+        RootContainer& operator=(const RootContainer&&) = delete;
+        explicit RootContainer(engine::EntityID id);
+        ~RootContainer() override = default;
+
+        void DoAction(Action action) override;
+    };
+
 }
 
 #endif //CONTAINER_HPP

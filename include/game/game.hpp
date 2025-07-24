@@ -6,11 +6,15 @@
 #define GAME_HPP
 
 #include "../engine/engine.hpp"
+#include "../engine/logInterface.hpp"
+
+#include "../ui/config.hpp"
+#include "../ui/menu.hpp"
 #include "../ui/scene.hpp"
+
 #include "world.hpp"
 #include "player.hpp"
-#include "../ui/config.hpp"
-#include "../engine/logInterface.hpp"
+
 
 namespace farcical::game {
     class Game;

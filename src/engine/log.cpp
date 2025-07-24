@@ -4,10 +4,11 @@
 #include "../../include/engine/log.hpp"
 #include "../../include/resource/manager.hpp"
 
-farcical::engine::LogSystem::LogSystem(ResourceID logID, std::string_view logPath): System(System::ID::LogSystem, *this),
-    logParams{logID, logPath},
-    resourceManager{nullptr},
-    log{nullptr} {
+farcical::engine::LogSystem::LogSystem(ResourceID logID,
+                                       std::string_view logPath): System(System::ID::LogSystem, *this),
+                                                                  logParams{logID, logPath},
+                                                                  resourceManager{nullptr},
+                                                                  log{nullptr} {
 }
 
 void farcical::engine::LogSystem::Init() {

@@ -15,10 +15,12 @@
 namespace farcical::ui {
     struct DecorationConfig {
         engine::EntityID id;
+        engine::EntityID parentID;
         sf::Vector2u relativePosition;
         TextureProperties textureProperties;
 
         DecorationConfig(): id{""},
+                            parentID{""},
                             relativePosition{sf::Vector2u{0, 0}} {
         }
 
@@ -37,11 +39,13 @@ namespace farcical::ui {
 
     struct LabelConfig {
         engine::EntityID id;
+        engine::EntityID parentID;
         sf::Vector2u relativePosition;
         std::string contents;
         FontProperties fontProperties;
 
         LabelConfig(): id{""},
+                       parentID{""},
                        relativePosition{sf::Vector2u{0, 0}},
                        contents{""} {
         }
@@ -65,13 +69,16 @@ namespace farcical::ui {
 
     struct MenuConfig {
         engine::EntityID id;
+        engine::EntityID parentID;
         sf::Vector2u relativePosition;
         std::vector<MenuItemConfig> menuItemConfigs;
         ButtonConfig buttonConfig;
         FontProperties fontProperties;
 
-        MenuConfig(): id{""},
-                      relativePosition{sf::Vector2u{0, 0}} {
+        MenuConfig():
+            id{""},
+            parentID{""},
+            relativePosition{sf::Vector2u{0, 0}} {
         }
 
         ~MenuConfig() = default;

@@ -2,30 +2,72 @@
 // Created by dgmuller on 6/24/25.
 //
 #include "../../include/ui/scene.hpp"
-#include "../../include/ui/decoration.hpp"
 
-farcical::ui::Scene::Scene(engine::EntityID id): Container(id, Widget::Type::Scene, nullptr) {
+farcical::ui::Scene::Scene(engine::EntityID id):
+    id{id},
+    widgetContainer{std::make_unique<RootContainer>(std::string{rootContainerID})} {
 }
 
-void farcical::ui::Scene::DoAction(Action action) {
+farcical::engine::EntityID farcical::ui::Scene::GetID() const {
+    return id;
 }
 
-std::vector<sf::Text*> farcical::ui::Scene::GetTextLayer(Layout::Layer::ID layerID) const {
-    std::vector<sf::Text*> textList;
-    const auto& layer{textLayers[static_cast<int>(layerID)]};
-    for(const auto& text: layer | std::views::values) {
-        textList.emplace_back(const_cast<sf::Text*>(&text));
-    }
-    return textList;
+farcical::ui::RootContainer& farcical::ui::Scene::GetWidgetContainer() const {
+    return *widgetContainer;
 }
 
-std::vector<sf::Sprite*> farcical::ui::Scene::GetSpriteLayer(Layout::Layer::ID layerID) const {
-    std::vector<sf::Sprite*> spriteList;
-    const auto& layer{spriteLayers[static_cast<int>(layerID)]};
-    for(const auto& sprite: layer | std::views::values) {
-        spriteList.emplace_back(const_cast<sf::Sprite*>(&sprite));
-    }
-    return spriteList;
+std::vector<farcical::ui::Widget*> farcical::ui::Scene::GetTopLevelWidgets() const {
+    return widgetContainer->GetChildren();
+}
+
+farcical::ui::Widget* farcical::ui::Scene::FindWidget(engine::EntityID widgetID) const {
+    if(widgetContainer->GetID() == widgetID) {
+        return widgetContainer.get();
+    } // if widgetContainer matches widgetID
+    return widgetContainer->FindChild(widgetID);
+}
+
+void farcical::ui::Scene::AddWidget(std::unique_ptr<ui::Widget> widget, ui::Widget* parent) {
+    // If parent == nullptr, set parent = rootContainer
+    if(!parent) {
+        parent = widgetContainer.get();
+    } // if !parent
+    if(!parent->IsContainer()) {
+        return; // Error!
+    } // !parent->IsContainer()
+    Container* parentContainer{dynamic_cast<Container*>(parent)};
+    if(!parentContainer) {
+        return; // Error!
+    } // !parentContainer
+    parentContainer->AddChild(std::move(widget));
+}
+
+void farcical::ui::Scene::RemoveWidget(engine::EntityID widgetID, ui::Widget* parent) {
+    // If parent == nullptr, set parent = rootContainer
+    if(!parent) {
+        parent = widgetContainer.get();
+    } // if !parent
+    if(!parent->IsContainer()) {
+        return; // Error!
+    } // !parent->IsContainer()
+    Container* parentContainer{dynamic_cast<Container*>(parent)};
+    if(!parentContainer) {
+        return; // Error!
+    } // !parentContainer
+    if(parentContainer->GetID() == widgetID) {
+        parent = parentContainer->GetParent();
+        parentContainer = dynamic_cast<Container*>(parent);
+        if(parentContainer) {
+            parentContainer->RemoveChild(widgetID);
+        } // remove from parent
+    } // if parentContainer matches widgetID, remove it from its parent
+    else {
+        Widget* child{parentContainer->FindChild(widgetID)};
+        if(child) {
+            parentContainer->RemoveChild(widgetID);
+            child = nullptr;
+        } // if child found
+    } // else if parentContainer does not match widgetID
 }
 
 sf::Font* farcical::ui::Scene::GetCachedFont(ResourceID id) const {

@@ -13,7 +13,7 @@ namespace farcical::ui {
   class Widget: public engine::Entity, public ActionHandler {
   public:
     enum class Type {
-      Scene,
+      RootContainer,
       Decoration,
       Menu,
       MenuItem,
