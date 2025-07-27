@@ -4,9 +4,9 @@
 #include <SFML/Graphics/Sprite.hpp>
 #include "../../include/ui/decoration.hpp"
 
-farcical::ui::Decoration::Decoration(engine::EntityID id, Widget* parent): Widget(id, Widget::Type::Decoration, parent,
-                                                                               false),
-                                                                           texture{nullptr} {
+farcical::ui::Decoration::Decoration(engine::EntityID id, Container* parent):
+    Widget(id, Widget::Type::Decoration, parent,false),
+    texture{nullptr} {
 }
 
 void farcical::ui::Decoration::DoAction(Action action) {

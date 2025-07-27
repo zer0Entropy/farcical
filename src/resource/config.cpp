@@ -56,6 +56,7 @@ std::expected<farcical::TextureProperties, farcical::engine::Error> farcical::Lo
     const auto& findID{json.find("id")};
     const auto& findPath{json.find("path")};
     const auto& findScale{json.find("scale")};
+    const auto& findColor{json.find("color")};
     const auto& findPosition{json.find("position")};
     const auto& findInputSize{json.find("inputSize")};
 
@@ -81,6 +82,10 @@ std::expected<farcical::TextureProperties, farcical::engine::Error> farcical::Lo
     if(findScale != json.end()) {
         properties.scale = findScale.value().get<float>();
     } // if "scale" found
+    if(findColor != json.end()) {
+        properties.color = GetColorByName(findColor.value().get<std::string>());
+        properties.isColorized = true;
+    } // if "color" found
     if(findPosition != json.end()) {
         const auto& positionJSON{findPosition.value()};
         const auto& loadPosition{jsonParser::ParsePosition(positionJSON)};
@@ -114,6 +119,7 @@ std::expected<farcical::RepeatingTextureProperties, farcical::engine::Error> far
     const auto& findOutputID{json.find("outputID")};
     const auto& findPath{json.find("path")};
     const auto& findScale{json.find("scale")};
+    const auto& findColor{json.find("color")};
     const auto& findPosition{json.find("position")};
     const auto& findInputSize{json.find("inputSize")};
     const auto& findOutputSize{json.find("outputSize")};
@@ -169,6 +175,11 @@ std::expected<farcical::RepeatingTextureProperties, farcical::engine::Error> far
         properties.scale = findScale.value().get<float>();
     } // if scale found
 
+    if(findColor != json.end()) {
+        properties.color = GetColorByName(findColor.value().get<std::string>());
+        properties.isColorized = true;
+    } // if color found
+
     return properties;
 }
 
@@ -179,6 +190,7 @@ std::expected<farcical::SegmentedTextureProperties, farcical::engine::Error> far
     const auto& findID{json.find("id")};
     const auto& findPath{json.find("path")};
     const auto& findScale{json.find("scale")};
+    const auto& findColor{json.find("color")};
     const auto& findSegments{json.find("segments")};
 
     if(findID == json.end()) {
@@ -221,11 +233,16 @@ std::expected<farcical::SegmentedTextureProperties, farcical::engine::Error> far
                 properties.outputSize.y = size.y;
             } // if outputSize.y < size.y
         } // if loadSizeResult == success
-    }
+    } // for each segmentJSON
 
     if(findScale != json.end()) {
         properties.scale = findScale.value().get<float>();
-    }
+    } // if scale found
+
+    if(findColor != json.end()) {
+        properties.color = GetColorByName(findColor.value().get<std::string>());
+        properties.isColorized = true;
+    } // if color found
 
     return properties;
 }

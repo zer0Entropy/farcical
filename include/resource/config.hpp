@@ -55,19 +55,44 @@ namespace farcical {
         ResourceID id;
         std::string path;
         float scale;
+        sf::Color color;
+        bool isColorized;
         sf::IntRect inputRect;
 
         TextureProperties():
             id{""},
             path{""},
             scale{1.0f},
-            inputRect{{0, 0}, {0, 0}} {}
+            color{sf::Color::Black},
+            isColorized{false},
+            inputRect{{0, 0}, {0, 0}} {
+
+        }
 
         TextureProperties(ResourceID id, std::string_view path, float scale, const sf::IntRect& inputRect):
             id{id},
             path{path},
             scale{scale},
-            inputRect{inputRect} {}
+            color{sf::Color::Black},
+            isColorized{false},
+            inputRect{inputRect} {
+
+        }
+
+        TextureProperties(
+            ResourceID id,
+            std::string_view path,
+            float scale,
+            const sf::Color& color,
+            const sf::IntRect& inputRect):
+            id{id},
+            path{path},
+            scale{scale},
+            color{color},
+            isColorized{true},
+            inputRect{inputRect} {
+
+        }
 
         ~TextureProperties() = default;
     };
@@ -77,6 +102,8 @@ namespace farcical {
         ResourceID outputID;
         std::string path;
         float scale;
+        sf::Color color;
+        bool isColorized;
         sf::IntRect inputRect;
         sf::Vector2u outputSize;
 
@@ -85,6 +112,8 @@ namespace farcical {
             outputID{""},
             path{""},
             scale{1.0f},
+            color{sf::Color::Black},
+            isColorized{false},
             inputRect{{0, 0}, {0, 0}},
             outputSize{0, 0} {}
 
@@ -99,6 +128,25 @@ namespace farcical {
             outputID{outputID},
             path{path},
             scale{scale},
+            color{sf::Color::Black},
+            isColorized{false},
+            inputRect{inputRect},
+            outputSize{outputSize} {}
+
+        RepeatingTextureProperties(
+            ResourceID inputID,
+            ResourceID outputID,
+            std::string_view path,
+            float scale,
+            const sf::Color& color,
+            const sf::IntRect& inputRect,
+            const sf::Vector2u& outputSize):
+            inputID{inputID},
+            outputID{outputID},
+            path{path},
+            scale{scale},
+            color{color},
+            isColorized{true},
             inputRect{inputRect},
             outputSize{outputSize} {}
 
@@ -109,6 +157,8 @@ namespace farcical {
         ResourceID id;
         std::string path;
         float scale;
+        sf::Color color;
+        bool isColorized;
         sf::Vector2u outputSize;
         std::vector<TextureProperties> segments;
 
@@ -116,12 +166,29 @@ namespace farcical {
             id{""},
             path{""},
             scale{1.0f},
+            color{sf::Color::Black},
+            isColorized{false},
             outputSize{0, 0} {}
 
         SegmentedTextureProperties(ResourceID id, std::string_view path, float scale, const sf::Vector2u& outputSize):
             id{id},
             path{path},
             scale{scale},
+            color{sf::Color::Black},
+            isColorized{false},
+            outputSize{outputSize} {}
+
+        SegmentedTextureProperties(
+            ResourceID id,
+            std::string_view path,
+            float scale,
+            const sf::Color& color,
+            const sf::Vector2u& outputSize):
+            id{id},
+            path{path},
+            scale{scale},
+            color{color},
+            isColorized{true},
             outputSize{outputSize} {}
 
         ~SegmentedTextureProperties() = default;

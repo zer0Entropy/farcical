@@ -9,8 +9,8 @@
 #include "../engine/error.hpp"
 #include "../resource/config.hpp"
 #include "../engine/event.hpp"
-#include "button.hpp"
 #include "layout.hpp"
+#include "menu.hpp"
 
 namespace farcical::ui {
     struct DecorationConfig {
@@ -70,16 +70,17 @@ namespace farcical::ui {
     struct MenuConfig {
         engine::EntityID id;
         engine::EntityID parentID;
+        MenuLayout layout;
         sf::Vector2u relativePosition;
         std::vector<MenuItemConfig> menuItemConfigs;
         ButtonConfig buttonConfig;
         FontProperties fontProperties;
 
-        MenuConfig(): id{""},
-                      parentID{""},
-                      relativePosition{sf::Vector2u{0, 0}} {
+        explicit MenuConfig():
+            id{""},
+            parentID{""},
+            relativePosition{sf::Vector2u{0, 0}} {
         }
-
         ~MenuConfig() = default;
     };
 

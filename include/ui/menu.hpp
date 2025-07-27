@@ -23,14 +23,11 @@ namespace farcical::ui {
         explicit MenuItem(engine::EntityID id,
                           engine::Event::Type activationEventType,
                           const std::vector<std::any>& activationEventArgs,
-                          Widget* parent = nullptr);
+                          Container* parent = nullptr);
 
         ~MenuItem() override = default;
 
-        [[nodiscard]] Button* CreateButton(engine::EntityID id, std::vector<sf::Texture*> textures);
-
-        [[nodiscard]] Label* CreateLabel(engine::EntityID id, std::string_view contents,
-                                         const FontProperties& fontProperties, sf::Font& font);
+        void AddChild(std::unique_ptr<Widget> child) override;
 
         [[nodiscard]] engine::Event::Type GetActivationEventType() const;
 
@@ -41,7 +38,7 @@ namespace farcical::ui {
         [[nodiscard]] Label* GetLabel() const;
 
         void DoAction(Action action) override;
-
+/*
         static std::expected<MenuItem*, engine::Error> Create(
             engine::EntityID id,
             std::string_view contents,
@@ -71,7 +68,7 @@ namespace farcical::ui {
             Label* label{item->CreateLabel(labelID, contents, fontProperties, *font)};
             return item;
         }
-
+*/
     private:
         Button* button;
         Label* label;
@@ -79,7 +76,7 @@ namespace farcical::ui {
         std::vector<std::any> activationEventArgs;
     };
 
-    struct MenuItemLayout {
+    struct MenuLayout {
         enum class Orientation {
             Horizontal,
             Vertical
@@ -89,22 +86,62 @@ namespace farcical::ui {
         int relativeSpacing;
         float actualSpacing;
         std::unordered_map<engine::EntityID, sf::Vector2f> positions;
+
+        MenuLayout():
+            orientation{Orientation::Vertical},
+            relativeSpacing{0},
+            actualSpacing{0.0f} {
+
+        }
+        explicit MenuLayout(Orientation orientation, int relativeSpacing):
+            orientation{orientation},
+            relativeSpacing{relativeSpacing},
+            actualSpacing{0.0f} {
+
+        }
+        ~MenuLayout() = default;
+
+        constexpr static std::string_view GetOrientationName(Orientation orientation) {
+            std::string_view name{"?"};
+            switch(orientation) {
+                case Orientation::Vertical: {
+                    name = "vertical";
+                } break;
+                case Orientation::Horizontal: {
+                    name = "horizontal";
+                } break;
+            } // switch(orientation)
+            return name;
+        }
+
+        constexpr static Orientation GetOrientationByName(std::string_view name) {
+            Orientation orientation{Orientation::Vertical};
+            if(name == "vertical") {
+                orientation = Orientation::Vertical;
+            } // if vertical
+            else if(name == "horizontal") {
+                orientation = Orientation::Horizontal;
+            } // else if horizontal
+            return orientation;
+        }
     };
 
     struct MenuItemCollection {
-        const std::vector<engine::EntityID>& ids;
-        const std::vector<std::string>& contents;
-        const std::vector<engine::Event::Type>& eventTypes;
-        const std::vector<std::vector<std::any> >& eventArgs;
+        std::vector<engine::EntityID> ids;
+        std::vector<std::string> contents;
+        std::vector<engine::Event::Type> eventTypes;
+        std::vector<std::vector<std::any>> eventArgs;
     };
 
     class Menu final : public Container {
     public:
-        explicit Menu(engine::EntityID id, const MenuItemLayout& layout, Widget* parent = nullptr);
+        explicit Menu(engine::EntityID id, const MenuLayout& layout, Container* parent = nullptr);
 
         ~Menu() override = default;
 
         void AddChild(std::unique_ptr<Widget> child) override;
+
+        [[nodiscard]] const std::vector<MenuItem*>& GetMenuItems() const;
 
         [[nodiscard]] int GetNumMenuItems() const;
 
@@ -127,7 +164,7 @@ namespace farcical::ui {
         void SetSelectedIndex(int index);
 
         void DoAction(Action action) override;
-
+/*
         static std::expected<Menu*, engine::Error> Create(
             engine::EntityID id,
             Widget* parent,
@@ -135,7 +172,7 @@ namespace farcical::ui {
             const FontProperties& fontProperties,
             const std::vector<sf::Texture*>& buttonTextures,
             const MenuItemCollection& items,
-            const MenuItemLayout& layout) {
+            const MenuLayout& layout) {
             if(!parent || !parent->IsContainer()) {
                 const std::string failMsg{"Invalid configuration: Menu with missing or invalid parent."};
                 return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
@@ -175,7 +212,7 @@ namespace farcical::ui {
             }
             return menu;
         }
-
+        */
         /*
         static std::expected<Menu*, engine::Error> Create(
             engine::EntityID id,
@@ -224,7 +261,7 @@ namespace farcical::ui {
         */
 
     private:
-        MenuItemLayout layout;
+        MenuLayout layout;
         std::vector<MenuItem*> items;
         sf::Texture* buttonTextureNormal;
         sf::Texture* buttonTextureHighlighted;

@@ -86,10 +86,6 @@ namespace farcical::game {
 
         std::optional<engine::Error> DestroyTitle(const ui::LabelConfig& titleConfig);
 
-        std::optional<engine::Error> CreateMenu(const ui::MenuConfig& menuConfig);
-
-        std::optional<engine::Error> DestroyMenu(const ui::MenuConfig& menuConfig);
-
         std::optional<engine::Error> CacheFonts(const std::vector<FontProperties>& fontPropertiesList);
 
         std::optional<engine::Error> CacheTextures(const std::vector<TextureProperties>& texturePropertiesList);

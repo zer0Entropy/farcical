@@ -47,16 +47,7 @@ std::expected<farcical::ui::ButtonConfig, farcical::engine::Error> farcical::ui:
     } // if state not found
     const std::string buttonStateString{findState.value().get<std::string>()};
 
-    Button::Status buttonState{Button::Status::Normal};
-    if(buttonStateString == "normal") {
-        buttonState = Button::Status::Normal;
-    } // if normal
-    else if(buttonStateString == "highlighted") {
-        buttonState = Button::Status::Highlighted;
-    } // else if highlighted
-    else if(buttonStateString == "pressed") {
-        buttonState = Button::Status::Pressed;
-    } // else if pressed
+    const Button::Status buttonState{Button::GetStatusByName(buttonStateString)};
 
     if(findTexture == json.end()) {
         const std::string failMsg{"Invalid configuration: ResourceID could not be found."};
@@ -159,6 +150,8 @@ std::expected<farcical::ui::MenuConfig, farcical::engine::Error> farcical::ui::L
     MenuConfig config;
     const auto& findID{json.find("id")};
     const auto& findPosition{json.find("relativePosition")};
+    const auto& findOrientation{json.find("orientation")};
+    const auto& findRelativeSpacing{json.find("relativeSpacing")};
     const auto& findFont{json.find("font")};
     const auto& findButtons{json.find("buttons")};
     const auto& findItems{json.find("items")};
@@ -176,6 +169,18 @@ std::expected<farcical::ui::MenuConfig, farcical::engine::Error> farcical::ui::L
     if(loadPosition.has_value()) {
         config.relativePosition = loadPosition.value();
     } // if loadPosition == success
+
+    if(findOrientation == json.end()) {
+        const std::string failMsg{"Invalid configuration: Orientation could not be found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if orientation not found
+    config.layout.orientation = MenuLayout::GetOrientationByName(findOrientation.value().get<std::string>());
+
+    if(findRelativeSpacing == json.end()) {
+        const std::string failMsg{"Invalid configuration: Spacing could not be found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if relativeSpacing not found
+    config.layout.relativeSpacing = findRelativeSpacing.value().get<int>();
 
     if(findFont == json.end()) {
         const std::string failMsg{"Invalid configuration: ResourceID could not be found."};

@@ -10,6 +10,7 @@
 #include "../../include/ui/menu.hpp"
 #include "../../include/ui/decoration.hpp"
 #include "../../include/engine/log.hpp"
+#include "../../include/ui/factory.hpp"
 
 farcical::game::GameController::GameController(Game& game): EventHandler(),
                                                             LogInterface(game.GetEngine().GetLogSystem()),
@@ -207,12 +208,12 @@ std::unique_ptr<farcical::game::Player> farcical::game::Game::CreatePlayer() {
 }
 
 std::expected<farcical::ui::Scene*, farcical::engine::Error> farcical::game::Game::CreateScene(ui::SceneConfig config) {
-    std::unique_ptr<ui::Scene> scene{std::make_unique<ui::Scene>(config.id)};
+    std::unique_ptr<ui::Scene> scene{std::make_unique<ui::Scene>(config.id, *this)};
     const auto& findConfig{sceneConfigs.find(config.id)};
     if(findConfig != sceneConfigs.end()) {
         sceneConfigs.erase(findConfig);
     } // if a config for this Scene already exists, erase it
-    const auto& createSceneResult{sceneConfigs.emplace(std::make_pair(config.id, config))};
+    const auto& createSceneResult{sceneConfigs.emplace(config.id, config)};
     engine.GetLogSystem().AddMessage("Scene created successfully.");
     currentScene = std::move(scene);
     return currentScene.get();
@@ -230,8 +231,14 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateSceneLayout(c
 
     for(const auto& layerConfig: layoutConfig.layers) {
         CreateDecorations(layerConfig.decorations);
-        CreateTitle(layerConfig.title);
-        CreateMenu(layerConfig.menu);
+        const auto& createTitle{
+            ui::factory::CreateTitle(*this, layerConfig.title, &currentScene->GetRootContainer())
+        };
+        const auto& createMenu{
+            ui::factory::CreateMenu(*this, layerConfig.menu, &currentScene->GetRootContainer())
+        };
+        //CreateTitle(layerConfig.title);
+        //CreateMenu(layerConfig.menu);
         for(const auto& widget: currentScene->GetTopLevelWidgets()) {
             ui::Widget::Type widgetType{widget->GetType()};
             if(widgetType == ui::Widget::Type::Decoration) {
@@ -316,15 +323,25 @@ std::optional<farcical::engine::Error> farcical::game::Game::DestroySceneLayout(
             return destroyDecorationResult.value();
         } // if destroyDecorationResult == failure
 
-        const auto& destroyTitleResult{DestroyTitle(layerConfig.title)};
-        if(destroyTitleResult.has_value()) {
-            return destroyTitleResult.value();
-        } // if destroyTitleResult == failure
+        //const auto& destroyTitleResult{DestroyTitle(layerConfig.title)};
+        ui::Label* title{dynamic_cast<ui::Label*>(currentScene->FindWidget(layerConfig.title.id))};
+        if(title) {
+            const auto& destroyTitleResult{ui::factory::DestroyTitle(*this, title)};
+            if(destroyTitleResult.has_value()) {
+                return destroyTitleResult.value();
+            } // if destroyTitleResult == failure
+        } // if title
 
-        const auto& destroyMenuResult{DestroyMenu(layerConfig.menu)};
-        if(destroyMenuResult.has_value()) {
-            return destroyMenuResult.value();
-        } // if destroyMenuResult == failure
+        //const auto& destroyMenuResult{DestroyMenu(layerConfig.menu)};
+        ui::Menu* menu{dynamic_cast<ui::Menu*>(currentScene->FindWidget(layerConfig.menu.id))};
+        if(menu) {
+            const auto& destroyMenuResult{
+                ui::factory::DestroyMenu(*this, menu)
+            };
+            if(destroyMenuResult.has_value()) {
+                return destroyMenuResult.value();
+            } // if destroyMenuResult == failure
+        } // if menu
     } // for each layer in layoutConfig
 
     // Destroy RenderContext
@@ -347,9 +364,9 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateDecorations(c
             } // if texture == nullptr
 
             // Create the Decoration
-            ui::Widget* parent{currentScene->FindWidget(decorationConfig.parentID)};
+            ui::Container* parent{dynamic_cast<ui::Container*>(currentScene->FindWidget(decorationConfig.parentID))};
             if(!parent) {
-                parent = &currentScene->GetWidgetContainer();
+                parent = &currentScene->GetRootContainer();
             } // if !parent
             const auto& createDecoration{ui::Decoration::Create(decorationConfig.id, texture, parent)};
             if(createDecoration.has_value()) {
@@ -401,7 +418,7 @@ std::optional<farcical::engine::Error> farcical::game::Game::DestroyDecorations(
 
     return std::nullopt;
 }
-
+/*
 std::optional<farcical::engine::Error> farcical::game::Game::CreateTitle(const ui::LabelConfig& titleConfig) {
     farcical::engine::LogSystem& logSystem{engine.GetLogSystem()};
     const auto& windowSize{engine.GetWindow().getSize()};
@@ -425,7 +442,7 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateTitle(const u
         // Create the Title
         ui::Widget* parent{currentScene->FindWidget(titleConfig.parentID)};
         if(!parent) {
-            parent = &currentScene->GetWidgetContainer();
+            parent = &currentScene->GetRootContainer();
         } // if !parent
         const auto& createTitle{ui::Label::Create(titleConfig.id, font, fontProperties, parent)};
         if(createTitle.has_value()) {
@@ -448,7 +465,8 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateTitle(const u
     } // if title has valid ID
     return std::nullopt;
 }
-
+*/
+/*
 std::optional<farcical::engine::Error> farcical::game::Game::DestroyTitle(const ui::LabelConfig& titleConfig) {
     engine::LogSystem& logSystem{engine.GetLogSystem()};
 
@@ -464,7 +482,8 @@ std::optional<farcical::engine::Error> farcical::game::Game::DestroyTitle(const 
     } // if title has valid ID
     return std::nullopt;
 }
-
+*/
+/*
 std::optional<farcical::engine::Error> farcical::game::Game::CreateMenu(const ui::MenuConfig& menuConfig) {
     engine::LogSystem& logSystem{engine.GetLogSystem()};
     const auto& windowSize{engine.GetWindow().getSize()};
@@ -509,7 +528,7 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateMenu(const ui
 
         ui::MenuItemLayout menuLayout{
             ui::MenuItemLayout::Orientation::Vertical,
-            textureSize.x / 2,
+            static_cast<int>(textureSize.x) / 2,
             {}
         };
 
@@ -581,7 +600,8 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateMenu(const ui
     } // if Menu has valid ID
     return std::nullopt;
 }
-
+*/
+/*
 std::optional<farcical::engine::Error> farcical::game::Game::DestroyMenu(const ui::MenuConfig& menuConfig) {
     engine::LogSystem& logSystem{engine.GetLogSystem()};
     engine::RenderContext* context{engine.GetRenderSystem().GetRenderContext(currentScene->GetID())};
@@ -603,7 +623,7 @@ std::optional<farcical::engine::Error> farcical::game::Game::DestroyMenu(const u
         // Destroy Menu
         ui::Widget* parent{currentScene->FindWidget(menuConfig.parentID)};
         if(!parent) {
-            parent = &currentScene->GetWidgetContainer();
+            parent = &currentScene->GetRootContainer();
         } // if !parent
         if(parent->IsContainer()) {
             ui::Container* container{dynamic_cast<ui::Container*>(parent)};
@@ -613,7 +633,7 @@ std::optional<farcical::engine::Error> farcical::game::Game::DestroyMenu(const u
     } // if Menu has valid ID
     return std::nullopt;
 }
-
+*/
 std::optional<farcical::engine::Error> farcical::game::Game::CacheFonts(const std::vector<FontProperties>& fontPropertiesList) {
     for(const auto& fontProperties: fontPropertiesList) {
         // Create ResourceHandle for the Font

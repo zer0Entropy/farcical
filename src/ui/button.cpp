@@ -5,7 +5,7 @@
 #include "../../include/ui/button.hpp"
 #include "../../include/engine/render.hpp"
 
-farcical::ui::Button::Button(engine::EntityID id, Widget* parent)
+farcical::ui::Button::Button(engine::EntityID id, Container* parent)
   : Widget(id, Widget::Type::Button, parent, false),
     textures{nullptr},
     status{Status::Normal} {
@@ -13,6 +13,10 @@ farcical::ui::Button::Button(engine::EntityID id, Widget* parent)
 
 void farcical::ui::Button::SetTexture(Status state, sf::Texture& texture) {
   this->textures[static_cast<int>(state)] = &texture;
+  this->size = sf::Vector2u{
+    texture.getSize().x * static_cast<unsigned int>(this->scale.x),
+    texture.getSize().y * static_cast<unsigned int>(this->scale.y)
+  };
 }
 
 sf::Texture* farcical::ui::Button::GetTexture(Status buttonStatus) const {
@@ -21,12 +25,6 @@ sf::Texture* farcical::ui::Button::GetTexture(Status buttonStatus) const {
 
 sf::Texture* farcical::ui::Button::GetTexture() const {
   return textures[static_cast<int>(status)];
-}
-
-sf::Vector2u farcical::ui::Button::GetSize() const {
-  sf::Texture& texture = *this->textures[static_cast<int>(Status::Normal)];
-  sf::Vector2u textureSize{texture.getSize()};
-  return sf::Vector2u{textureSize.x * static_cast<unsigned int>(this->scale.x), textureSize.y * static_cast<unsigned int>(this->scale.y)};
 }
 
 farcical::ui::Button::Status farcical::ui::Button::GetStatus() const {

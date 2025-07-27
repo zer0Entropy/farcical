@@ -7,7 +7,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "container.hpp"
+#include "root.hpp"
 #include "../resource/manager.hpp"
 
 namespace farcical::ui {
@@ -18,21 +18,21 @@ namespace farcical::ui {
         Scene(Scene&) = delete;
         Scene(Scene&&) = delete;
         Scene& operator=(const Scene&) = delete;
-        explicit Scene(engine::EntityID id);
+        explicit Scene(engine::EntityID id, game::Game& game);
 
         ~Scene() = default;
 
         [[nodiscard]] engine::EntityID GetID() const;
 
-        [[nodiscard]] ui::RootContainer& GetWidgetContainer() const;
+        [[nodiscard]] RootContainer& GetRootContainer() const;
 
-        [[nodiscard]] std::vector<ui::Widget*> GetTopLevelWidgets() const;
+        [[nodiscard]] std::vector<Widget*> GetTopLevelWidgets() const;
 
-        [[nodiscard]] ui::Widget* FindWidget(engine::EntityID widgetID) const;
+        [[nodiscard]] Widget* FindWidget(engine::EntityID widgetID) const;
 
-        void AddWidget(std::unique_ptr<ui::Widget> widget, ui::Widget* parent = nullptr);
+        void AddWidget(std::unique_ptr<Widget> widget, Widget* parent = nullptr);
 
-        void RemoveWidget(engine::EntityID widgetID, ui::Widget* parent = nullptr);
+        void RemoveWidget(engine::EntityID widgetID, Widget* parent = nullptr);
 
         [[nodiscard]] sf::Font* GetCachedFont(ResourceID id) const;
 
@@ -52,7 +52,7 @@ namespace farcical::ui {
 
     private:
         engine::EntityID id;
-        std::unique_ptr<RootContainer> widgetContainer;
+        std::unique_ptr<RootContainer> rootContainer;
 
         std::unordered_map<ResourceID, sf::Font*> fontCache;
         std::unordered_map<ResourceID, FontProperties> fontPropertiesCache;

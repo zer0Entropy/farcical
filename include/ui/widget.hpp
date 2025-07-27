@@ -4,12 +4,15 @@
 #ifndef WIDGET_HPP
 #define WIDGET_HPP
 
+#include <SFML/Graphics/Color.hpp>
 #include <SFML/System/Vector2.hpp>
 
 #include "../engine/entity.hpp"
 #include "action.hpp"
 
 namespace farcical::ui {
+  class Container;
+
   class Widget: public engine::Entity, public ActionHandler {
   public:
     enum class Type {
@@ -30,23 +33,34 @@ namespace farcical::ui {
 
     explicit Widget(  engine::EntityID id,
                       Type type,
-                      Widget* parent = nullptr,
+                      Container* parent = nullptr,
                       bool canReceiveFocus = false):
       Entity(id),
       ActionHandler(),
-      type{type}, parent{parent}, canReceiveFocus{canReceiveFocus},
-      size{0, 0}, scale{1.0f, 1.0f}, position{0.0f, 0.0f} {
+      type{type},
+      parent{parent},
+      canReceiveFocus{canReceiveFocus},
+      isColorized{false},
+      size{0, 0},
+      scale{1.0f, 1.0f},
+      position{0.0f, 0.0f} {
     }
 
     [[nodiscard]] Type GetType() const { return type; }
-    [[nodiscard]] Widget* GetParent() const { return parent; }
-    [[nodiscard]] virtual sf::Vector2u GetSize() const { return size; }
-    [[nodiscard]] sf::Vector2f GetScale() const { return scale; }
-    [[nodiscard]] sf::Vector2f GetPosition() const { return position; }
+    [[nodiscard]] Container* GetParent() const { return parent; }
+    [[nodiscard]] const sf::Vector2u& GetSize() const { return size; }
+    [[nodiscard]] const sf::Vector2f& GetScale() const { return scale; }
+    [[nodiscard]] const sf::Vector2f& GetPosition() const { return position; }
+    [[nodiscard]] const sf::Color& GetColor() const { return color; }
+    [[nodiscard]] bool IsColorized() const { return isColorized; }
 
-    void SetSize(sf::Vector2u size) { this->size = size; }
-    void SetScale(sf::Vector2f scale) { this->scale = scale; }
-    void SetPosition(sf::Vector2f position) { this->position = position; }
+    void SetSize(const sf::Vector2u& size) { this->size = size; }
+    void SetScale(const sf::Vector2f& scale) { this->scale = scale; }
+    void SetPosition(const sf::Vector2f& position) { this->position = position; }
+    void SetColor(const sf::Color& color) {
+      this->color = color;
+      isColorized = true;
+    }
 
     [[nodiscard]] bool CanReceiveFocus() const { return canReceiveFocus; }
 
@@ -56,12 +70,14 @@ namespace farcical::ui {
 
   protected:
     Type type;
-    Widget* parent;
+    Container* parent;
     bool canReceiveFocus;
+    bool isColorized;
 
     sf::Vector2u size;
     sf::Vector2f scale;
     sf::Vector2f position;
+    sf::Color color;
   };
 }  // namespace farcical::ui
 

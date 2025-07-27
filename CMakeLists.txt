@@ -25,7 +25,7 @@ add_executable( main
         src/resource/parser.cpp
         src/resource/manager.cpp
         src/ui/config.cpp
-        src/ui/container.cpp
+        src/ui/root.cpp
                 src/ui/menu.cpp
                 src/ui/label.cpp
                 src/ui/button.cpp
@@ -38,6 +38,7 @@ add_executable( main
         src/main.cpp
         src/resource/parser.cpp
         src/resource/config.cpp
+        src/ui/factory.cpp
 )
 target_compile_features(main PRIVATE cxx_std_23)
 target_link_libraries(main PRIVATE SFML::Graphics nlohmann_json::nlohmann_json)

@@ -3,35 +3,34 @@
 //
 #include "../../include/ui/scene.hpp"
 
-farcical::ui::Scene::Scene(engine::EntityID id): id{id},
-                                                 widgetContainer{
-                                                     std::make_unique<RootContainer>(std::string{rootContainerID})
-                                                 } {
+farcical::ui::Scene::Scene(engine::EntityID id, game::Game& game):
+    id{id},
+    rootContainer{std::make_unique<RootContainer>(std::string{rootContainerID}, game)} {
 }
 
 farcical::engine::EntityID farcical::ui::Scene::GetID() const {
     return id;
 }
 
-farcical::ui::RootContainer& farcical::ui::Scene::GetWidgetContainer() const {
-    return *widgetContainer;
+farcical::ui::RootContainer& farcical::ui::Scene::GetRootContainer() const {
+    return *rootContainer;
 }
 
 std::vector<farcical::ui::Widget*> farcical::ui::Scene::GetTopLevelWidgets() const {
-    return widgetContainer->GetChildren();
+    return rootContainer->GetChildren();
 }
 
 farcical::ui::Widget* farcical::ui::Scene::FindWidget(engine::EntityID widgetID) const {
-    if(widgetContainer->GetID() == widgetID) {
-        return widgetContainer.get();
-    } // if widgetContainer matches widgetID
-    return widgetContainer->FindChild(widgetID);
+    if(rootContainer->GetID() == widgetID) {
+        return rootContainer.get();
+    } // if rootContainer matches widgetID
+    return rootContainer->FindChild(widgetID);
 }
 
 void farcical::ui::Scene::AddWidget(std::unique_ptr<ui::Widget> widget, ui::Widget* parent) {
     // If parent == nullptr, set parent = rootContainer
     if(!parent) {
-        parent = widgetContainer.get();
+        parent = rootContainer.get();
     } // if !parent
     if(!parent->IsContainer()) {
         return; // Error!
@@ -46,7 +45,7 @@ void farcical::ui::Scene::AddWidget(std::unique_ptr<ui::Widget> widget, ui::Widg
 void farcical::ui::Scene::RemoveWidget(engine::EntityID widgetID, ui::Widget* parent) {
     // If parent == nullptr, set parent = rootContainer
     if(!parent) {
-        parent = widgetContainer.get();
+        parent = rootContainer.get();
     } // if !parent
     if(!parent->IsContainer()) {
         return; // Error!

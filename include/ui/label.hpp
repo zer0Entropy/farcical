@@ -18,7 +18,7 @@ namespace farcical::ui {
 
   class Label final : public Widget {
   public:
-    explicit Label(engine::EntityID id, Widget* parent = nullptr);
+    explicit Label(engine::EntityID id, Container* parent = nullptr);
     ~Label() override = default;
 
     void SetFont(sf::Font& font);
@@ -36,10 +36,8 @@ namespace farcical::ui {
 
     [[nodiscard]] const FontProperties& GetFontProperties() const;
 
-    [[nodiscard]] sf::Vector2u GetSize() const override;
-
     void DoAction(Action action) override;
-
+/*
     static std::expected<Label*, engine::Error> Create(
                                                   engine::EntityID id,
                                                   sf::Font* font,
@@ -61,7 +59,7 @@ namespace farcical::ui {
       label->SetFontProperties(properties);
       return label;
     }
-
+*/
   private:
     sf::Font*       font;
     FontProperties  fontProperties;

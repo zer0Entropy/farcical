@@ -20,7 +20,7 @@ namespace farcical::ui {
         Decoration(Decoration&&) = delete;
         Decoration& operator=(const Decoration&) = delete;
 
-        explicit Decoration(engine::EntityID id, Widget* parent);
+        explicit Decoration(engine::EntityID id, Container* parent);
 
         ~Decoration() override = default;
 
@@ -32,7 +32,7 @@ namespace farcical::ui {
 
         static std::expected<Decoration*, engine::Error> Create(engine::EntityID id,
                                                                 sf::Texture* texture,
-                                                                Widget* parent) {
+                                                                Container* parent) {
             if(!parent || !parent->IsContainer()) {
                 const std::string failMsg{"Invalid configuration: Decoration with missing or invalid parent."};
                 return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
@@ -41,10 +41,9 @@ namespace farcical::ui {
                 const std::string failMsg{"Invalid configuration: Decoration with missing or invalid texture."};
                 return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
             }
-            Container* container{dynamic_cast<Container*>(parent)};
-            const unsigned int childIndex{container->GetNumChildren()};
-            container->AddChild(std::make_unique<Decoration>(id, parent));
-            Decoration* decoration = dynamic_cast<Decoration*>(container->GetChild(childIndex));
+            const unsigned int childIndex{parent->GetNumChildren()};
+            parent->AddChild(std::make_unique<Decoration>(id, parent));
+            Decoration* decoration = dynamic_cast<Decoration*>(parent->GetChild(childIndex));
             decoration->SetTexture(texture);
             return decoration;
         }

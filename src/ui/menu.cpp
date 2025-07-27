@@ -13,16 +13,32 @@ farcical::ui::MenuItem::MenuItem(
   engine::EntityID id,
   engine::Event::Type activationEventType,
   const std::vector<std::any>& activationEventArgs,
-  Widget* parent): Container(id, Type::MenuItem, parent, true),
-                   button{nullptr},
-                   label{nullptr},
-                   activationEventType{activationEventType} {
+  Container* parent):
+    Container(id, Type::MenuItem, parent, true),
+    button{nullptr},
+    label{nullptr},
+    activationEventType{activationEventType} {
+
   // For some reason, copying the eventArgs vector directly results in an extra layer of indirection :(
   for(const auto& eventArg: activationEventArgs) {
     this->activationEventArgs.emplace_back(eventArg);
-  }
+  } // for each eventArg
+
 }
 
+void farcical::ui::MenuItem::AddChild(std::unique_ptr<Widget> child) {
+  const unsigned int childIndex{GetNumChildren()};
+  Container::AddChild(std::move(child));
+  Widget* childPtr = GetChild(childIndex);
+  if(childPtr->GetType() == Type::Button) {
+    button = dynamic_cast<Button*>(childPtr);
+  } // if Button
+  else if(childPtr->GetType() == Type::Label) {
+    label = dynamic_cast<Label*>(childPtr);
+  } // else if Label
+}
+
+/*
 farcical::ui::Button* farcical::ui::MenuItem::CreateButton(engine::EntityID id, std::vector<sf::Texture*> textures) {
   children.emplace_back(std::make_unique<Button>(id, this));
   button = dynamic_cast<Button*>(children.rbegin()->get());
@@ -44,7 +60,7 @@ farcical::ui::Label* farcical::ui::MenuItem::CreateLabel(
   label->SetContents(contents);
   return label;
 }
-
+*/
 farcical::engine::Event::Type farcical::ui::MenuItem::GetActivationEventType() const {
   return activationEventType;
 }
@@ -88,8 +104,8 @@ void farcical::ui::MenuItem::DoAction(Action action) {
 }
 
 
-farcical::ui::Menu::Menu(engine::EntityID id, const MenuItemLayout& layout, Widget* parent): Container(id, Type::Menu,
-    parent, false),
+farcical::ui::Menu::Menu(engine::EntityID id, const MenuLayout& layout, Container* parent):
+  Container(id, Type::Menu,parent, false),
   layout{layout},
   buttonTextureNormal{nullptr},
   buttonTextureHighlighted{nullptr},
@@ -106,6 +122,10 @@ void farcical::ui::Menu::AddChild(std::unique_ptr<Widget> child) {
   if(movedChild->GetType() == Type::MenuItem) {
     items.push_back(dynamic_cast<MenuItem*>(movedChild));
   }
+}
+
+const std::vector<farcical::ui::MenuItem*>& farcical::ui::Menu::GetMenuItems() const {
+  return items;
 }
 
 int farcical::ui::Menu::GetNumMenuItems() const {

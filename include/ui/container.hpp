@@ -19,8 +19,8 @@ namespace farcical::ui {
         Container& operator=(const Container&) = delete;
         explicit Container( engine::EntityID id,
                             Type type,
-                            Widget* parent = nullptr,
-                           bool receiveFocus = false):
+                            Container* parent = nullptr,
+                            bool receiveFocus = false):
             Widget(id, type, parent, receiveFocus) {
         }
         virtual ~Container() override = default;
@@ -70,26 +70,6 @@ namespace farcical::ui {
         std::vector<std::unique_ptr<Widget> > children;
     };
 
-    class RootContainer final : public Container {
-    public:
-        RootContainer() = delete;
-
-        RootContainer(const RootContainer&) = delete;
-
-        RootContainer(RootContainer&) = delete;
-
-        RootContainer(RootContainer&&) = delete;
-
-        RootContainer& operator=(const RootContainer&) = delete;
-
-        RootContainer& operator=(const RootContainer&&) = delete;
-
-        explicit RootContainer(engine::EntityID id);
-
-        ~RootContainer() override = default;
-
-        void DoAction(Action action) override;
-    };
 }
 
 #endif //CONTAINER_HPP
