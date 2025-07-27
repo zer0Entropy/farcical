@@ -87,6 +87,7 @@ namespace farcical::ui {
         Layout::Layer::ID id;
         std::vector<DecorationConfig> decorations;
         LabelConfig title;
+        std::vector<LabelConfig> headings;
         MenuConfig menu;
 
         LayoutLayerConfig(): id{Layout::Layer::ID::NumLayers} {

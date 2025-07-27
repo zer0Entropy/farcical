@@ -22,10 +22,10 @@ namespace farcical::ui::factory {
 
     std::optional<engine::Error> DestroyDecoration(const game::Game& game, Decoration* decoration);
 
-    [[nodiscard]] std::expected<Label*, engine::Error> CreateTitle(
+    [[nodiscard]] std::expected<Label*, engine::Error> CreateLabel(
         const game::Game& game, const LabelConfig& config, Container* parent);
 
-    std::optional<engine::Error> DestroyTitle(const game::Game& game, Label* title);
+    std::optional<engine::Error> DestroyLabel(const game::Game& game, Label* label);
 
     [[nodiscard]] std::expected<Menu*, engine::Error> CreateMenu(
         const game::Game& game, const MenuConfig& config, Container* parent);

@@ -229,6 +229,7 @@ std::expected<farcical::ui::LayoutLayerConfig, farcical::engine::Error> farcical
     const auto& findID{json.find("id")};
     const auto& findDecorations{json.find("decorations")};
     const auto& findTitle{json.find("title")};
+    const auto& findHeadings{json.find("headings")};
     const auto& findMenu{json.find("menu")};
     if(findID == json.end()) {
         const std::string failMsg{"Invalid configuration: LayerID could not be found."};
@@ -254,6 +255,16 @@ std::expected<farcical::ui::LayoutLayerConfig, farcical::engine::Error> farcical
             config.title = loadTitleResult.value();
         } // if loadTitleResult == success
     } // if title found
+
+    if(findHeadings != json.end()) {
+        const auto& headingsJSON{findHeadings.value()};
+        for(const auto& headingJSON: headingsJSON) {
+            const auto& loadHeadingResult{LoadLabelConfig(headingJSON)};
+            if(loadHeadingResult.has_value()) {
+                config.headings.push_back(loadHeadingResult.value());
+            } // if loadHeadingResult == success
+        } // for each heading in headingsJSON
+    } // if headings found
 
     if(findMenu != json.end()) {
         const auto& menuJSON{findMenu.value()};
