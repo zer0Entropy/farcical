@@ -14,7 +14,9 @@ std::expected<farcical::ui::Decoration*, farcical::engine::Error> farcical::ui::
     if(!config.id.empty()) {
         // Load Texture from Scene cache
         sf::Texture* texture{currentScene->GetCachedTexture(config.textureProperties.id)};
-        const TextureProperties& textureProperties{currentScene->GetCachedTextureProperties(config.textureProperties.id)};
+        const TextureProperties& textureProperties{
+            currentScene->GetCachedTextureProperties(config.textureProperties.id)
+        };
         if(!texture) {
             const std::string failMsg{"NullPtr Error: Failed to retrieve Texture from Scene cache."};
             return std::unexpected(engine::Error{engine::Error::Signal::NullPtr, failMsg});
@@ -42,7 +44,8 @@ std::expected<farcical::ui::Decoration*, farcical::engine::Error> farcical::ui::
     return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
 }
 
-std::optional<farcical::engine::Error> farcical::ui::factory::DestroyDecoration(const game::Game& game, Decoration* decoration) {
+std::optional<farcical::engine::Error> farcical::ui::factory::DestroyDecoration(
+    const game::Game& game, Decoration* decoration) {
     Scene* currentScene{game.GetCurrentScene()};
     const auto& destroyRenderComponent{
         game.GetEngine().GetRenderSystem().DestroyRenderComponent(currentScene->GetID(), decoration->GetID())
@@ -51,7 +54,7 @@ std::optional<farcical::engine::Error> farcical::ui::factory::DestroyDecoration(
     return std::nullopt;
 }
 
-std::expected<farcical::ui::Label*, farcical::engine::Error> farcical::ui::factory::CreateTitle(
+std::expected<farcical::ui::Label*, farcical::engine::Error> farcical::ui::factory::CreateLabel(
     const game::Game& game, const LabelConfig& config, Container* parent) {
     engine::LogSystem& logSystem{game.GetEngine().GetLogSystem()};
     const auto& windowSize{game.GetEngine().GetWindow().getSize()};
@@ -77,16 +80,16 @@ std::expected<farcical::ui::Label*, farcical::engine::Error> farcical::ui::facto
         return label;
     } // if title has valid ID
 
-    const std::string failMsg{"Invalid configuration: Failed to create Title (id=" + config.id + ")."};
+    const std::string failMsg{"Invalid configuration: Failed to create Label (id=" + config.id + ")."};
     return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
 }
 
-std::optional<farcical::engine::Error> farcical::ui::factory::DestroyTitle(const game::Game& game, Label* title) {
+std::optional<farcical::engine::Error> farcical::ui::factory::DestroyLabel(const game::Game& game, Label* label) {
     Scene* currentScene{game.GetCurrentScene()};
     const auto& destroyRenderComponent{
-        game.GetEngine().GetRenderSystem().DestroyRenderComponent(currentScene->GetID(), title->GetID())
+        game.GetEngine().GetRenderSystem().DestroyRenderComponent(currentScene->GetID(), label->GetID())
     };
-    title->GetParent()->RemoveChild(title->GetID());
+    label->GetParent()->RemoveChild(label->GetID());
     return std::nullopt;
 }
 

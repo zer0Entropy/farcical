@@ -12,9 +12,8 @@
 #include "../../include/engine/log.hpp"
 #include "../../include/ui/factory.hpp"
 
-farcical::game::GameController::GameController(Game& game):
-    EventHandler(),
-    LogInterface(game.GetEngine().GetLogSystem()), game{game} {
+farcical::game::GameController::GameController(Game& game): EventHandler(),
+                                                            LogInterface(game.GetEngine().GetLogSystem()), game{game} {
 }
 
 void farcical::game::GameController::HandleEvent(const engine::Event& event) {
@@ -236,8 +235,13 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateSceneLayout(c
             };
         } // for each Decoration
         const auto& createTitle{
-            ui::factory::CreateTitle(*this, layerConfig.title, &currentScene->GetRootContainer())
+            ui::factory::CreateLabel(*this, layerConfig.title, &currentScene->GetRootContainer())
         };
+        for(const auto& headingConfig: layerConfig.headings) {
+            const auto& createHeading{
+                ui::factory::CreateLabel(*this, headingConfig, &currentScene->GetRootContainer())
+            };
+        } // for each heading
         const auto& createMenu{
             ui::factory::CreateMenu(*this, layerConfig.menu, &currentScene->GetRootContainer())
         };
@@ -330,11 +334,19 @@ std::optional<farcical::engine::Error> farcical::game::Game::DestroySceneLayout(
 
         ui::Label* title{dynamic_cast<ui::Label*>(currentScene->FindWidget(layerConfig.title.id))};
         if(title) {
-            const auto& destroyTitleResult{ui::factory::DestroyTitle(*this, title)};
+            const auto& destroyTitleResult{ui::factory::DestroyLabel(*this, title)};
             if(destroyTitleResult.has_value()) {
                 return destroyTitleResult.value();
             } // if destroyTitleResult == failure
         } // if title
+
+        for(const auto& headingConfig: layerConfig.headings) {
+            ui::Label* heading{dynamic_cast<ui::Label*>(currentScene->FindWidget(headingConfig.id))};
+            const auto& destroyHeading{ui::factory::DestroyLabel(*this, heading)};
+            if(destroyHeading.has_value()) {
+                return destroyHeading.value();
+            } // if destroyHeading == failure
+        } // for each heading
 
         ui::Menu* menu{dynamic_cast<ui::Menu*>(currentScene->FindWidget(layerConfig.menu.id))};
         if(menu) {
