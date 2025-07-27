@@ -16,17 +16,8 @@ void farcical::ResourceManager::AddLogSystem(engine::LogSystem* logSystem) {
 
 farcical::ResourceHandle* farcical::ResourceManager::GetResourceHandle(ResourceID id) const {
     const auto resourceIter{registry.find(id)};
-    if(logSystem) {
-        logSystem->AddMessage("Resource requested (id=\"" + id + "\").");
-    }
     if(resourceIter != registry.end()) {
-        const ResourceHandle* handle{&resourceIter->second};
-        if(logSystem) {
-            logSystem->AddMessage("Resource with id=\"" + id + "\" found (type=" + std::string{
-                                      ResourceHandle::GetTypeName(handle->type)
-                                  } + ").");
-        }
-        return const_cast<ResourceHandle*>(handle);
+        return const_cast<ResourceHandle*>(&resourceIter->second);
     }
     if(logSystem) {
         logSystem->AddMessage("Failed to find Resource with id=\"" + id + "\"!");
@@ -43,9 +34,6 @@ std::expected<farcical::ResourceHandle*, farcical::engine::Error> farcical::Reso
         const std::string failMsg{"Failed to create resource " + id + "."};
         return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
     }
-    if(logSystem) {
-        logSystem->AddMessage("ResourceHandle (id=\"" + id + "\", type=" + std::string{ResourceHandle::GetTypeName(type)} + ") created.");
-    }
     return &createResourceResult.first->second;
 }
 
@@ -55,7 +43,6 @@ std::optional<farcical::engine::Error> farcical::ResourceManager::DestroyResourc
             const auto& findLog{logs.find(id)};
             if(findLog != logs.end()) {
                 logs.erase(findLog);
-                logSystem->AddMessage("Log with id=\"" + id + "\" destroyed.");
             }
         }
         break;
@@ -63,21 +50,18 @@ std::optional<farcical::engine::Error> farcical::ResourceManager::DestroyResourc
             const auto& findJSONDoc{jsonDocs.find(id)};
             if(findJSONDoc != jsonDocs.end()) {
                 jsonDocs.erase(findJSONDoc);
-                logSystem->AddMessage("jsonDocument with id=\"" + id + "\" destroyed.");
             }
         } break;
         case ResourceHandle::Type::Font: {
             const auto& findFont{fonts.find(id)};
             if(findFont != fonts.end()) {
                 fonts.erase(findFont);
-                logSystem->AddMessage("Font with id=\"" + id + "\" destroyed.");
             }
         } break;
         case ResourceHandle::Type::Texture: {
             const auto& findTexture{textures.find(id)};
             if(findTexture != textures.end()) {
                 textures.erase(findTexture);
-                logSystem->AddMessage("Texture with id=\"" + id + "\" destroyed.");
             }
         } break;
         case ResourceHandle::Type::Sound: {
@@ -117,13 +101,10 @@ std::expected<farcical::engine::Log*, farcical::engine::Error> farcical::Resourc
         const auto& createLog{logs.emplace(handle->id, engine::Log{{handle->id, handle->path}, {}})};
         const auto& logIter{createLog.first};
         std::ifstream inputFromFile{handle->path};
-        logSystem->AddMessage("Attempting to open Log (id=\"" + id + "\" at " + handle->path + "...");
         if(!std::filesystem::exists(handle->path)) {
-            logSystem->AddMessage("File not found, creating new Log file at " + handle->path + "...");
             std::ofstream outputToFile{handle->path, std::ios_base::out};
             outputToFile.close();
             inputFromFile.open(handle->path);
-            logSystem->AddMessage("Log file successfully created at " + handle->path + ".");
         }
         while(inputFromFile.good()) {
             std::string nextLine{""};
@@ -134,9 +115,6 @@ std::expected<farcical::engine::Log*, farcical::engine::Error> farcical::Resourc
         } // if inputFromFile.good()
         // If the file was successfully opened, close it
         if(inputFromFile.is_open()) {
-            if(!logIter->second.contents.empty()) {
-                logSystem->AddMessage("Log file successfully loaded from " + handle->path + ".");
-            } // if log is not empty
             inputFromFile.close();
             handle->status = ResourceHandle::Status::IsReady;
             return &logIter->second;

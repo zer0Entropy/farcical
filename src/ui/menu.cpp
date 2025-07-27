@@ -13,17 +13,14 @@ farcical::ui::MenuItem::MenuItem(
   engine::EntityID id,
   engine::Event::Type activationEventType,
   const std::vector<std::any>& activationEventArgs,
-  Container* parent):
-    Container(id, Type::MenuItem, parent, true),
-    button{nullptr},
-    label{nullptr},
-    activationEventType{activationEventType} {
-
+  Container* parent): Container(id, Type::MenuItem, parent, true),
+                      button{nullptr},
+                      label{nullptr},
+                      activationEventType{activationEventType} {
   // For some reason, copying the eventArgs vector directly results in an extra layer of indirection :(
   for(const auto& eventArg: activationEventArgs) {
     this->activationEventArgs.emplace_back(eventArg);
   } // for each eventArg
-
 }
 
 void farcical::ui::MenuItem::AddChild(std::unique_ptr<Widget> child) {

@@ -20,8 +20,7 @@ namespace farcical::ui {
         explicit Container( engine::EntityID id,
                             Type type,
                             Container* parent = nullptr,
-                            bool receiveFocus = false):
-            Widget(id, type, parent, receiveFocus) {
+                            bool receiveFocus = false): Widget(id, type, parent, receiveFocus) {
         }
         virtual ~Container() override = default;
 

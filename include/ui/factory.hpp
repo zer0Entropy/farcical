@@ -7,6 +7,7 @@
 
 #include "config.hpp"
 #include "container.hpp"
+#include "decoration.hpp"
 #include "menu.hpp"
 #include "scene.hpp"
 #include "../engine/error.hpp"
@@ -16,12 +17,18 @@ namespace farcical::game {
 }
 
 namespace farcical::ui::factory {
+    [[nodiscard]] std::expected<Decoration*, engine::Error> CreateDecoration(
+        const game::Game& game, const DecorationConfig& config, Container* parent);
 
-    [[nodiscard]] std::expected<Label*, engine::Error> CreateTitle(const game::Game& game, const LabelConfig& config, Container* parent);
+    std::optional<engine::Error> DestroyDecoration(const game::Game& game, Decoration* decoration);
+
+    [[nodiscard]] std::expected<Label*, engine::Error> CreateTitle(
+        const game::Game& game, const LabelConfig& config, Container* parent);
 
     std::optional<engine::Error> DestroyTitle(const game::Game& game, Label* title);
 
-    [[nodiscard]] std::expected<Menu*, engine::Error> CreateMenu(const game::Game& game, const MenuConfig& config, Container* parent);
+    [[nodiscard]] std::expected<Menu*, engine::Error> CreateMenu(
+        const game::Game& game, const MenuConfig& config, Container* parent);
 
     std::optional<engine::Error> DestroyMenu(const game::Game& game, Menu* menu);
 
@@ -48,7 +55,6 @@ namespace farcical::ui::factory {
     [[nodiscard]] MenuItemCollection CreateMenuItemCollection(const MenuConfig& config);
 
     [[nodiscard]] std::vector<sf::Texture*> GetButtonTextures(const Scene& scene, const ButtonConfig& config);
-
 }
 
 #endif //FACTORY_HPP

@@ -3,9 +3,11 @@
 //
 #include "../../include/ui/scene.hpp"
 
-farcical::ui::Scene::Scene(engine::EntityID id, game::Game& game):
-    id{id},
-    rootContainer{std::make_unique<RootContainer>(std::string{rootContainerID}, game)} {
+farcical::ui::Scene::Scene(engine::EntityID id, game::Game& game): id{id},
+                                                                   rootContainer{
+                                                                       std::make_unique<RootContainer>(
+                                                                           std::string{rootContainerID}, game)
+                                                                   } {
 }
 
 farcical::engine::EntityID farcical::ui::Scene::GetID() const {

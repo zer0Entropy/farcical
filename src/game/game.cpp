@@ -12,9 +12,9 @@
 #include "../../include/engine/log.hpp"
 #include "../../include/ui/factory.hpp"
 
-farcical::game::GameController::GameController(Game& game): EventHandler(),
-                                                            LogInterface(game.GetEngine().GetLogSystem()),
-                                                            game{game} {
+farcical::game::GameController::GameController(Game& game):
+    EventHandler(),
+    LogInterface(game.GetEngine().GetLogSystem()), game{game} {
 }
 
 void farcical::game::GameController::HandleEvent(const engine::Event& event) {
@@ -89,7 +89,6 @@ void farcical::game::GameController::HandleEvent(const engine::Event& event) {
     } // else if event.type == CreateScene
     else if(event.type == engine::Event::Type::DestroyScene) {
     } // else if event.type == DestroyScene
-    return;
 }
 
 farcical::game::Game::Game(engine::Engine& engine):
@@ -220,6 +219,7 @@ std::expected<farcical::ui::Scene*, farcical::engine::Error> farcical::game::Gam
 }
 
 std::optional<farcical::engine::Error> farcical::game::Game::CreateSceneLayout(const ui::LayoutConfig& layoutConfig) {
+
     // Create the RenderContext that will encapsulate our RenderComponents
     const auto& createRenderContext{
         engine.GetRenderSystem().CreateRenderContext(currentScene->GetID())
@@ -230,15 +230,17 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateSceneLayout(c
     engine::RenderContext& context{*createRenderContext.value()};
 
     for(const auto& layerConfig: layoutConfig.layers) {
-        CreateDecorations(layerConfig.decorations);
+        for(const auto& decorationConfig: layerConfig.decorations) {
+            const auto& createDecoration{
+                ui::factory::CreateDecoration(*this, decorationConfig, &currentScene->GetRootContainer())
+            };
+        } // for each Decoration
         const auto& createTitle{
             ui::factory::CreateTitle(*this, layerConfig.title, &currentScene->GetRootContainer())
         };
         const auto& createMenu{
             ui::factory::CreateMenu(*this, layerConfig.menu, &currentScene->GetRootContainer())
         };
-        //CreateTitle(layerConfig.title);
-        //CreateMenu(layerConfig.menu);
         for(const auto& widget: currentScene->GetTopLevelWidgets()) {
             ui::Widget::Type widgetType{widget->GetType()};
             if(widgetType == ui::Widget::Type::Decoration) {
@@ -318,12 +320,14 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateSceneLayout(c
 
 std::optional<farcical::engine::Error> farcical::game::Game::DestroySceneLayout(const ui::LayoutConfig& layoutConfig) {
     for(const auto& layerConfig: layoutConfig.layers) {
-        const auto& destroyDecorationResult{DestroyDecorations(layerConfig.decorations)};
-        if(destroyDecorationResult.has_value()) {
-            return destroyDecorationResult.value();
-        } // if destroyDecorationResult == failure
+        for(const auto& decorationConfig: layerConfig.decorations) {
+            ui::Decoration* decoration{dynamic_cast<ui::Decoration*>(currentScene->FindWidget(decorationConfig.id))};
+            const auto& destroyDecoration{ui::factory::DestroyDecoration(*this, decoration)};
+            if(destroyDecoration.has_value()) {
+                return destroyDecoration.value();
+            } // if destroyDecoration == failure
+        } // for each Decoration
 
-        //const auto& destroyTitleResult{DestroyTitle(layerConfig.title)};
         ui::Label* title{dynamic_cast<ui::Label*>(currentScene->FindWidget(layerConfig.title.id))};
         if(title) {
             const auto& destroyTitleResult{ui::factory::DestroyTitle(*this, title)};
@@ -332,7 +336,6 @@ std::optional<farcical::engine::Error> farcical::game::Game::DestroySceneLayout(
             } // if destroyTitleResult == failure
         } // if title
 
-        //const auto& destroyMenuResult{DestroyMenu(layerConfig.menu)};
         ui::Menu* menu{dynamic_cast<ui::Menu*>(currentScene->FindWidget(layerConfig.menu.id))};
         if(menu) {
             const auto& destroyMenuResult{
@@ -350,290 +353,6 @@ std::optional<farcical::engine::Error> farcical::game::Game::DestroySceneLayout(
     return std::nullopt;
 }
 
-std::optional<farcical::engine::Error> farcical::game::Game::CreateDecorations(const std::vector<ui::DecorationConfig>& decorationConfigList) {
-    engine::LogSystem& logSystem{engine.GetLogSystem()};
-    const auto& windowSize{engine.GetWindow().getSize()};
-    for(const auto& decorationConfig: decorationConfigList) {
-        // Test length of decorationID to determine if this config is valid
-        if(!decorationConfig.id.empty()) {
-            // Load Texture from Scene cache
-            sf::Texture* texture{currentScene->GetCachedTexture(decorationConfig.textureProperties.id)};
-            if(!texture) {
-                const std::string failMsg{"NullPtr Error: Failed to retrieve Texture from Scene cache."};
-                return engine::Error{engine::Error::Signal::NullPtr, failMsg};
-            } // if texture == nullptr
-
-            // Create the Decoration
-            ui::Container* parent{dynamic_cast<ui::Container*>(currentScene->FindWidget(decorationConfig.parentID))};
-            if(!parent) {
-                parent = &currentScene->GetRootContainer();
-            } // if !parent
-            const auto& createDecoration{ui::Decoration::Create(decorationConfig.id, texture, parent)};
-            if(createDecoration.has_value()) {
-                ui::Decoration* decoration{createDecoration.value()};
-                logSystem.AddMessage("Decoration created (id=" + decoration->GetID() + ").");
-                decoration->SetScale(sf::Vector2f{
-                    decorationConfig.textureProperties.scale, decorationConfig.textureProperties.scale
-                });
-                // Create a temporary Sprite to determine the Decoration's size
-                sf::Sprite tempSprite{*texture};
-                tempSprite.setScale(decoration->GetScale());
-                decoration->SetSize(sf::Vector2u{
-                    static_cast<unsigned int>(tempSprite.getGlobalBounds().size.x),
-                    static_cast<unsigned int>(tempSprite.getGlobalBounds().size.y)
-                });
-                if(decorationConfig.relativePosition.x == 0 && decorationConfig.relativePosition.y == 0) {
-                    decoration->SetPosition(sf::Vector2f{0.0f, 0.0f});
-                } else {
-                    const sf::Vector2f position{
-                        static_cast<float>(windowSize.x * decorationConfig.relativePosition.x) / 100.0f - static_cast<
-                            float>(decoration->GetSize().x) / 2.0f,
-                        static_cast<float>(windowSize.y * decorationConfig.relativePosition.y) / 100.0f - static_cast<
-                            float>(decoration->GetSize().y) / 2.0f
-                    };
-                    decoration->SetPosition(position);
-                }
-            } // if createDecoration == success
-        } // if decorationConfig has valid ID
-    } // for each decorationConfig in layerConfig.decorations
-    return std::nullopt;
-}
-
-std::optional<farcical::engine::Error> farcical::game::Game::DestroyDecorations(
-    const std::vector<ui::DecorationConfig>& decorationConfigList) {
-    engine::LogSystem& logSystem{engine.GetLogSystem()};
-
-    for(const auto& decorationConfig: decorationConfigList) {
-        // Test length of decorationID to determine if this config is valid
-        if(!decorationConfig.id.empty()) {
-            engine.GetRenderSystem().DestroyRenderComponent(currentScene->GetID(), decorationConfig.id);
-            ui::Widget* parent{currentScene->FindWidget(decorationConfig.parentID)};
-            if(parent && parent->IsContainer()) {
-                ui::Container* container{dynamic_cast<ui::Container*>(parent)};
-                container->RemoveChild(decorationConfig.id);
-                logSystem.AddMessage("Decoration destroyed (id=" + decorationConfig.id + ").");
-            } // if parent exists and isContainer
-        } // if decorationConfig has valid ID
-    } // for each decorationConfig in layerConfig.decorations
-
-    return std::nullopt;
-}
-/*
-std::optional<farcical::engine::Error> farcical::game::Game::CreateTitle(const ui::LabelConfig& titleConfig) {
-    farcical::engine::LogSystem& logSystem{engine.GetLogSystem()};
-    const auto& windowSize{engine.GetWindow().getSize()};
-    // Test length of labelID to determine if this config is valid
-    if(!titleConfig.id.empty()) {
-        // Load Font & FontProperties from Scene cache
-        sf::Font* font{currentScene->GetCachedFont(titleConfig.fontProperties.id)};
-        const FontProperties& fontProperties{currentScene->GetCachedFontProperties(titleConfig.fontProperties.id)};
-        if(!font) {
-            const std::string failMsg{"NullPtr Error: Failed to retrieve Font from Scene cache."};
-            return engine::Error{engine::Error::Signal::NullPtr, failMsg};
-        } // if font == null
-        if(fontProperties.id != titleConfig.fontProperties.id) {
-            const std::string failMsg{
-                "Invalid configuration: fontID does not match expected value (\"" + titleConfig.fontProperties.id +
-                "\")"
-            };
-            return engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg};
-        } // if fontProperties.id does not match correct ResourceID
-
-        // Create the Title
-        ui::Widget* parent{currentScene->FindWidget(titleConfig.parentID)};
-        if(!parent) {
-            parent = &currentScene->GetRootContainer();
-        } // if !parent
-        const auto& createTitle{ui::Label::Create(titleConfig.id, font, fontProperties, parent)};
-        if(createTitle.has_value()) {
-            logSystem.AddMessage("Title created (id=" + titleConfig.id + ").");
-            ui::Label* label{createTitle.value()};
-            label->SetContents(titleConfig.contents);
-            label->SetScale(sf::Vector2f{label->GetFontProperties().scale, label->GetFontProperties().scale});
-            // Create a temporary Text to determine the Label's size
-            const sf::Text tempText{*font, titleConfig.contents, fontProperties.characterSize};
-            label->SetSize(sf::Vector2u{
-                static_cast<unsigned int>(tempText.getGlobalBounds().size.x),
-                static_cast<unsigned int>(tempText.getGlobalBounds().size.y)
-            });
-            const sf::Vector2f position{
-                static_cast<float>(windowSize.x * titleConfig.relativePosition.x) / 100.0f - label->GetSize().x / 2.0f,
-                static_cast<float>(windowSize.y * titleConfig.relativePosition.y) / 100.0f
-            };
-            label->SetPosition(position);
-        } // if createTitle == success
-    } // if title has valid ID
-    return std::nullopt;
-}
-*/
-/*
-std::optional<farcical::engine::Error> farcical::game::Game::DestroyTitle(const ui::LabelConfig& titleConfig) {
-    engine::LogSystem& logSystem{engine.GetLogSystem()};
-
-    // Test length of labelID to determine if this config is valid
-    if(!titleConfig.id.empty()) {
-        engine.GetRenderSystem().DestroyRenderComponent(currentScene->GetID(), titleConfig.id);
-        ui::Widget* parent{currentScene->FindWidget(titleConfig.parentID)};
-        if(parent && parent->IsContainer()) {
-            ui::Container* container{dynamic_cast<ui::Container*>(parent)};
-            container->RemoveChild(titleConfig.id);
-            logSystem.AddMessage("Title destroyed (id=" + titleConfig.id + ").");
-        } // if parent exists and isContainer
-    } // if title has valid ID
-    return std::nullopt;
-}
-*/
-/*
-std::optional<farcical::engine::Error> farcical::game::Game::CreateMenu(const ui::MenuConfig& menuConfig) {
-    engine::LogSystem& logSystem{engine.GetLogSystem()};
-    const auto& windowSize{engine.GetWindow().getSize()};
-    // Test length of menuID to determine if this config is valid
-    if(!menuConfig.id.empty()) {
-        // Load Font & FontProperties from Scene cache
-        sf::Font* font{currentScene->GetCachedFont(menuConfig.fontProperties.id)};
-        const auto& fontProperties{currentScene->GetCachedFontProperties(menuConfig.fontProperties.id)};
-
-        // Create a list of all Button Textures
-        std::vector<sf::Texture*> buttonTextures;
-        sf::Vector2u textureSize{0, 0};
-        for(const auto& textureProperties: menuConfig.buttonConfig.textureProperties | std::views::values) {
-            const ResourceID textureID{textureProperties.id + "Texture"};
-            sf::Texture* texture{currentScene->GetCachedTexture(textureID)};
-            if(texture) {
-                buttonTextures.push_back(texture);
-                if(texture->getSize().x > textureSize.x && texture->getSize().y > textureSize.y) {
-                    textureSize = texture->getSize();
-                }
-            } // if texture
-        } // for each texture in buttonConfig
-
-        // Create 3 lists: names, contents, and onSelection Events for all MenuItems
-        std::vector<std::string> idList;
-        std::vector<std::string> contentsList;
-        std::vector<engine::Event::Type> eventTypeList;
-        std::vector<std::vector<std::any>> eventArgsList;
-        for(const auto& itemConfig: menuConfig.menuItemConfigs) {
-            idList.push_back(itemConfig.id);
-            contentsList.push_back(itemConfig.labelConfig.contents);
-            eventTypeList.push_back(itemConfig.activationEventType);
-            eventArgsList.push_back(itemConfig.activationEventArgs);
-        } // for each itemConfig in layerConfig.menu.menuItemConfigs
-
-        ui::MenuItemCollection menuItems{
-            idList,
-            contentsList,
-            eventTypeList,
-            eventArgsList
-        };
-
-        ui::MenuItemLayout menuLayout{
-            ui::MenuItemLayout::Orientation::Vertical,
-            static_cast<int>(textureSize.x) / 2,
-            {}
-        };
-
-        // Create the Menu using the above lists
-        ui::Widget* parent{currentScene->FindWidget(menuConfig.parentID)};
-        if(!parent) {
-            parent = &currentScene->GetWidgetContainer();
-        } // if !parent
-        const auto& createMenu{
-            ui::Menu::Create(
-                menuConfig.id,
-                parent,
-                font,
-                fontProperties,
-                buttonTextures,
-                menuItems,
-                menuLayout)
-        };
-        if(createMenu.has_value()) {
-            ui::Menu* menu{createMenu.value()};
-            logSystem.AddMessage("Menu created (id=" + menu->GetID() + ").");
-            // For each MenuItem, configure all Buttons and Labels
-            for(int index = 0; index < menu->GetNumMenuItems(); ++index) {
-                ui::MenuItem* item{menu->GetMenuItemByIndex(index)};
-                ui::Label* label{item->GetLabel()};
-                ui::Button* button{item->GetButton()};
-                ResourceID textureID{
-                    menuConfig.buttonConfig.textureProperties.at(static_cast<int>(button->GetStatus())).second.id
-                };
-                textureID.append("Texture");
-
-                // Load Texture & TextureProperties from Scene cache
-                sf::Texture* texture{currentScene->GetCachedTexture(textureID)};
-                const TextureProperties& textureProperties{currentScene->GetCachedTextureProperties(textureID)};
-                button->SetScale(sf::Vector2f{textureProperties.scale, textureProperties.scale});
-
-                // Create a temporary Sprite to determine Button's size
-                sf::Sprite tempSprite{*texture};
-                button->SetSize(sf::Vector2u{
-                    static_cast<unsigned int>(tempSprite.getGlobalBounds().size.x),
-                    static_cast<unsigned int>(tempSprite.getGlobalBounds().size.y)
-                });
-                button->SetPosition(sf::Vector2f{
-                    static_cast<float>(windowSize.x * menuConfig.relativePosition.x) / 100.0f - button->GetSize().x /
-                    2.0f,
-                    static_cast<float>(windowSize.y * menuConfig.relativePosition.y) / 100.0f + (
-                        index * 1.5f * button->GetSize().y)
-                });
-
-                // Create a temporary Text to determine Label's size
-                label->SetScale(sf::Vector2f{fontProperties.scale, fontProperties.scale});
-                sf::Text tempText{*font, std::string{item->GetLabel()->GetContents()}, fontProperties.characterSize};
-                tempText.setScale(label->GetScale());
-                label->SetSize(sf::Vector2u{
-                    static_cast<unsigned int>(tempText.getGlobalBounds().size.x),
-                    static_cast<unsigned int>(tempText.getGlobalBounds().size.y)
-                });
-                label->SetPosition(sf::Vector2f{
-                    button->GetPosition().x + button->GetSize().x / 2.0f - label->GetSize().x / 2.0f,
-                    button->GetPosition().y + button->GetSize().y / 2.0f - label->GetSize().y / 3.0f
-                });
-            } // for each MenuItem in Menu
-            // Create MenuController
-            menuController = std::make_unique<ui::MenuController>(menu, engine.GetEventSystem());
-            logSystem.AddMessage("MenuController created.");
-            engine.GetInputSystem().AddKeyListener(menuController.get());
-            engine.GetInputSystem().AddMouseListener(menuController.get());
-        } // if createMenu == success
-    } // if Menu has valid ID
-    return std::nullopt;
-}
-*/
-/*
-std::optional<farcical::engine::Error> farcical::game::Game::DestroyMenu(const ui::MenuConfig& menuConfig) {
-    engine::LogSystem& logSystem{engine.GetLogSystem()};
-    engine::RenderContext* context{engine.GetRenderSystem().GetRenderContext(currentScene->GetID())};
-
-    // Test length of labelID to determine if this config is valid
-    if(!menuConfig.id.empty()) {
-        // Destroy MenuController
-        engine.GetInputSystem().RemoveKeyListener(menuController.get());
-        engine.GetInputSystem().RemoveMouseListener(menuController.get());
-        menuController.reset();
-        logSystem.AddMessage("MenuController destroyed.");
-
-        // Loop through each MenuItem and destroy all its RenderComponents
-        for(auto& itemConfig: menuConfig.menuItemConfigs) {
-            engine.GetRenderSystem().DestroyRenderComponent(currentScene->GetID(), itemConfig.buttonConfig.id);
-            engine.GetRenderSystem().DestroyRenderComponent(currentScene->GetID(), itemConfig.labelConfig.id);
-        } // for each itemConfig in menuItemConfigs
-
-        // Destroy Menu
-        ui::Widget* parent{currentScene->FindWidget(menuConfig.parentID)};
-        if(!parent) {
-            parent = &currentScene->GetRootContainer();
-        } // if !parent
-        if(parent->IsContainer()) {
-            ui::Container* container{dynamic_cast<ui::Container*>(parent)};
-            container->RemoveChild(menuConfig.id);
-            logSystem.AddMessage("Menu destroyed (id=" + menuConfig.id + ").");
-        } // if parent->IsContainer()
-    } // if Menu has valid ID
-    return std::nullopt;
-}
-*/
 std::optional<farcical::engine::Error> farcical::game::Game::CacheFonts(const std::vector<FontProperties>& fontPropertiesList) {
     for(const auto& fontProperties: fontPropertiesList) {
         // Create ResourceHandle for the Font

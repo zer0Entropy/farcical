@@ -57,6 +57,7 @@ namespace farcical::ui {
     void SetSize(const sf::Vector2u& size) { this->size = size; }
     void SetScale(const sf::Vector2f& scale) { this->scale = scale; }
     void SetPosition(const sf::Vector2f& position) { this->position = position; }
+
     void SetColor(const sf::Color& color) {
       this->color = color;
       isColorized = true;

@@ -66,7 +66,6 @@ namespace farcical {
             color{sf::Color::Black},
             isColorized{false},
             inputRect{{0, 0}, {0, 0}} {
-
         }
 
         TextureProperties(ResourceID id, std::string_view path, float scale, const sf::IntRect& inputRect):
@@ -76,7 +75,6 @@ namespace farcical {
             color{sf::Color::Black},
             isColorized{false},
             inputRect{inputRect} {
-
         }
 
         TextureProperties(
@@ -84,14 +82,12 @@ namespace farcical {
             std::string_view path,
             float scale,
             const sf::Color& color,
-            const sf::IntRect& inputRect):
-            id{id},
-            path{path},
-            scale{scale},
-            color{color},
-            isColorized{true},
-            inputRect{inputRect} {
-
+            const sf::IntRect& inputRect): id{id},
+                                           path{path},
+                                           scale{scale},
+                                           color{color},
+                                           isColorized{true},
+                                           inputRect{inputRect} {
         }
 
         ~TextureProperties() = default;
@@ -107,15 +103,15 @@ namespace farcical {
         sf::IntRect inputRect;
         sf::Vector2u outputSize;
 
-        RepeatingTextureProperties():
-            inputID{""},
-            outputID{""},
-            path{""},
-            scale{1.0f},
-            color{sf::Color::Black},
-            isColorized{false},
-            inputRect{{0, 0}, {0, 0}},
-            outputSize{0, 0} {}
+        RepeatingTextureProperties(): inputID{""},
+                                      outputID{""},
+                                      path{""},
+                                      scale{1.0f},
+                                      color{sf::Color::Black},
+                                      isColorized{false},
+                                      inputRect{{0, 0}, {0, 0}},
+                                      outputSize{0, 0} {
+        }
 
         RepeatingTextureProperties(
             ResourceID inputID,
@@ -123,15 +119,15 @@ namespace farcical {
             std::string_view path,
             float scale,
             const sf::IntRect& inputRect,
-            const sf::Vector2u& outputSize):
-            inputID{inputID},
-            outputID{outputID},
-            path{path},
-            scale{scale},
-            color{sf::Color::Black},
-            isColorized{false},
-            inputRect{inputRect},
-            outputSize{outputSize} {}
+            const sf::Vector2u& outputSize): inputID{inputID},
+                                             outputID{outputID},
+                                             path{path},
+                                             scale{scale},
+                                             color{sf::Color::Black},
+                                             isColorized{false},
+                                             inputRect{inputRect},
+                                             outputSize{outputSize} {
+        }
 
         RepeatingTextureProperties(
             ResourceID inputID,
@@ -162,13 +158,13 @@ namespace farcical {
         sf::Vector2u outputSize;
         std::vector<TextureProperties> segments;
 
-        SegmentedTextureProperties():
-            id{""},
-            path{""},
-            scale{1.0f},
-            color{sf::Color::Black},
-            isColorized{false},
-            outputSize{0, 0} {}
+        SegmentedTextureProperties(): id{""},
+                                      path{""},
+                                      scale{1.0f},
+                                      color{sf::Color::Black},
+                                      isColorized{false},
+                                      outputSize{0, 0} {
+        }
 
         SegmentedTextureProperties(ResourceID id, std::string_view path, float scale, const sf::Vector2u& outputSize):
             id{id},

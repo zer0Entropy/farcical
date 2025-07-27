@@ -7,11 +7,10 @@
 #include "../../include/ui/root.hpp"
 #include "../../include/game/game.hpp"
 
-farcical::ui::RootContainer::RootContainer(engine::EntityID id, game::Game& game):
-    Container(id, ui::Widget::Type::RootContainer, nullptr),
+farcical::ui::RootContainer::RootContainer(engine::EntityID id, game::Game& game): Container(
+        id, ui::Widget::Type::RootContainer, nullptr),
     game{game},
     logSystem{&game.GetEngine().GetLogSystem()} {
-
 }
 
 void farcical::ui::RootContainer::DoAction(Action action) {
@@ -39,7 +38,8 @@ std::expected<farcical::ui::MenuController*, farcical::engine::Error> farcical::
     return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
 }
 
-std::optional<farcical::engine::Error> farcical::ui::RootContainer::DestroyMenuController(Menu* menu, engine::InputSystem& inputSystem) {
+std::optional<farcical::engine::Error> farcical::ui::RootContainer::DestroyMenuController(
+    Menu* menu, engine::InputSystem& inputSystem) {
     const auto& findController{menuControllers.find(menu->GetID())};
     if(findController != menuControllers.end()) {
         inputSystem.RemoveKeyListener(findController->second.get());
@@ -47,7 +47,10 @@ std::optional<farcical::engine::Error> farcical::ui::RootContainer::DestroyMenuC
         menuControllers.erase(findController);
         return std::nullopt;
     } // if menuController found
-    const std::string failMsg{"Error: Attempted to destroy MenuController for menu (id=" + menu->GetID() + "), but no such MenuController was found."};
+    const std::string failMsg{
+        "Error: Attempted to destroy MenuController for menu (id=" + menu->GetID() +
+        "), but no such MenuController was found."
+    };
     return engine::Error{engine::Error::Signal::ResourceNotFound, failMsg};
 }
 

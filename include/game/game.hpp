@@ -78,14 +78,6 @@ namespace farcical::game {
 
         std::optional<engine::Error> DestroySceneLayout(const ui::LayoutConfig& layoutConfig);
 
-        std::optional<engine::Error> CreateDecorations(const std::vector<ui::DecorationConfig>& decorationConfigList);
-
-        std::optional<engine::Error> DestroyDecorations(const std::vector<ui::DecorationConfig>& decorationConfigList);
-
-        std::optional<engine::Error> CreateTitle(const ui::LabelConfig& titleConfig);
-
-        std::optional<engine::Error> DestroyTitle(const ui::LabelConfig& titleConfig);
-
         std::optional<engine::Error> CacheFonts(const std::vector<FontProperties>& fontPropertiesList);
 
         std::optional<engine::Error> CacheTextures(const std::vector<TextureProperties>& texturePropertiesList);
@@ -102,7 +94,6 @@ namespace farcical::game {
         engine::Engine& engine;
         std::unique_ptr<GameController> controller;
         std::unique_ptr<ui::Scene> currentScene;
-        std::unique_ptr<ui::MenuController> menuController;
         std::unordered_map<engine::EntityID, ui::SceneConfig> sceneConfigs;
         std::unordered_map<engine::EntityID, ResourceParameters> sceneResources;
     };

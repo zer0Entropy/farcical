@@ -87,18 +87,16 @@ namespace farcical::ui {
         float actualSpacing;
         std::unordered_map<engine::EntityID, sf::Vector2f> positions;
 
-        MenuLayout():
-            orientation{Orientation::Vertical},
-            relativeSpacing{0},
-            actualSpacing{0.0f} {
-
+        MenuLayout(): orientation{Orientation::Vertical},
+                      relativeSpacing{0},
+                      actualSpacing{0.0f} {
         }
-        explicit MenuLayout(Orientation orientation, int relativeSpacing):
-            orientation{orientation},
-            relativeSpacing{relativeSpacing},
-            actualSpacing{0.0f} {
 
+        explicit MenuLayout(Orientation orientation, int relativeSpacing): orientation{orientation},
+                                                                           relativeSpacing{relativeSpacing},
+                                                                           actualSpacing{0.0f} {
         }
+
         ~MenuLayout() = default;
 
         constexpr static std::string_view GetOrientationName(Orientation orientation) {
@@ -106,10 +104,12 @@ namespace farcical::ui {
             switch(orientation) {
                 case Orientation::Vertical: {
                     name = "vertical";
-                } break;
+                }
+                break;
                 case Orientation::Horizontal: {
                     name = "horizontal";
-                } break;
+                }
+                break;
             } // switch(orientation)
             return name;
         }
@@ -130,7 +130,7 @@ namespace farcical::ui {
         std::vector<engine::EntityID> ids;
         std::vector<std::string> contents;
         std::vector<engine::Event::Type> eventTypes;
-        std::vector<std::vector<std::any>> eventArgs;
+        std::vector<std::vector<std::any> > eventArgs;
     };
 
     class Menu final : public Container {
@@ -164,55 +164,56 @@ namespace farcical::ui {
         void SetSelectedIndex(int index);
 
         void DoAction(Action action) override;
-/*
-        static std::expected<Menu*, engine::Error> Create(
-            engine::EntityID id,
-            Widget* parent,
-            sf::Font* font,
-            const FontProperties& fontProperties,
-            const std::vector<sf::Texture*>& buttonTextures,
-            const MenuItemCollection& items,
-            const MenuLayout& layout) {
-            if(!parent || !parent->IsContainer()) {
-                const std::string failMsg{"Invalid configuration: Menu with missing or invalid parent."};
-                return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
-            } // if missing or invalid parent
 
-            if(!font) {
-                const std::string failMsg{"Unexpected nullptr: font."};
-                return std::unexpected(engine::Error{engine::Error::Signal::NullPtr, failMsg});
-            } // if !font
+        /*
+                static std::expected<Menu*, engine::Error> Create(
+                    engine::EntityID id,
+                    Widget* parent,
+                    sf::Font* font,
+                    const FontProperties& fontProperties,
+                    const std::vector<sf::Texture*>& buttonTextures,
+                    const MenuItemCollection& items,
+                    const MenuLayout& layout) {
+                    if(!parent || !parent->IsContainer()) {
+                        const std::string failMsg{"Invalid configuration: Menu with missing or invalid parent."};
+                        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+                    } // if missing or invalid parent
 
-            // Create the Menu as a child of its parent
-            Container* container{dynamic_cast<Container*>(parent)};
-            const unsigned int childIndex{container->GetNumChildren()};
-            container->AddChild(std::make_unique<Menu>(id, layout, parent));
-            Menu* menu = dynamic_cast<Menu*>(container->GetChild(childIndex));
+                    if(!font) {
+                        const std::string failMsg{"Unexpected nullptr: font."};
+                        return std::unexpected(engine::Error{engine::Error::Signal::NullPtr, failMsg});
+                    } // if !font
 
-            // Create each MenuItem
-            for(unsigned int index = 0; index < items.ids.size(); ++index) {
-                const std::string itemID{items.ids[index]};
-                const std::string contents{items.contents[index]};
-                const engine::Event::Type eventType{items.eventTypes[index]};
-                const std::vector<std::any>& eventArgs{items.eventArgs[index]};
-                const auto& createMenuItem{
-                    MenuItem::Create(
-                        itemID,
-                        contents,
-                        font,
-                        fontProperties,
-                        buttonTextures,
-                        eventType,
-                        eventArgs,
-                        menu)
-                };
-                if(createMenuItem.has_value()) {
-                    MenuItem* menuItem{createMenuItem.value()};
-                } // if createMenuItem == success
-            }
-            return menu;
-        }
-        */
+                    // Create the Menu as a child of its parent
+                    Container* container{dynamic_cast<Container*>(parent)};
+                    const unsigned int childIndex{container->GetNumChildren()};
+                    container->AddChild(std::make_unique<Menu>(id, layout, parent));
+                    Menu* menu = dynamic_cast<Menu*>(container->GetChild(childIndex));
+
+                    // Create each MenuItem
+                    for(unsigned int index = 0; index < items.ids.size(); ++index) {
+                        const std::string itemID{items.ids[index]};
+                        const std::string contents{items.contents[index]};
+                        const engine::Event::Type eventType{items.eventTypes[index]};
+                        const std::vector<std::any>& eventArgs{items.eventArgs[index]};
+                        const auto& createMenuItem{
+                            MenuItem::Create(
+                                itemID,
+                                contents,
+                                font,
+                                fontProperties,
+                                buttonTextures,
+                                eventType,
+                                eventArgs,
+                                menu)
+                        };
+                        if(createMenuItem.has_value()) {
+                            MenuItem* menuItem{createMenuItem.value()};
+                        } // if createMenuItem == success
+                    }
+                    return menu;
+                }
+                */
         /*
         static std::expected<Menu*, engine::Error> Create(
             engine::EntityID id,

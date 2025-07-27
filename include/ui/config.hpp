@@ -76,10 +76,9 @@ namespace farcical::ui {
         ButtonConfig buttonConfig;
         FontProperties fontProperties;
 
-        explicit MenuConfig():
-            id{""},
-            parentID{""},
-            relativePosition{sf::Vector2u{0, 0}} {
+        explicit MenuConfig(): id{""},
+                               parentID{""},
+                               relativePosition{sf::Vector2u{0, 0}} {
         }
         ~MenuConfig() = default;
     };

@@ -18,6 +18,7 @@ namespace farcical::ui {
         Scene(Scene&) = delete;
         Scene(Scene&&) = delete;
         Scene& operator=(const Scene&) = delete;
+
         explicit Scene(engine::EntityID id, game::Game& game);
 
         ~Scene() = default;

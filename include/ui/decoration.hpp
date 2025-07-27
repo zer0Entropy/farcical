@@ -30,24 +30,6 @@ namespace farcical::ui {
 
         void SetTexture(sf::Texture* texture);
 
-        static std::expected<Decoration*, engine::Error> Create(engine::EntityID id,
-                                                                sf::Texture* texture,
-                                                                Container* parent) {
-            if(!parent || !parent->IsContainer()) {
-                const std::string failMsg{"Invalid configuration: Decoration with missing or invalid parent."};
-                return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
-            } // if missing or invalid parent
-            if(!texture) {
-                const std::string failMsg{"Invalid configuration: Decoration with missing or invalid texture."};
-                return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
-            }
-            const unsigned int childIndex{parent->GetNumChildren()};
-            parent->AddChild(std::make_unique<Decoration>(id, parent));
-            Decoration* decoration = dynamic_cast<Decoration*>(parent->GetChild(childIndex));
-            decoration->SetTexture(texture);
-            return decoration;
-        }
-
     private:
         sf::Texture* texture;
     };
