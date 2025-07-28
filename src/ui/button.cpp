@@ -11,8 +11,8 @@ farcical::ui::Button::Button(engine::EntityID id, Container* parent)
     status{Status::Normal} {
 }
 
-void farcical::ui::Button::SetTexture(Status state, sf::Texture& texture) {
-  this->textures[static_cast<int>(state)] = &texture;
+void farcical::ui::Button::SetTexture(Status status, sf::Texture& texture) {
+  this->textures[static_cast<int>(status)] = &texture;
   this->size = sf::Vector2u{
     texture.getSize().x * static_cast<unsigned int>(this->scale.x),
     texture.getSize().y * static_cast<unsigned int>(this->scale.y)

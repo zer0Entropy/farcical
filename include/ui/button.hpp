@@ -24,9 +24,9 @@ namespace farcical::ui {
 
     ~Button() override = default;
 
-    void SetTexture(Status state, sf::Texture& texture);
+    void SetTexture(Status status, sf::Texture& texture);
 
-    [[nodiscard]] sf::Texture* GetTexture(Status buttonStatus) const;
+    [[nodiscard]] sf::Texture* GetTexture(Status status) const;
 
     [[nodiscard]] sf::Texture* GetTexture() const;
 

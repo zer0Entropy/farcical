@@ -21,6 +21,8 @@ namespace farcical::ui {
       Menu,
       MenuItem,
       Button,
+      RadioButton,
+      RadioButtonGroup,
       Label
     };
 
