@@ -54,16 +54,16 @@ std::optional<farcical::engine::Error> farcical::ui::factory::DestroyDecoration(
     return std::nullopt;
 }
 
-std::expected<farcical::ui::Label*, farcical::engine::Error> farcical::ui::factory::CreateLabel(
-    const game::Game& game, const LabelConfig& config, Container* parent) {
+std::expected<farcical::ui::Text*, farcical::engine::Error> farcical::ui::factory::CreateText(
+    const game::Game& game, const TextConfig& config, Container* parent) {
     engine::LogSystem& logSystem{game.GetEngine().GetLogSystem()};
     const auto& windowSize{game.GetEngine().GetWindow().getSize()};
     const Scene* currentScene{game.GetCurrentScene()};
     if(!config.id.empty()) {
         sf::Font* font{currentScene->GetCachedFont(config.fontProperties.id)};
         const FontProperties& fontProperties{currentScene->GetCachedFontProperties(config.fontProperties.id)};
-        parent->AddChild(std::make_unique<Label>(config.id, parent));
-        Label* label{dynamic_cast<Label*>(parent->FindChild(config.id))};
+        parent->AddChild(std::make_unique<Text>(config.id, parent));
+        Text* label{dynamic_cast<Text*>(parent->FindChild(config.id))};
         label->SetFont(*font);
         label->SetFontProperties(fontProperties);
         label->SetContents(config.contents);
@@ -80,16 +80,16 @@ std::expected<farcical::ui::Label*, farcical::engine::Error> farcical::ui::facto
         return label;
     } // if title has valid ID
 
-    const std::string failMsg{"Invalid configuration: Failed to create Label (id=" + config.id + ")."};
+    const std::string failMsg{"Invalid configuration: Failed to create Text (id=" + config.id + ")."};
     return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
 }
 
-std::optional<farcical::engine::Error> farcical::ui::factory::DestroyLabel(const game::Game& game, Label* label) {
+std::optional<farcical::engine::Error> farcical::ui::factory::DestroyText(const game::Game& game, Text* text) {
     Scene* currentScene{game.GetCurrentScene()};
     const auto& destroyRenderComponent{
-        game.GetEngine().GetRenderSystem().DestroyRenderComponent(currentScene->GetID(), label->GetID())
+        game.GetEngine().GetRenderSystem().DestroyRenderComponent(currentScene->GetID(), text->GetID())
     };
-    label->GetParent()->RemoveChild(label->GetID());
+    text->GetParent()->RemoveChild(text->GetID());
     return std::nullopt;
 }
 
@@ -155,7 +155,7 @@ std::expected<farcical::ui::Menu*, farcical::engine::Error> farcical::ui::factor
             logSystem.AddMessage("MenuItem created (id=" + item->GetID() + ").");
             Button* button{item->GetButton()};
             sf::Vector2f buttonPosition{0.0f, 0.0f};
-            Label* label{item->GetLabel()};
+            Text* label{item->GetLabel()};
             sf::Vector2f labelPosition{0.0f, 0.0f};
             if(menuLayout.orientation == MenuLayout::Orientation::Horizontal) {
                 buttonPosition.x = menuPosition.x
@@ -272,12 +272,12 @@ std::expected<farcical::ui::Button*, farcical::engine::Error> farcical::ui::fact
     return button;
 }
 
-std::expected<farcical::ui::Label*, farcical::engine::Error> farcical::ui::factory::CreateMenuLabel(
+std::expected<farcical::ui::Text*, farcical::engine::Error> farcical::ui::factory::CreateMenuLabel(
     const game::Game& game, const MenuItemConfig& itemConfig, const MenuConfig& menuConfig, MenuItem* item) {
     // Create Label
     const engine::EntityID id{itemConfig.id + "Label"};
-    item->AddChild(std::make_unique<Label>(id, item));
-    Label* label{item->GetLabel()};
+    item->AddChild(std::make_unique<Text>(id, item));
+    Text* label{item->GetLabel()};
 
     // Retrieve cached Font and FontProperties from currentScene
     const Scene* currentScene{game.GetCurrentScene()};

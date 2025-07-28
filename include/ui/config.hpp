@@ -37,31 +37,33 @@ namespace farcical::ui {
         ~ButtonConfig() = default;
     };
 
-    struct LabelConfig {
+    struct TextConfig {
         engine::EntityID id;
         engine::EntityID parentID;
         sf::Vector2u relativePosition;
         std::string contents;
         FontProperties fontProperties;
 
-        LabelConfig(): id{""},
-                       parentID{""},
-                       relativePosition{sf::Vector2u{0, 0}},
-                       contents{""} {
+        TextConfig():
+            id{""},
+            parentID{""},
+            relativePosition{sf::Vector2u{0, 0}},
+            contents{""} {
         }
 
-        ~LabelConfig() = default;
+        ~TextConfig() = default;
     };
 
     struct MenuItemConfig {
         engine::EntityID id;
         ButtonConfig buttonConfig;
-        LabelConfig labelConfig;
+        TextConfig labelConfig;
         engine::Event::Type activationEventType;
         std::vector<std::any> activationEventArgs;
 
-        MenuItemConfig(): id{""},
-                          activationEventType{engine::Event::Type::QuitGame} {
+        MenuItemConfig():
+            id{""},
+            activationEventType{engine::Event::Type::QuitGame} {
         }
 
         ~MenuItemConfig() = default;
@@ -76,9 +78,10 @@ namespace farcical::ui {
         ButtonConfig buttonConfig;
         FontProperties fontProperties;
 
-        explicit MenuConfig(): id{""},
-                               parentID{""},
-                               relativePosition{sf::Vector2u{0, 0}} {
+        explicit MenuConfig():
+            id{""},
+            parentID{""},
+            relativePosition{sf::Vector2u{0, 0}} {
         }
         ~MenuConfig() = default;
     };
@@ -86,8 +89,8 @@ namespace farcical::ui {
     struct LayoutLayerConfig {
         Layout::Layer::ID id;
         std::vector<DecorationConfig> decorations;
-        LabelConfig title;
-        std::vector<LabelConfig> headings;
+        TextConfig title;
+        std::vector<TextConfig> headings;
         MenuConfig menu;
 
         LayoutLayerConfig(): id{Layout::Layer::ID::NumLayers} {
@@ -163,7 +166,7 @@ namespace farcical::ui {
 
     std::expected<ButtonConfig, engine::Error> LoadButtonConfig(const nlohmann::json& json);
 
-    std::expected<LabelConfig, engine::Error> LoadLabelConfig(const nlohmann::json& json);
+    std::expected<TextConfig, engine::Error> LoadTextConfig(const nlohmann::json& json);
 
     std::expected<MenuItemConfig, engine::Error> LoadMenuItemConfig(const nlohmann::json& json);
 

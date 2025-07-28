@@ -235,11 +235,11 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateSceneLayout(c
             };
         } // for each Decoration
         const auto& createTitle{
-            ui::factory::CreateLabel(*this, layerConfig.title, &currentScene->GetRootContainer())
+            ui::factory::CreateText(*this, layerConfig.title, &currentScene->GetRootContainer())
         };
         for(const auto& headingConfig: layerConfig.headings) {
             const auto& createHeading{
-                ui::factory::CreateLabel(*this, headingConfig, &currentScene->GetRootContainer())
+                ui::factory::CreateText(*this, headingConfig, &currentScene->GetRootContainer())
             };
         } // for each heading
         const auto& createMenu{
@@ -263,22 +263,22 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateSceneLayout(c
                     decoration->AddComponent(renderCmp);
                 } // if createRenderCmp == success
             } // if Decoration
-            else if(widgetType == ui::Widget::Type::Label) {
-                ui::Label* label{dynamic_cast<ui::Label*>(widget)};
+            else if(widgetType == ui::Widget::Type::Text) {
+                ui::Text* text{dynamic_cast<ui::Text*>(widget)};
                 const auto& createRenderCmp{
                     engine.GetRenderSystem().CreateRenderComponent(
                         layerConfig.id,
                         currentScene->GetID(),
-                        label->GetID(),
-                        label->GetFont(),
-                        label->GetFontProperties(),
-                        label->GetContents())
+                        text->GetID(),
+                        text->GetFont(),
+                        text->GetFontProperties(),
+                        text->GetContents())
                 };
                 if(createRenderCmp.has_value()) {
                     engine::RenderComponent* renderCmp{createRenderCmp.value()};
-                    renderCmp->scale = label->GetScale();
-                    renderCmp->position = label->GetPosition();
-                    label->AddComponent(renderCmp);
+                    renderCmp->scale = text->GetScale();
+                    renderCmp->position = text->GetPosition();
+                    text->AddComponent(renderCmp);
                 } // if createRenderCmp == success
             } // else if Label
             else if(widgetType == ui::Widget::Type::Menu) {
@@ -286,7 +286,7 @@ std::optional<farcical::engine::Error> farcical::game::Game::CreateSceneLayout(c
                 for(int index = 0; index < menu->GetNumMenuItems(); ++index) {
                     ui::MenuItem* item{menu->GetMenuItemByIndex(index)};
                     ui::Button* button{item->GetButton()};
-                    ui::Label* label{item->GetLabel()};
+                    ui::Text* label{item->GetLabel()};
                     const auto& createButtonRenderCmp{
                         engine.GetRenderSystem().CreateRenderComponent(
                             layerConfig.id,
@@ -332,17 +332,17 @@ std::optional<farcical::engine::Error> farcical::game::Game::DestroySceneLayout(
             } // if destroyDecoration == failure
         } // for each Decoration
 
-        ui::Label* title{dynamic_cast<ui::Label*>(currentScene->FindWidget(layerConfig.title.id))};
+        ui::Text* title{dynamic_cast<ui::Text*>(currentScene->FindWidget(layerConfig.title.id))};
         if(title) {
-            const auto& destroyTitleResult{ui::factory::DestroyLabel(*this, title)};
+            const auto& destroyTitleResult{ui::factory::DestroyText(*this, title)};
             if(destroyTitleResult.has_value()) {
                 return destroyTitleResult.value();
             } // if destroyTitleResult == failure
         } // if title
 
         for(const auto& headingConfig: layerConfig.headings) {
-            ui::Label* heading{dynamic_cast<ui::Label*>(currentScene->FindWidget(headingConfig.id))};
-            const auto& destroyHeading{ui::factory::DestroyLabel(*this, heading)};
+            ui::Text* heading{dynamic_cast<ui::Text*>(currentScene->FindWidget(headingConfig.id))};
+            const auto& destroyHeading{ui::factory::DestroyText(*this, heading)};
             if(destroyHeading.has_value()) {
                 return destroyHeading.value();
             } // if destroyHeading == failure

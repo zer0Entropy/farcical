@@ -60,9 +60,9 @@ std::expected<farcical::ui::ButtonConfig, farcical::engine::Error> farcical::ui:
     return config;
 }
 
-std::expected<farcical::ui::LabelConfig, farcical::engine::Error> farcical::ui::LoadLabelConfig(
+std::expected<farcical::ui::TextConfig, farcical::engine::Error> farcical::ui::LoadTextConfig(
     const nlohmann::json& json) {
-    LabelConfig config;
+    TextConfig config;
     const auto& findID{json.find("id")};
     const auto& findPosition{json.find("relativePosition")};
     const auto& findFont{json.find("font")};
@@ -90,7 +90,7 @@ std::expected<farcical::ui::LabelConfig, farcical::engine::Error> farcical::ui::
     config.fontProperties.id = findFont.value().get<std::string>();
 
     if(findContents == json.end()) {
-        const std::string failMsg{"Invalid configuration: Label contents could not be found."};
+        const std::string failMsg{"Invalid configuration: Text contents could not be found."};
         return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
     } // if contents not found
     config.contents = findContents.value().get<std::string>();
@@ -250,7 +250,7 @@ std::expected<farcical::ui::LayoutLayerConfig, farcical::engine::Error> farcical
 
     if(findTitle != json.end()) {
         const auto& titleJSON{findTitle.value()};
-        const auto& loadTitleResult{LoadLabelConfig(titleJSON)};
+        const auto& loadTitleResult{LoadTextConfig(titleJSON)};
         if(loadTitleResult.has_value()) {
             config.title = loadTitleResult.value();
         } // if loadTitleResult == success
@@ -259,7 +259,7 @@ std::expected<farcical::ui::LayoutLayerConfig, farcical::engine::Error> farcical
     if(findHeadings != json.end()) {
         const auto& headingsJSON{findHeadings.value()};
         for(const auto& headingJSON: headingsJSON) {
-            const auto& loadHeadingResult{LoadLabelConfig(headingJSON)};
+            const auto& loadHeadingResult{LoadTextConfig(headingJSON)};
             if(loadHeadingResult.has_value()) {
                 config.headings.push_back(loadHeadingResult.value());
             } // if loadHeadingResult == success

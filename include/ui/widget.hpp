@@ -23,7 +23,7 @@ namespace farcical::ui {
       Button,
       RadioButton,
       RadioButtonGroup,
-      Label
+      Text
     };
 
     Widget() = delete;

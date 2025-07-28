@@ -16,11 +16,11 @@
 
 namespace farcical::ui {
 
-  class Label final : public Widget {
+  class Text final : public Widget {
   public:
-    explicit Label(engine::EntityID id, Container* parent = nullptr);
+    explicit Text(engine::EntityID id, Container* parent = nullptr);
 
-    ~Label() override = default;
+    ~Text() override = default;
 
     void SetFont(sf::Font& font);
     void SetFontSize(unsigned int fontSize);

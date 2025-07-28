@@ -22,10 +22,10 @@ namespace farcical::ui::factory {
 
     std::optional<engine::Error> DestroyDecoration(const game::Game& game, Decoration* decoration);
 
-    [[nodiscard]] std::expected<Label*, engine::Error> CreateLabel(
-        const game::Game& game, const LabelConfig& config, Container* parent);
+    [[nodiscard]] std::expected<Text*, engine::Error> CreateText(
+        const game::Game& game, const TextConfig& config, Container* parent);
 
-    std::optional<engine::Error> DestroyLabel(const game::Game& game, Label* label);
+    std::optional<engine::Error> DestroyText(const game::Game& game, Text* text);
 
     [[nodiscard]] std::expected<Menu*, engine::Error> CreateMenu(
         const game::Game& game, const MenuConfig& config, Container* parent);
@@ -46,7 +46,7 @@ namespace farcical::ui::factory {
         const MenuConfig& menuConfig,
         MenuItem* item);
 
-    [[nodiscard]] std::expected<Label*, engine::Error> CreateMenuLabel(
+    [[nodiscard]] std::expected<Text*, engine::Error> CreateMenuLabel(
         const game::Game& game,
         const MenuItemConfig& itemConfig,
         const MenuConfig& menuConfig,

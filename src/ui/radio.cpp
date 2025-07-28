@@ -3,8 +3,7 @@
 //
 #include "../../include/ui/radio.hpp"
 
-farcical::ui::RadioButton::RadioButton(engine::EntityID id, Container* parent):
-    Widget(id, Type::RadioButton, parent),
+farcical::ui::RadioButton::RadioButton(engine::EntityID id, Container* parent): Widget(id, Type::RadioButton, parent),
     status{Status::Unselected} {
 }
 
@@ -29,11 +28,10 @@ void farcical::ui::RadioButton::SetStatus(Status status) {
 }
 
 void farcical::ui::RadioButton::DoAction(Action action) {
-
 }
 
-farcical::ui::RadioButtonGroup::RadioButtonGroup(engine::EntityID id, Container* parent):
-    Container(id, Type::RadioButtonGroup, parent),
+farcical::ui::RadioButtonGroup::RadioButtonGroup(engine::EntityID id, Container* parent): Container(
+        id, Type::RadioButtonGroup, parent),
     selectedButton{nullptr} {
 }
 
@@ -71,5 +69,4 @@ void farcical::ui::RadioButtonGroup::SetSelectedButton(RadioButton* button) {
 }
 
 void farcical::ui::RadioButtonGroup::DoAction(Action action) {
-
 }

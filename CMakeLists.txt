@@ -32,10 +32,10 @@ add_executable( main
         src/ui/decoration.cpp
         src/ui/factory.cpp
         src/ui/menu.cpp
-        src/ui/label.cpp
         src/ui/radio.cpp
         src/ui/root.cpp
         src/ui/scene.cpp
+        src/ui/text.cpp
         src/game/game.cpp
         src/game/map.cpp
         src/main.cpp

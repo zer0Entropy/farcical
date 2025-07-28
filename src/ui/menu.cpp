@@ -5,7 +5,7 @@
 #include "../../include/ui/menu.hpp"
 #include "../../include/color.hpp"
 #include "../../include/ui/button.hpp"
-#include "../../include/ui/label.hpp"
+#include "../../include/ui/text.hpp"
 #include "../../include/engine/render.hpp"
 #include "../../include/game/game.hpp"
 
@@ -30,34 +30,11 @@ void farcical::ui::MenuItem::AddChild(std::unique_ptr<Widget> child) {
   if(childPtr->GetType() == Type::Button) {
     button = dynamic_cast<Button*>(childPtr);
   } // if Button
-  else if(childPtr->GetType() == Type::Label) {
-    label = dynamic_cast<Label*>(childPtr);
+  else if(childPtr->GetType() == Type::Text) {
+    label = dynamic_cast<Text*>(childPtr);
   } // else if Label
 }
 
-/*
-farcical::ui::Button* farcical::ui::MenuItem::CreateButton(engine::EntityID id, std::vector<sf::Texture*> textures) {
-  children.emplace_back(std::make_unique<Button>(id, this));
-  button = dynamic_cast<Button*>(children.rbegin()->get());
-  button->SetTexture(Button::Status::Normal, *textures[static_cast<int>(Button::Status::Normal)]);
-  button->SetTexture(Button::Status::Highlighted, *textures[static_cast<int>(Button::Status::Highlighted)]);
-  button->SetTexture(Button::Status::Pressed, *textures[static_cast<int>(Button::Status::Pressed)]);
-  return button;
-}
-
-farcical::ui::Label* farcical::ui::MenuItem::CreateLabel(
-  engine::EntityID id, std::string_view contents, const FontProperties& fontProperties, sf::Font& font) {
-  children.emplace_back(std::make_unique<Label>(id, this));
-  label = dynamic_cast<Label*>(children.rbegin()->get());
-  label->SetFont(font);
-  label->SetFontSize(fontProperties.characterSize);
-  label->SetFontColor(fontProperties.color);
-  label->SetOutlineColor(fontProperties.outlineColor);
-  label->SetOutlineThickness(fontProperties.outlineThickness);
-  label->SetContents(contents);
-  return label;
-}
-*/
 farcical::engine::Event::Type farcical::ui::MenuItem::GetActivationEventType() const {
   return activationEventType;
 }
@@ -70,7 +47,7 @@ farcical::ui::Button* farcical::ui::MenuItem::GetButton() const {
   return button;
 }
 
-farcical::ui::Label* farcical::ui::MenuItem::GetLabel() const {
+farcical::ui::Text* farcical::ui::MenuItem::GetLabel() const {
   return label;
 }
 
