@@ -137,8 +137,9 @@ std::expected<farcical::ui::Scene*, farcical::engine::Error> farcical::ui::Scene
     /*
         STEP TWO: Create Widgets using the structure specified in Layout
     */
-    for(const auto& layer: properties.layout.layers) {
-        for(const auto& decorationProperties: layer.decorationProperties) {
+    for(auto layer: properties.layout.layers) {
+        for(auto& decorationProperties: layer.decorationProperties) {
+            decorationProperties.layerID = layer.id;
             const auto& createDecoration{
                 factory::CreateDecoration(renderSystem, currentScene.get(), decorationProperties)
             };
@@ -146,13 +147,17 @@ std::expected<farcical::ui::Scene*, farcical::engine::Error> farcical::ui::Scene
                 return std::unexpected(createDecoration.error());
             } // if createDecoration == failure
         } // for each Decoration
+
+        layer.titleProperties.layerID = layer.id;
         const auto& createTitle{
             factory::CreateText(renderSystem, currentScene.get(), layer.titleProperties)
         };
         if(!createTitle.has_value()) {
             return std::unexpected(createTitle.error());
         } // if createTitle == failure
-        for(const auto& heading: layer.headingProperties) {
+
+        for(auto& heading: layer.headingProperties) {
+            heading.layerID = layer.id;
             const auto& createHeading{
                 factory::CreateText(renderSystem, currentScene.get(), heading)
             };
@@ -160,6 +165,7 @@ std::expected<farcical::ui::Scene*, farcical::engine::Error> farcical::ui::Scene
                 return std::unexpected(createHeading.error());
             } // if createHeading == failure
         } // for each heading
+        layer.menuProperties.layerID = layer.id;
         const auto& createMenu{
             factory::CreateMenu(
                 engine.GetRenderSystem(),

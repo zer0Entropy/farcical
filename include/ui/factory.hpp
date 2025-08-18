@@ -47,6 +47,13 @@ namespace farcical::ui::factory {
         const MenuProperties& menuProperties,
         const ButtonProperties& buttonProperties);
 
+    [[nodiscard]] std::expected<RadioButton*, engine::Error> CreateRadioButton(
+        engine::RenderSystem& renderSystem,
+        Scene* scene,
+        Menu* menu,
+        const MenuProperties& menuProperties,
+        const WidgetProperties& radioButtonProperties);
+
     [[nodiscard]] std::vector<sf::Texture*> GetButtonTextures(const Scene& scene, const MenuProperties& properties);
 
     [[nodiscard]] std::vector<sf::Texture*> GetRadioButtonTextures(const Scene& scene, const MenuProperties& properties);

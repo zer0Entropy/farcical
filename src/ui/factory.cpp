@@ -226,10 +226,26 @@ std::expected<farcical::ui::Menu*, farcical::engine::Error> farcical::ui::factor
             Text* label{createLabelResult.value()};
         } // for each Button in Menu
     } // if Button Menu
+
     else if(properties.menuType == Menu::Type::RadioButton) {
-        const std::vector<sf::Texture*> radioButtonTextures{GetRadioButtonTextures(*scene, properties)};
+        for(auto radioButtonProperties: properties.radioButtonProperties) {
+            radioButtonProperties.labelProperties.second = properties.labelProperties.second;
+            const auto& createRadioButtonResult{
+                CreateRadioButton(renderSystem, scene, menu, properties, radioButtonProperties)
+            };
+        } // for each RadioButton in Menu
     } // else if RadioButton Menu
+
     else if(properties.menuType == Menu::Type::SubMenu) {
+        for(auto subMenuProperties: properties.menuProperties) {
+            subMenuProperties.layerID = properties.layerID;
+            const auto& createSubMenu{
+                CreateMenu(renderSystem, inputSystem, eventSystem, scene, subMenuProperties)
+            };
+            if(!createSubMenu.has_value()) {
+                return std::unexpected(createSubMenu.error());
+            } // if createSubMenu == failure
+        } // for each subMenu
     } // else if SubMenu Menu
 
     // Create MenuController for this Menu
@@ -284,8 +300,9 @@ std::optional<farcical::engine::Error> farcical::ui::factory::DestroyMenu(
         } // else if item.type == RadioButton
         else if(getSubMenuPtr) {
             widget = *getSubMenuPtr;
+            DestroyMenu(renderSystem, inputSystem, eventSystem, scene, *getSubMenuPtr);
         } // else if item.type == Menu
-        if(widget) {
+        if(widget && menu->GetMenuType() != Menu::Type::SubMenu) {
             const auto& destroyRenderCmp{
                 renderSystem.DestroyRenderComponent(scene->GetID(), widget->GetID())
             };
@@ -386,6 +403,94 @@ std::expected<farcical::ui::Button*, farcical::engine::Error> farcical::ui::fact
     } // if createRenderCmp == success
 
     return button;
+}
+
+std::expected<farcical::ui::RadioButton*, farcical::engine::Error> farcical::ui::factory::CreateRadioButton(
+    engine::RenderSystem& renderSystem,
+    Scene* scene,
+    Menu* menu,
+    const MenuProperties& menuProperties,
+    const WidgetProperties& radioButtonProperties) {
+    if(radioButtonProperties.id.empty()) {
+        return nullptr;
+    } // return nullptr if ID is empty
+
+    // Create RadioButton
+    engine::EntityID radioButtonID{radioButtonProperties.id + "RadioButton"};
+    menu->AddChild(std::make_unique<RadioButton>(radioButtonID, menu));
+    RadioButton* radioButton{dynamic_cast<RadioButton*>(menu->FindChild(radioButtonID))};
+
+    // Get RadioButton index
+    int radioButtonIndex{0};
+    for(const auto& menuRadioButton: menuProperties.radioButtonProperties) {
+        if(menuRadioButton.id == radioButtonProperties.id) {
+            break;
+        } // if ID's match, break
+        ++radioButtonIndex;
+    } // for each RadioButton in Menu
+
+    // Get Textures and TextureProperties
+    const std::vector<sf::Texture*> radioButtonTextures{GetRadioButtonTextures(*scene, menuProperties)};
+    const ResourceID textureID{
+        menuProperties.radioButtonTextures.at(static_cast<int>(RadioButton::Status::Unselected)).second.id + "Texture"
+    };
+    const TextureProperties& textureProperties{scene->GetCachedTextureProperties(textureID)};
+    int textureIndex{0};
+    for(const auto& texture: radioButtonTextures) {
+        RadioButton::Status status{menuProperties.radioButtonTextures[textureIndex++].first};
+        radioButton->SetTexture(status, *texture);
+    } // for each Texture
+
+    // Set scale and size
+    sf::Vector2f scale{textureProperties.scale, textureProperties.scale};
+    radioButton->SetScale(scale);
+    const sf::Vector2u size{
+        static_cast<unsigned int>(static_cast<float>(radioButtonTextures[0]->getSize().x) * textureProperties.scale),
+        static_cast<unsigned int>(static_cast<float>(radioButtonTextures[0]->getSize().y) * textureProperties.scale)
+    };
+    radioButton->SetSize(size);
+
+    // Calculate spacing
+    const auto& windowSize{renderSystem.GetWindow().getSize()};
+    float spacing{0.0f};
+    if(menuProperties.layout.orientation == Orientation::Horizontal) {
+        spacing = static_cast<float>(size.x) * (static_cast<float>(menuProperties.layout.relativeSpacing) / 100.0f);
+    } // if orientation == Horizontal
+    else if(menuProperties.layout.orientation == Orientation::Vertical) {
+        spacing = static_cast<float>(size.y) * (static_cast<float>(menuProperties.layout.relativeSpacing) / 100.0f);
+    } // else if orientation == Vertical
+
+    // Calculate Position
+    sf::Vector2f radioButtonPosition{0.0f, 0.0f};
+    if(menuProperties.layout.orientation == Orientation::Horizontal) {
+        radioButtonPosition.x = menu->GetPosition().x
+                           + static_cast<float>(radioButtonIndex * size.x)
+                           + static_cast<float>(radioButtonIndex) * spacing;
+        radioButtonPosition.y = menu->GetPosition().y + static_cast<float>(size.y) / 2.0f;
+    } // if layout == Horizontal
+    else if(menuProperties.layout.orientation == Orientation::Vertical) {
+        radioButtonPosition.x = menu->GetPosition().x - static_cast<float>(size.x) / 2.0f;
+        radioButtonPosition.y = menu->GetPosition().y
+                           + static_cast<float>(radioButtonIndex * radioButton->GetSize().y)
+                           + static_cast<float>(radioButtonIndex) * spacing;
+    } // else if layout == Vertical
+    radioButton->SetPosition(radioButtonPosition);
+
+    const auto& createRenderCmp{
+        renderSystem.CreateRenderComponent(
+            menuProperties.layerID,
+            scene->GetID(),
+            radioButton->GetID(),
+            radioButton->GetTexture())
+    };
+    if(createRenderCmp.has_value()) {
+        engine::RenderComponent* renderCmp{createRenderCmp.value()};
+        renderCmp->scale = radioButton->GetScale();
+        renderCmp->position = radioButton->GetPosition();
+        radioButton->AddComponent(renderCmp);
+    } // if createRenderCmp == success
+
+    return radioButton;
 }
 
 std::vector<sf::Texture*>
