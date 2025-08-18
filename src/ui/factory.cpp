@@ -312,6 +312,11 @@ std::optional<farcical::engine::Error> farcical::ui::factory::DestroyMenu(
             menu->RemoveChild(widget->GetID());
         } // if widget
     } // for each MenuItem
+    for(const auto& child: menu->GetChildren()) {
+        if(child->GetType() == Widget::Type::Text) {
+            DestroyText(renderSystem, scene, dynamic_cast<Text*>(child));
+        } // if child->type == Text
+    } // for each child in Menu
 
     menu->GetParent()->RemoveChild(menu->GetID());
     return std::nullopt;
@@ -464,15 +469,15 @@ std::expected<farcical::ui::RadioButton*, farcical::engine::Error> farcical::ui:
     sf::Vector2f radioButtonPosition{0.0f, 0.0f};
     if(menuProperties.layout.orientation == Orientation::Horizontal) {
         radioButtonPosition.x = menu->GetPosition().x
-                           + static_cast<float>(radioButtonIndex * size.x)
-                           + static_cast<float>(radioButtonIndex) * spacing;
+                                + static_cast<float>(radioButtonIndex * size.x)
+                                + static_cast<float>(radioButtonIndex) * spacing;
         radioButtonPosition.y = menu->GetPosition().y + static_cast<float>(size.y) / 2.0f;
     } // if layout == Horizontal
     else if(menuProperties.layout.orientation == Orientation::Vertical) {
         radioButtonPosition.x = menu->GetPosition().x - static_cast<float>(size.x) / 2.0f;
         radioButtonPosition.y = menu->GetPosition().y
-                           + static_cast<float>(radioButtonIndex * radioButton->GetSize().y)
-                           + static_cast<float>(radioButtonIndex) * spacing;
+                                + static_cast<float>(radioButtonIndex * radioButton->GetSize().y)
+                                + static_cast<float>(radioButtonIndex) * spacing;
     } // else if layout == Vertical
     radioButton->SetPosition(radioButtonPosition);
 
