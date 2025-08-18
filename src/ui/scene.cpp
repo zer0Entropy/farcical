@@ -3,73 +3,10 @@
 //
 #include "../../include/ui/scene.hpp"
 
-farcical::ui::Scene::Scene(engine::EntityID id, game::Game& game): id{id},
-                                                                   rootContainer{
-                                                                       std::make_unique<RootContainer>(
-                                                                           std::string{rootContainerID}, game)
-                                                                   } {
+void farcical::ui::Scene::DoAction(Action action) {
 }
 
-farcical::engine::EntityID farcical::ui::Scene::GetID() const {
-    return id;
-}
-
-farcical::ui::RootContainer& farcical::ui::Scene::GetRootContainer() const {
-    return *rootContainer;
-}
-
-std::vector<farcical::ui::Widget*> farcical::ui::Scene::GetTopLevelWidgets() const {
-    return rootContainer->GetChildren();
-}
-
-farcical::ui::Widget* farcical::ui::Scene::FindWidget(engine::EntityID widgetID) const {
-    if(rootContainer->GetID() == widgetID) {
-        return rootContainer.get();
-    } // if rootContainer matches widgetID
-    return rootContainer->FindChild(widgetID);
-}
-
-void farcical::ui::Scene::AddWidget(std::unique_ptr<ui::Widget> widget, ui::Widget* parent) {
-    // If parent == nullptr, set parent = rootContainer
-    if(!parent) {
-        parent = rootContainer.get();
-    } // if !parent
-    if(!parent->IsContainer()) {
-        return; // Error!
-    } // !parent->IsContainer()
-    Container* parentContainer{dynamic_cast<Container*>(parent)};
-    if(!parentContainer) {
-        return; // Error!
-    } // !parentContainer
-    parentContainer->AddChild(std::move(widget));
-}
-
-void farcical::ui::Scene::RemoveWidget(engine::EntityID widgetID, ui::Widget* parent) {
-    // If parent == nullptr, set parent = rootContainer
-    if(!parent) {
-        parent = rootContainer.get();
-    } // if !parent
-    if(!parent->IsContainer()) {
-        return; // Error!
-    } // !parent->IsContainer()
-    Container* parentContainer{dynamic_cast<Container*>(parent)};
-    if(!parentContainer) {
-        return; // Error!
-    } // !parentContainer
-    if(parentContainer->GetID() == widgetID) {
-        parent = parentContainer->GetParent();
-        parentContainer = dynamic_cast<Container*>(parent);
-        if(parentContainer) {
-            parentContainer->RemoveChild(widgetID);
-        } // remove from parent
-    } // if parentContainer matches widgetID, remove it from its parent
-    else {
-        Widget* child{parentContainer->FindChild(widgetID)};
-        if(child) {
-            parentContainer->RemoveChild(widgetID);
-            child = nullptr;
-        } // if child found
-    } // else if parentContainer does not match widgetID
+farcical::ui::Scene::Scene(engine::EntityID id) : Container(id, Widget::Type::Scene, nullptr) {
 }
 
 sf::Font* farcical::ui::Scene::GetCachedFont(ResourceID id) const {
@@ -118,4 +55,52 @@ void farcical::ui::Scene::CacheTexture(ResourceID id, sf::Texture* texture) {
 
 void farcical::ui::Scene::CacheTextureProperties(ResourceID id, const TextureProperties& textureProperties) {
     texturePropertiesCache.insert(std::make_pair(id, textureProperties));
+}
+
+void farcical::ui::Scene::ClearFontCache() {
+    fontCache.clear();
+}
+
+void farcical::ui::Scene::ClearFontPropertiesCache() {
+    fontPropertiesCache.clear();
+}
+
+void farcical::ui::Scene::ClearTextureCache() {
+    textureCache.clear();
+}
+
+void farcical::ui::Scene::ClearTexturePropertiesCache() {
+    texturePropertiesCache.clear();
+}
+
+std::expected<farcical::ui::MenuController*, farcical::engine::Error> farcical::ui::Scene::CreateMenuController(
+    Menu* menu, engine::EventSystem& eventSystem) {
+    const auto& createMenuController{
+        menuControllers.insert(std::make_pair(menu->GetID(), std::make_unique<MenuController>(menu, eventSystem)))
+    };
+    if(!createMenuController.second) {
+        const std::string failMsg{"Error: Failed to create MenuController for Menu with id=\"" + menu->GetID() + "\"."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if createMenuController == failure
+    return createMenuController.first->second.get();
+}
+
+std::optional<farcical::engine::Error> farcical::ui::Scene::DestroyMenuController(
+    Menu* menu, engine::EventSystem& eventSystem) {
+    const auto& findMenuController{menuControllers.find(menu->GetID())};
+    if(findMenuController == menuControllers.end()) {
+        const std::string failMsg{"Error: MenuController for Menu with id=\"" + menu->GetID() + "\" not found."};
+        return engine::Error{engine::Error::Signal::ResourceNotFound, failMsg};
+    } // if findMenuController == failure
+    menuControllers.erase(findMenuController);
+    return std::nullopt;
+}
+
+farcical::ui::MenuController* farcical::ui::Scene::GetMenuController(engine::EntityID menuID) {
+    MenuController* controller{nullptr};
+    const auto& findController{menuControllers.find(menuID)};
+    if(findController != menuControllers.end()) {
+        controller = findController->second.get();
+    } // if controller found
+    return controller;
 }

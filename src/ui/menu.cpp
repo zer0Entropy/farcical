@@ -6,133 +6,129 @@
 #include "../../include/color.hpp"
 #include "../../include/ui/button.hpp"
 #include "../../include/ui/text.hpp"
-#include "../../include/engine/render.hpp"
+#include "../../include/engine/system/render.hpp"
 #include "../../include/game/game.hpp"
 
-farcical::ui::MenuItem::MenuItem(
-  engine::EntityID id,
-  engine::Event::Type activationEventType,
-  const std::vector<std::any>& activationEventArgs,
-  Container* parent): Container(id, Type::MenuItem, parent, true),
-                      button{nullptr},
-                      label{nullptr},
-                      activationEventType{activationEventType} {
-  // For some reason, copying the eventArgs vector directly results in an extra layer of indirection :(
-  for(const auto& eventArg: activationEventArgs) {
-    this->activationEventArgs.emplace_back(eventArg);
-  } // for each eventArg
-}
-
-void farcical::ui::MenuItem::AddChild(std::unique_ptr<Widget> child) {
-  const unsigned int childIndex{GetNumChildren()};
-  Container::AddChild(std::move(child));
-  Widget* childPtr = GetChild(childIndex);
-  if(childPtr->GetType() == Type::Button) {
-    button = dynamic_cast<Button*>(childPtr);
-  } // if Button
-  else if(childPtr->GetType() == Type::Text) {
-    label = dynamic_cast<Text*>(childPtr);
-  } // else if Label
-}
-
-farcical::engine::Event::Type farcical::ui::MenuItem::GetActivationEventType() const {
-  return activationEventType;
-}
-
-const std::vector<std::any>& farcical::ui::MenuItem::GetActivationEventArgs() const {
-  return activationEventArgs;
-}
-
-farcical::ui::Button* farcical::ui::MenuItem::GetButton() const {
-  return button;
-}
-
-farcical::ui::Text* farcical::ui::MenuItem::GetLabel() const {
-  return label;
-}
-
-void farcical::ui::MenuItem::DoAction(Action action) {
-  engine::RenderComponent* labelRenderCmp{dynamic_cast<engine::RenderComponent*>(label->GetComponent(engine::Component::Type::Render))};
-  if(action.type == Action::Type::ReceiveFocus) {
-    if(button->GetStatus() == Button::Status::Normal) {
-      button->SetStatus(Button::Status::Highlighted);
-      label->SetOutlineColor(sf::Color::Black);
-      labelRenderCmp->fontProperties.outlineColor = sf::Color::Black;
-    } // if buttonStatus == Normal
-  } // else if action == ReceiveFocus
-  else if(action.type == Action::Type::LoseFocus) {
-    if(button->GetStatus() == Button::Status::Highlighted || button->GetStatus() == Button::Status::Pressed) {
-      button->SetStatus(Button::Status::Normal);
-      const std::string colorName{"darkGray"};
-      const sf::Color color{GetColorByName(colorName)};
-      label->SetOutlineColor(color);
-      labelRenderCmp->fontProperties.outlineColor = color;
-    } // if buttonStatus == Highlighted || buttonStatus == Pressed
-  } // else if action == LoseFocus
-  else if(action.type == Action::Type::SetPressedTrue) {
-    button->SetStatus(Button::Status::Pressed);
-  } // else if action == SetPressedTrue
-  else if(action.type == Action::Type::SetPressedFalse) {
-    button->SetStatus(Button::Status::Normal);
-  } // else if action == SetPressedFalse
-}
-
-
-farcical::ui::Menu::Menu(engine::EntityID id, const MenuLayout& layout, Container* parent):
-  Container(id, Type::Menu,parent, false),
-  layout{layout},
-  buttonTextureNormal{nullptr},
-  buttonTextureHighlighted{nullptr},
-  buttonTexturePressed{nullptr},
-  labelFont{nullptr},
-  titleFont{nullptr},
-  selectedIndex{-1} {
+farcical::ui::Menu::Menu(engine::EntityID id, Menu::Type type, const MenuLayout& layout,
+                         Container* parent) : Container(id, Widget::Type::Menu, parent, false),
+                                              menuType{type},
+                                              layout{layout},
+                                              labelFont{nullptr},
+                                              titleFont{nullptr},
+                                              selectedIndex{-1} {
 }
 
 void farcical::ui::Menu::AddChild(std::unique_ptr<Widget> child) {
   const unsigned int childIndex{GetNumChildren()};
   Container::AddChild(std::move(child));
   Widget* movedChild(GetChild(childIndex));
-  if(movedChild->GetType() == Type::MenuItem) {
-    items.push_back(dynamic_cast<MenuItem*>(movedChild));
+  switch(menuType) {
+    case Type::Button: {
+      if(movedChild->GetType() == Widget::Type::Button) {
+        buttons.push_back(dynamic_cast<Button*>(movedChild));
+      } // if this child is a Button
+    }
+    break;
+    case Type::RadioButton: {
+      if(movedChild->GetType() == Widget::Type::RadioButton) {
+        radioButtons.push_back(dynamic_cast<RadioButton*>(movedChild));
+      } // if this child is a RadioButton
+    }
+    break;
+    case Type::SubMenu: {
+      if(movedChild->GetType() == Widget::Type::Menu) {
+        subMenus.push_back(dynamic_cast<Menu*>(movedChild));
+      } // if this child is a Menu
+    }
+    break;
+    default: break;
   }
 }
 
-const std::vector<farcical::ui::MenuItem*>& farcical::ui::Menu::GetMenuItems() const {
+farcical::ui::Menu::Type farcical::ui::Menu::GetMenuType() const {
+  return menuType;
+}
+
+const std::vector<farcical::ui::Button*>& farcical::ui::Menu::GetButtons() const {
+  return buttons;
+}
+
+const std::vector<farcical::ui::RadioButton*>& farcical::ui::Menu::GetRadioButtons() const {
+  return radioButtons;
+}
+
+const std::vector<farcical::ui::Menu*>& farcical::ui::Menu::GetSubMenus() const {
+  return subMenus;
+}
+
+std::vector<farcical::ui::Menu::Item> farcical::ui::Menu::GetItems() const {
+  std::vector<Item> items;
+  switch(menuType) {
+    case Menu::Type::Button: {
+      for(const auto& button: buttons) {
+        items.emplace_back(button);
+      } // for each Button
+    }
+    break;
+    case Menu::Type::RadioButton: {
+      for(const auto& radioButton: radioButtons) {
+        items.emplace_back(radioButton);
+      } // for each RadioButton
+    }
+    break;
+    case Menu::Type::SubMenu: {
+      for(const auto& subMenu: subMenus) {
+        items.emplace_back(subMenu);
+      } // for each subMenu
+    }
+    break;
+  }
   return items;
 }
 
-int farcical::ui::Menu::GetNumMenuItems() const {
-  return static_cast<int>(items.size());
-}
-
-farcical::ui::MenuItem* farcical::ui::Menu::GetMenuItemByID(engine::EntityID id) const {
-  for(const auto& item: items) {
-    if(item->GetID() == id) {
-      return item;
-    }
+std::optional<farcical::ui::Menu::Item> farcical::ui::Menu::GetItem(int index) const {
+  const auto& items = GetItems();
+  if(index >= 0 && index < items.size()) {
+    return items[index];
   }
-  return nullptr;
+  return std::nullopt;
 }
 
-farcical::ui::MenuItem* farcical::ui::Menu::GetMenuItemByIndex(int index) const {
-  if(items.size() <= index) {
-    return nullptr;
+farcical::ui::Widget* farcical::ui::Menu::GetWidget(int index) const {
+  Widget* widget{nullptr};
+  if(menuType == Menu::Type::Button) {
+    for(int i = 0; i < buttons.size(); ++i) {
+      if(i == index) {
+        widget = buttons[i];
+        break;
+      } // if i == index
+    } // for each Button
+  } // if Button
+  else if(menuType == Menu::Type::RadioButton) {
+    for(int i = 0; i < radioButtons.size(); ++i) {
+      if(i == index) {
+        widget = radioButtons[i];
+        break;
+      } // if i == index
+    } // for each RadioButton
+  } // else if RadioButton
+  else if(menuType == Menu::Type::SubMenu) {
+    for(int i = 0; i < subMenus.size(); ++i) {
+      if(i == index) {
+        widget = subMenus[i];
+        break;
+      }
+    } // for each SubMenu
+  } // else if SubMenu
+  return widget;
+}
+
+std::optional<farcical::ui::Menu::Item> farcical::ui::Menu::GetSelectedItem() const {
+  const auto& items = GetItems();
+  if(selectedIndex >= 0 && selectedIndex < items.size()) {
+    return items[selectedIndex];
   }
-  return items.at(index);
-}
-
-farcical::ui::MenuItem* farcical::ui::Menu::GetMenuItemUnderCursor(sf::Vector2i position) const {
-  for(const auto& item: items) {
-    const Button* button{item->GetButton()};
-    if(position.x >= static_cast<int>(button->GetPosition().x)
-       && position.y >= static_cast<int>(button->GetPosition().y)
-       && position.x < static_cast<int>(button->GetPosition().x) + button->GetSize().x
-       && position.y < static_cast<int>(button->GetPosition().y) + button->GetSize().y) {
-      return item;
-    }
-  } // for each child
-  return nullptr;
+  return std::nullopt;
 }
 
 int farcical::ui::Menu::GetSelectedIndex() const {
@@ -140,31 +136,27 @@ int farcical::ui::Menu::GetSelectedIndex() const {
 }
 
 sf::Texture* farcical::ui::Menu::GetButtonTexture(Button::Status state) const {
-  if(state == Button::Status::Normal) {
-    return buttonTextureNormal;
-  } else if(state == Button::Status::Highlighted) {
-    return buttonTextureHighlighted;
-  } else if(state == Button::Status::Pressed) {
-    return buttonTexturePressed;
+  const auto& findTexture{buttonTextures.find(state)};
+  if(findTexture != buttonTextures.end()) {
+    return findTexture->second;
   }
   return nullptr;
 }
 
-void farcical::ui::Menu::SetButtonTexture(Button::Status state, sf::Texture& texture) {
-  switch(state) {
-    case Button::Status::Normal: {
-      buttonTextureNormal = &texture;
-    }
-    break;
-    case Button::Status::Highlighted: {
-      buttonTextureHighlighted = &texture;
-    }
-    break;
-    case Button::Status::Pressed: {
-      buttonTexturePressed = &texture;
-    }
-    break;
+sf::Texture* farcical::ui::Menu::GetRadioButtonTexture(RadioButton::Status status) const {
+  const auto& findTexture{radioButtonTextures.find(status)};
+  if(findTexture != radioButtonTextures.end()) {
+    return findTexture->second;
   }
+  return nullptr;
+}
+
+void farcical::ui::Menu::AddButtonTexture(Button::Status status, sf::Texture& texture) {
+    buttonTextures.insert(std::make_pair(status, &texture));
+}
+
+void farcical::ui::Menu::AddRadioButtonTexture(RadioButton::Status status, sf::Texture& texture) {
+  radioButtonTextures.insert(std::make_pair(status, &texture));
 }
 
 void farcical::ui::Menu::SetLabelFont(sf::Font& font) {
@@ -177,6 +169,38 @@ void farcical::ui::Menu::SetTitleFont(sf::Font& font) {
 
 void farcical::ui::Menu::SetSelectedIndex(int index) {
   selectedIndex = index;
+}
+
+void farcical::ui::Menu::SetSelectedItem(const Item& item) {
+  switch(menuType) {
+    case Type::Button: {
+      const auto& selectButton{std::get_if<Button*>(&item)};
+      if(selectButton) {
+        for(int index = 0; index < buttons.size(); ++index) {
+          const Button* button{buttons[index]};
+          if(button == *selectButton) {
+            selectedIndex = index;
+            break;
+          } // if this Button == selectButton
+        } // for each Button
+      } // if selectButton
+    }
+    break;
+    case Type::RadioButton: {
+      const auto& selectRadioButton{std::get_if<RadioButton*>(&item)};
+      if(selectRadioButton) {
+        for(int index = 0; index < radioButtons.size(); ++index) {
+          const RadioButton* radioButton{radioButtons[index]};
+          if(radioButton == *selectRadioButton) {
+            selectedIndex = index;
+            break;
+          }
+        } // for each RadioButton
+      } // if selectRadioButton
+    } break;
+    case Type::SubMenu: {
+    } break;
+  }
 }
 
 void farcical::ui::Menu::DoAction(Action action) {
@@ -193,102 +217,156 @@ void farcical::ui::Menu::DoAction(Action action) {
   }
 }
 
-farcical::ui::MenuController::MenuController(Menu* menu, engine::EventSystem& eventSystem): MouseInterface(),
+farcical::ui::MenuController::MenuController(Menu* menu, engine::EventSystem& eventSystem) : Entity(engine::EntityID{
+    menu->GetID() + std::string{MenuControllerName}
+  }),
+  MouseInterface(),
   KeyboardInterface(),
   menu{menu}, eventSystem{eventSystem} {
 }
 
 void farcical::ui::MenuController::ReceiveMouseMovement(sf::Vector2i position) {
-  MenuItem* menuItemUnderCursor{menu->GetMenuItemUnderCursor(position)};
-  int selectedIndex{menu->GetSelectedIndex()};
-
-  for(int index = 0; index < menu->GetNumMenuItems(); ++index) {
-    MenuItem* menuItem{menu->GetMenuItemByIndex(index)};
-    if(menuItem == menuItemUnderCursor) {
-      if(selectedIndex != index) {
-        menu->SetSelectedIndex(index);
-        menuItem->DoAction(Action{Action::Type::ReceiveFocus});
-      } // if not currently focused
-    } // if this item is under the cursor
+  const auto& itemList{menu->GetItems()};
+  for(const auto& item: itemList) {
+    const auto& button{std::get_if<Button*>(&item)};
+    const auto& radioButton{std::get_if<RadioButton*>(&item)};
+    const auto& subMenu{std::get_if<Menu*>(&item)};
+    Widget* widget{nullptr};
+    if(button) {
+      widget = *button;
+    } // if Button
+    else if(radioButton) {
+      widget = *radioButton;
+    } // if radioButton
+    else if(subMenu) {
+      widget = *subMenu;
+    } // if subMenu
     else {
-      menuItem->DoAction(Action{Action::Type::LoseFocus});
-    } // else if this item is not under the cursor
-  } // for each MenuItem in Menu
-
-  if(menuItemUnderCursor == nullptr) {
-    menu->SetSelectedIndex(-1);
-  } // if no MenuItem is under the cursor
-}
-
-void farcical::ui::MenuController::ReceiveMouseButtonPress(sf::Mouse::Button button, sf::Vector2i position) {
-  MenuItem* menuItemUnderCursor{menu->GetMenuItemUnderCursor(position)};
-  int selectedIndex{menu->GetSelectedIndex()};
-
-  for(int index = 0; index < menu->GetNumMenuItems(); ++index) {
-    MenuItem* menuItem{menu->GetMenuItemByIndex(index)};
-    if(menuItem == menuItemUnderCursor) {
-      menu->SetSelectedIndex(index);
-      menuItem->DoAction(Action{Action::Type::SetPressedTrue});
-    } // if this item is under the cursor
-    else {
-      menuItem->DoAction(Action{Action::Type::LoseFocus});
+      return;
     }
-  } // for each MenuItem in Menu
+
+    if(IsPointWithinRect(position, widget->GetBounds())) {
+      widget->DoAction(Action{Action::Type::ReceiveFocus});
+    } // if this Item is under the cursor
+    else {
+      // if(menu->GetSelectedItem() == item) {
+      widget->DoAction(Action{Action::Type::LoseFocus});
+    } // else if selectedItem == item
+  } // for each Item in Menu
 }
 
-void farcical::ui::MenuController::ReceiveMouseButtonRelease(sf::Mouse::Button button, sf::Vector2i position) {
-  MenuItem* menuItemUnderCursor{menu->GetMenuItemUnderCursor(position)};
+void farcical::ui::MenuController::ReceiveMouseButtonPress(sf::Mouse::Button buttonPressed, sf::Vector2i position) {
+  const auto& itemList{menu->GetItems()};
+  for(const auto& item: itemList) {
+    const auto& button{std::get_if<Button*>(&item)};
+    const auto& radioButton{std::get_if<RadioButton*>(&item)};
+    const auto& subMenu{std::get_if<Menu*>(&item)};
+    Widget* widget{nullptr};
+    if(button) {
+      widget = *button;
+    } // if Button
+    else if(radioButton) {
+      widget = *radioButton;
+    } // if radioButton
+    else if(subMenu) {
+      widget = *subMenu;
+    } // if subMenu
+    else {
+      return;
+    }
 
-  for(int index = 0; index < menu->GetNumMenuItems(); ++index) {
-    MenuItem* menuItem{menu->GetMenuItemByIndex(index)};
-    if(menuItem->GetButton()->GetStatus() == Button::Status::Pressed) {
-      menuItem->DoAction(Action{Action::Type::SetPressedFalse});
-      if(menuItem == menuItemUnderCursor) {
-        engine::Event event{
-          menuItem->GetActivationEventType(),
-          menuItem->GetActivationEventArgs()
-        };
-        eventSystem.Enqueue(event);
-      } // if this MenuItem is under the cursor, enqueue its OnSelection event
-    } // if Button == Pressed
-  } // for each MenuItem in Menu
+    if(IsPointWithinRect(position, widget->GetBounds())) {
+      menu->SetSelectedItem(item);
+      widget->DoAction(Action{Action::Type::SetPressedTrue});
+    } // if this Item is under the cursor
+    else if(menu->GetSelectedItem() == item) {
+      widget->DoAction(Action{Action::Type::LoseFocus});
+    } // else if selectedItem == item
+  } // for each Item in Menu
+}
 
+void farcical::ui::MenuController::ReceiveMouseButtonRelease(sf::Mouse::Button buttonReleased, sf::Vector2i position) {
+  const auto& itemList{menu->GetItems()};
+  for(const auto& item: itemList) {
+    const auto& button{std::get_if<Button*>(&item)};
+    const auto& radioButton{std::get_if<RadioButton*>(&item)};
+    const auto& subMenu{std::get_if<Menu*>(&item)};
+    if(button) {
+      if((*button)->GetStatus() == Button::Status::Pressed) {
+        (*button)->DoAction(Action{Action::Type::SetPressedFalse});
+        if(IsPointWithinRect(position, (*button)->GetBounds())) {
+          const engine::Event::Parameters& eventParams{(*button)->GetOnPressEvent()};
+          eventSystem.Enqueue(engine::Event{eventParams.type, eventParams.args});
+        } // if cursor is within Button's bounds
+      } // if Button status == Pressed
+    } // if Button
+    else if(radioButton) {
+    } // if radioButton
+    else if(subMenu) {
+    } // if subMenu
+    else {
+      return;
+    }
+  } // for each Item in Menu
   menu->SetSelectedIndex(-1);
 }
 
 void farcical::ui::MenuController::ReceiveKeyboardInput(sf::Keyboard::Key input) {
-  int selectedIndex{menu->GetSelectedIndex()};
-  MenuItem* previouslySelectedItem{nullptr};
-  if(selectedIndex >= 0) {
-    previouslySelectedItem = menu->GetMenuItemByIndex(selectedIndex);
+  const auto& getSelected{menu->GetSelectedItem()};
+  const Menu::Item* selectedItem{nullptr};
+  if(getSelected.has_value()) {
+    selectedItem = &getSelected.value();
   }
+  const auto& itemList{menu->GetItems()};
+  for(const auto& item: itemList) {
+    const auto& button{std::get_if<Button*>(&item)};
+    const auto& radioButton{std::get_if<RadioButton*>(&item)};
+    const auto& subMenu{std::get_if<Menu*>(&item)};
+    Widget* widget{nullptr};
+    bool isSelected{false};
+    if(button) {
+      widget = *button;
+      if(auto selectedButton = std::get_if<Button*>(selectedItem)) {
+        isSelected = true;
+      } // if this Button is selected
+    } // if Button
+    else if(radioButton) {
+      widget = *radioButton;
+      if(auto selectedRadio = std::get_if<RadioButton*>(selectedItem)) {
+        isSelected = true;
+      } // if this RadioButton is selected
+    } // if radioButton
+    else if(subMenu) {
+      widget = *subMenu;
+      if(auto selectedMenu = std::get_if<Menu*>(selectedItem)) {
+        isSelected = true;
+      } // if this Menu is selected
+    } // if subMenu
+    else {
+      return;
+    } // else widgetType is invalid
 
-  if(input == sf::Keyboard::Key::Up) {
-    if(previouslySelectedItem) {
-      previouslySelectedItem->DoAction(Action{Action::Type::LoseFocus});
-    } // if a MenuItem had focus prior to this input, make it lose focus
-    menu->DoAction(Action{Action::Type::MoveSelectionUp});
-    selectedIndex = menu->GetSelectedIndex();
-    MenuItem* selectedItem{menu->GetMenuItemByIndex(selectedIndex)};
-    selectedItem->DoAction(Action{Action::Type::ReceiveFocus});
-  } // if input == Up
+    if(selectedItem && isSelected) {
+      widget->DoAction(Action{Action::Type::LoseFocus});
+    } // if selectedItem
 
-  else if(input == sf::Keyboard::Key::Down) {
-    if(previouslySelectedItem) {
-      previouslySelectedItem->DoAction(Action{Action::Type::LoseFocus});
-    } // if a MenuItem had focus prior to this input, make it lose focus
-    menu->DoAction(Action{Action::Type::MoveSelectionDown});
-    selectedIndex = menu->GetSelectedIndex();
-    MenuItem* selectedItem{menu->GetMenuItemByIndex(selectedIndex)};
-    selectedItem->DoAction(Action{Action::Type::ReceiveFocus});
-  } // else if input == Down
+    if(input == sf::Keyboard::Key::Up || input == sf::Keyboard::Key::Left) {
+      menu->DoAction(Action{Action::Type::MoveSelectionUp});
+    } // if input == Up || Left
+    else if(input == sf::Keyboard::Key::Down || input == sf::Keyboard::Key::Right) {
+      menu->DoAction(Action{Action::Type::MoveSelectionDown});
+    } // else if input == Down || Right
+    else if(input == sf::Keyboard::Key::Enter) {
+      if(button) {
+        const engine::Event::Parameters& onPressEvent{(*button)->GetOnPressEvent()};
+        eventSystem.Enqueue(engine::Event{onPressEvent.type, onPressEvent.args});
+      } // if Button
+      return;
+    } // else if input == Enter
 
-  else if(input == sf::Keyboard::Key::Enter) {
-    if(previouslySelectedItem) {
-      eventSystem.Enqueue(engine::Event{
-        previouslySelectedItem->GetActivationEventType(),
-        previouslySelectedItem->GetActivationEventArgs()
-      });
-    } // if previouslySelectedItem
-  } // else if input == Enter
+    Widget* selectedWidget{menu->GetWidget(menu->GetSelectedIndex())};
+    if(selectedWidget) {
+      selectedWidget->DoAction(Action{Action::Type::ReceiveFocus});
+    } // if selectedWidget
+  } // for each Item
 }

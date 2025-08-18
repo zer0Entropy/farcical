@@ -13,10 +13,9 @@
 #include "resource.hpp"
 #include "../engine/error.hpp"
 #include "config.hpp"
-#include "../engine/log.hpp"
+#include "../engine/system/log.hpp"
 
 namespace farcical {
-
     class ResourceManager final {
     public:
         ResourceManager();
@@ -85,7 +84,6 @@ namespace farcical {
 
         engine::LogSystem* logSystem;
     };
-
 }
 
 #endif //RESOURCE_MANAGER_HPP

@@ -33,32 +33,39 @@ namespace farcical::ui {
 
         void DoAction(Action action) override;
 
+        static constexpr std::string_view GetStatusName(Status status) {
+            std::string_view name{"?"};
+            switch(status) {
+                case Status::Unselected: {
+                    name = "unselected";
+                }
+                break;
+                case Status::Selected: {
+                    name = "selected";
+                }
+                break;
+                case Status::NumStates: {
+                    name = "?";
+                }
+                break;
+            }
+            return name;
+        }
+
+        static constexpr Status GetStatusByName(std::string_view name) {
+            Status status{Status::NumStates};
+            if(name == "unselected") {
+                status = Status::Unselected;
+            } // unselected
+            else if(name == "selected") {
+                status = Status::Selected;
+            } // selected
+            return status;
+        }
+
     private:
         sf::Texture* textures[static_cast<int>(Status::NumStates)];
         Status status;
-    };
-
-    class RadioButtonGroup final : public Container {
-    public:
-        explicit RadioButtonGroup(engine::EntityID id, Container* parent);
-
-        ~RadioButtonGroup() override = default;
-
-        void AddChild(std::unique_ptr<Widget> child) override;
-
-        RadioButton* GetSelectedButton() const;
-
-        RadioButton* GetButtonByID(engine::EntityID id) const;
-
-        RadioButton* GetButtonByIndex(int index) const;
-
-        void SetSelectedButton(RadioButton* button);
-
-        void DoAction(Action action) override;
-
-    private:
-        std::vector<RadioButton*> radioButtons;
-        RadioButton* selectedButton;
     };
 }
 

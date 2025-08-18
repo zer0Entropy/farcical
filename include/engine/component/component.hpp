@@ -5,7 +5,7 @@
 #ifndef COMPONENT_HPP
 #define COMPONENT_HPP
 
-#include "id.hpp"
+#include "../id.hpp"
 
 namespace farcical::engine {
     struct Component {
@@ -21,7 +21,7 @@ namespace farcical::engine {
 
         Component() = delete;
 
-        explicit Component(Type type, EntityID parentID): type{type}, parentID{parentID} {
+        explicit Component(Type type, EntityID parentID) : type{type}, parentID{parentID} {
         }
 
         virtual ~Component() = default;

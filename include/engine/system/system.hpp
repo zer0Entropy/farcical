@@ -5,7 +5,7 @@
 #ifndef SYSTEM_HPP
 #define SYSTEM_HPP
 
-#include "logInterface.hpp"
+#include "../logInterface.hpp"
 
 namespace farcical::engine {
     class System : public LogInterface {

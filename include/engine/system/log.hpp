@@ -2,12 +2,12 @@
 // Created by dgmuller on 7/21/25.
 //
 
-#ifndef LOG_HPP
-#define LOG_HPP
+#ifndef LOG_SYSTEM_HPP
+#define LOG_SYSTEM_HPP
 
 #include <vector>
 #include "system.hpp"
-#include "../resource/resource.hpp"
+#include "../../resource/resource.hpp"
 
 namespace farcical {
     class ResourceManager;
@@ -45,4 +45,4 @@ namespace farcical::engine {
     };
 }
 
-#endif //LOG_HPP
+#endif //LOG_SYSTEM_HPP

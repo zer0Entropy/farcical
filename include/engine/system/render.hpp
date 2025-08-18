@@ -2,40 +2,19 @@
 // Created by dgmuller on 5/24/25.
 //
 
-#ifndef RENDER_HPP
-#define RENDER_HPP
+#ifndef RENDER_SYSTEM_HPP
+#define RENDER_SYSTEM_HPP
 
 #include <vector>
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
-#include "component.hpp"
+#include "../component/render.hpp"
 #include "log.hpp"
 #include "system.hpp"
-#include "../ui/layout.hpp"
-#include "../resource/config.hpp"
+#include "../../ui/layout.hpp"
+#include "../../resource/config.hpp"
 
 namespace farcical::engine {
-    struct RenderComponent final : public Component {
-        sf::Texture* texture;
-        sf::Font* font;
-        FontProperties fontProperties;
-        std::string contents;
-        sf::Vector2f position;
-        sf::Vector2f scale;
-
-        RenderComponent() = delete;
-
-        explicit RenderComponent(EntityID parentID): Component(Type::Render, parentID),
-                                                     texture{nullptr},
-                                                     font{nullptr},
-                                                     contents{""},
-                                                     position{0.0f, 0.0f},
-                                                     scale{1.0f, 1.0f} {
-        }
-
-        ~RenderComponent() override = default;
-    };
-
     struct RenderLayer {
         ui::Layout::Layer::ID id;
         std::vector<RenderComponent*> componentList;
@@ -82,6 +61,8 @@ namespace farcical::engine {
 
         void Stop() override;
 
+        sf::RenderWindow& GetWindow() const;
+
         // Create RenderContext to encapsulate RenderLayers
         std::expected<RenderContext*, Error> CreateRenderContext(engine::EntityID sceneID);
 
@@ -115,4 +96,4 @@ namespace farcical::engine {
     };
 };
 
-#endif //RENDER_HPP
+#endif //RENDER_SYSTEM_HPP

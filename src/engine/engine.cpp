@@ -6,15 +6,16 @@
 #include "../../include/game/game.hpp"
 #include <cassert>
 
-farcical::engine::Engine::Engine(std::string_view configPath): status{Status::Uninitialized},
-                                                               config{},
-                                                               configPath{configPath},
-                                                               window{nullptr},
-                                                               logSystem{nullptr},
-                                                               renderSystem{nullptr},
-                                                               inputSystem{nullptr},
-                                                               eventSystem{nullptr},
-                                                               game{nullptr} {
+farcical::engine::Engine::Engine(std::string_view configPath) : status{Status::Uninitialized},
+                                                                config{},
+                                                                configPath{configPath},
+                                                                window{nullptr},
+                                                                sceneManager{nullptr},
+                                                                logSystem{nullptr},
+                                                                renderSystem{nullptr},
+                                                                inputSystem{nullptr},
+                                                                eventSystem{nullptr},
+                                                                game{nullptr} {
 }
 
 farcical::engine::Engine::Status farcical::engine::Engine::GetStatus() const {
@@ -97,62 +98,30 @@ std::optional<farcical::engine::Error> farcical::engine::Engine::ApplyConfig(con
 std::optional<farcical::engine::Error> farcical::engine::Engine::Init(game::Game* game) {
   if(status == Status::Uninitialized) {
     this->game = game;
-    // Create Engine config
+
     const auto& createConfigResult{CreateConfig()};
     if(!createConfigResult.has_value()) {
       return createConfigResult.error();
     } // if createConfigResult == Error
 
-    // Apply Engine config
     const Config engineConfig{createConfigResult.value()};
     const auto& applyConfigResult{ApplyConfig(engineConfig)};
     if(applyConfigResult.has_value()) {
       return applyConfigResult.value();
     } // if applyConfigResult == Error
 
-    // Compile a ResourceList for Game
+    sceneManager = std::make_unique<ui::SceneManager>(*this);
     const std::string indexPath{config.scenePath + "/index.json"};
-    logSystem->AddMessage("Loading ResourceList from " + indexPath + "...");
-    ResourceID sceneIndexID{static_cast<ResourceID>(sceneIndexDocumentID)};
-    const auto& createSceneIndexHandle{
-      resourceManager.CreateResourceHandle(sceneIndexID, ResourceHandle::Type::JSONDocument, indexPath)
-    };
-    if(createSceneIndexHandle.has_value()) {
-      const auto& loadSceneIndex{
-        resourceManager.GetJSONDoc(sceneIndexID)
-      };
-      if(loadSceneIndex.has_value()) {
-        const auto& indexJSON{*loadSceneIndex.value()};
-        ResourceList sceneResourceList;
-        for(const auto& sceneResourceJSON: indexJSON) {
-          const auto& findID{sceneResourceJSON.find("id")};
-          const auto& findResource{sceneResourceJSON.find("resource")};
-          engine::EntityID sceneID{""};
-          ResourceParameters resourceParameters;
-          if(findID != sceneResourceJSON.end()) {
-            sceneID = findID.value().get<std::string>();
-            logSystem->AddMessage("Found Scene: " + sceneID);
-          } // if id found
-          if(findResource != sceneResourceJSON.end()) {
-            const auto& resourceJSON{findResource.value()};
-            const auto& findResourceID{resourceJSON.find("id")};
-            const auto& findResourcePath{resourceJSON.find("path")};
-            if(findResourceID != resourceJSON.end()) {
-              resourceParameters.first = findResourceID.value().get<std::string>();
-            } // if resourceID found
-            if(findResourcePath != resourceJSON.end()) {
-              resourceParameters.second = config.scenePath + "/" + findResourcePath.value().get<std::string>();
-            } // if resourcePath found
-          } // if resource found
-          sceneResourceList.push_back(std::make_pair(sceneID, resourceParameters));
-          logSystem->AddMessage("Resources for " + sceneID + " added successfully.");
-        } // for each sceneResource in indexJSON
+    sceneManager->LoadResourceIndex(indexPath);
 
-        // Initialize Game
-        logSystem->AddMessage("");
-        game->Init(sceneResourceList);
-      } // if loadSceneIndex == success
-    } // if createHandle == success
+    game->Init();
+
+    const auto& initFirstScene{
+      sceneManager->SetCurrentScene(EntityID{ui::SceneManager::MainMenuSceneID})
+    };
+    if(!initFirstScene.has_value()) {
+      return initFirstScene.error();
+    } // if initFirstScene == failure
 
     status = Status::IsRunning;
     logSystem->AddMessage("Engine initialization completed successfully.");
@@ -177,6 +146,7 @@ void farcical::engine::Engine::Update() {
     if(event->is<sf::Event::Closed>()) {
       window->close();
       status = Status::StoppedSuccessfully;
+      return;
     }
   }
   if(status == Status::IsRunning) {
@@ -189,8 +159,11 @@ void farcical::engine::Engine::Update() {
       status = Status::Error;
       Stop();
     }
+    if(!window->isOpen()) {
+      status = Status::StoppedSuccessfully;
+      return;
+    }
   }
-  return;
 }
 
 void farcical::engine::Engine::Stop() {
@@ -211,6 +184,11 @@ sf::RenderWindow& farcical::engine::Engine::GetWindow() const {
 
 farcical::ResourceManager& farcical::engine::Engine::GetResourceManager() const {
   return const_cast<ResourceManager&>(resourceManager);
+}
+
+farcical::ui::SceneManager& farcical::engine::Engine::GetSceneManager() const {
+  assert(sceneManager != nullptr && "Unexpected nullptr: sceneManager");
+  return *sceneManager;
 }
 
 farcical::engine::LogSystem& farcical::engine::Engine::GetLogSystem() const {
@@ -251,7 +229,7 @@ std::optional<farcical::engine::Error> farcical::engine::Engine::CreateWindow() 
   window = std::make_unique<sf::RenderWindow>();
   auto& windowProperties{config.windowProperties};
   if(windowProperties.fullscreen) {
-    window->create(sf::VideoMode{windowProperties.displayMode}, windowProperties.title, sf::Style::None);
+    window->create(sf::VideoMode{windowProperties.displayMode}, windowProperties.title, sf::State::Fullscreen);
   } else {
     window->create(sf::VideoMode{windowProperties.displayMode}, windowProperties.title);
   }

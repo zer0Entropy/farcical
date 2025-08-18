@@ -16,14 +16,15 @@ FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download
 FetchContent_MakeAvailable(SFML json)
 
 add_executable( main
-        src/color.cpp
         src/engine/config.cpp
         src/engine/engine.cpp
-        src/engine/event.cpp
-        src/engine/input.cpp
-        src/engine/log.cpp
         src/engine/logInterface.cpp
-        src/engine/render.cpp
+        src/engine/system/event.cpp
+        src/engine/system/input.cpp
+        src/engine/system/log.cpp
+        src/engine/system/render.cpp
+        src/game/game.cpp
+        src/game/map.cpp
         src/resource/config.cpp
         src/resource/parser.cpp
         src/resource/manager.cpp
@@ -33,11 +34,11 @@ add_executable( main
         src/ui/factory.cpp
         src/ui/menu.cpp
         src/ui/radio.cpp
-        src/ui/root.cpp
         src/ui/scene.cpp
+        src/ui/sceneManager.cpp
         src/ui/text.cpp
-        src/game/game.cpp
-        src/game/map.cpp
+        src/color.cpp
+        src/geometry.cpp
         src/main.cpp
 )
 target_compile_features(main PRIVATE cxx_std_23)

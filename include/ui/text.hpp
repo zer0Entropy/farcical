@@ -15,7 +15,6 @@
 #include "../engine/error.hpp"
 
 namespace farcical::ui {
-
   class Text final : public Widget {
   public:
     explicit Text(engine::EntityID id, Container* parent = nullptr);

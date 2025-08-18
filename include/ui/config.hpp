@@ -8,122 +8,69 @@
 #include <vector>
 #include "../engine/error.hpp"
 #include "../resource/config.hpp"
-#include "../engine/event.hpp"
+#include "../engine/system/event.hpp"
 #include "layout.hpp"
 #include "menu.hpp"
+#include "radio.hpp"
 
 namespace farcical::ui {
-    struct DecorationConfig {
+    using TextProperties = std::pair<std::string, FontProperties>;
+
+    struct WidgetProperties {
         engine::EntityID id;
+        Widget::Type type;
         engine::EntityID parentID;
-        sf::Vector2u relativePosition;
+        Layout::Layer::ID layerID;
+        sf::Vector2i relativePosition;
+        TextProperties labelProperties;
+    };
+
+    struct DecorationProperties : public WidgetProperties {
         TextureProperties textureProperties;
-
-        DecorationConfig(): id{""},
-                            parentID{""},
-                            relativePosition{sf::Vector2u{0, 0}} {
-        }
-
-        ~DecorationConfig() = default;
     };
 
-    struct ButtonConfig {
-        engine::EntityID id;
-        std::vector<std::pair<Button::Status, TextureProperties> > textureProperties;
-
-        ButtonConfig(): id{""} {
-        }
-
-        ~ButtonConfig() = default;
+    struct ButtonProperties : public WidgetProperties {
+        engine::Event::Parameters onPressEvent;
     };
 
-    struct TextConfig {
-        engine::EntityID id;
-        engine::EntityID parentID;
-        sf::Vector2u relativePosition;
-        std::string contents;
-        FontProperties fontProperties;
-
-        TextConfig():
-            id{""},
-            parentID{""},
-            relativePosition{sf::Vector2u{0, 0}},
-            contents{""} {
-        }
-
-        ~TextConfig() = default;
-    };
-
-    struct MenuItemConfig {
-        engine::EntityID id;
-        ButtonConfig buttonConfig;
-        TextConfig labelConfig;
-        engine::Event::Type activationEventType;
-        std::vector<std::any> activationEventArgs;
-
-        MenuItemConfig():
-            id{""},
-            activationEventType{engine::Event::Type::QuitGame} {
-        }
-
-        ~MenuItemConfig() = default;
-    };
-
-    struct MenuConfig {
-        engine::EntityID id;
-        engine::EntityID parentID;
+    struct MenuProperties : public WidgetProperties {
+        Menu::Type menuType;
         MenuLayout layout;
-        sf::Vector2u relativePosition;
-        std::vector<MenuItemConfig> menuItemConfigs;
-        ButtonConfig buttonConfig;
-        FontProperties fontProperties;
-
-        explicit MenuConfig():
-            id{""},
-            parentID{""},
-            relativePosition{sf::Vector2u{0, 0}} {
-        }
-        ~MenuConfig() = default;
+        std::vector<std::pair<Button::Status, TextureProperties> > buttonTextures;
+        std::vector<std::pair<RadioButton::Status, TextureProperties> > radioButtonTextures;
+        std::vector<ButtonProperties> buttonProperties;
+        std::vector<WidgetProperties> radioButtonProperties;
+        std::vector<MenuProperties> menuProperties;
     };
 
-    struct LayoutLayerConfig {
+    struct LayoutLayerProperties {
         Layout::Layer::ID id;
-        std::vector<DecorationConfig> decorations;
-        TextConfig title;
-        std::vector<TextConfig> headings;
-        MenuConfig menu;
-
-        LayoutLayerConfig(): id{Layout::Layer::ID::NumLayers} {
-        }
-
-        ~LayoutLayerConfig() = default;
+        std::vector<DecorationProperties> decorationProperties;
+        WidgetProperties titleProperties;
+        std::vector<WidgetProperties> headingProperties;
+        MenuProperties menuProperties;
     };
 
-    struct LayoutConfig {
-        std::array<LayoutLayerConfig, static_cast<int>(Layout::Layer::ID::NumLayers)> layers;
+    struct LayoutProperties {
+        std::array<LayoutLayerProperties, static_cast<int>(Layout::Layer::ID::NumLayers)> layers;
 
-        LayoutConfig() {
+        LayoutProperties() {
             for(int index = 0; index < static_cast<int>(Layout::Layer::ID::NumLayers); ++index) {
                 layers[index].id = static_cast<Layout::Layer::ID>(index);
             } // for each layer
         }
 
-        ~LayoutConfig() = default;
+        ~LayoutProperties() = default;
     };
 
-    struct SceneConfig {
+    struct SceneProperties {
         engine::EntityID id;
         std::vector<FontProperties> fonts;
         std::vector<TextureProperties> textures;
         std::vector<RepeatingTextureProperties> repeatingTextures;
         std::vector<SegmentedTextureProperties> segmentedTextures;
         BorderTextureProperties borderTexture;
-        LayoutConfig layout;
-
-        SceneConfig(): id{""} {
-        }
-
-        ~SceneConfig() = default;
+        LayoutProperties layout;
 
         std::optional<FontProperties> FindFontProperties(ResourceID id) const {
             for(const auto& fontProperties: fonts) {
@@ -162,21 +109,60 @@ namespace farcical::ui {
         }
     };
 
-    std::expected<DecorationConfig, engine::Error> LoadDecorationConfig(const nlohmann::json& json);
+    std::expected<WidgetProperties, engine::Error> LoadTextProperties(const nlohmann::json& json,
+                                                                      engine::EntityID parentID);
 
-    std::expected<ButtonConfig, engine::Error> LoadButtonConfig(const nlohmann::json& json);
+    std::expected<DecorationProperties, engine::Error> LoadDecoration(const nlohmann::json& json,
+                                                                      engine::EntityID parentID);
 
-    std::expected<TextConfig, engine::Error> LoadTextConfig(const nlohmann::json& json);
+    std::expected<ButtonProperties, engine::Error> LoadButton(const nlohmann::json& json, engine::EntityID parentID);
 
-    std::expected<MenuItemConfig, engine::Error> LoadMenuItemConfig(const nlohmann::json& json);
+    std::expected<WidgetProperties, engine::Error> LoadRadioButton(const nlohmann::json& json,
+                                                                   engine::EntityID parentID);
 
-    std::expected<MenuConfig, engine::Error> LoadMenuConfig(const nlohmann::json& json);
+    std::expected<MenuProperties, engine::Error> LoadMenu(const nlohmann::json& json, engine::EntityID parentID);
 
-    std::expected<LayoutLayerConfig, engine::Error> LoadLayoutLayerConfig(const nlohmann::json& json);
+    std::expected<LayoutLayerProperties, engine::Error> LoadLayoutLayer(const nlohmann::json& json,
+                                                                        engine::EntityID parentID);
 
-    std::expected<LayoutConfig, engine::Error> LoadLayoutConfig(const nlohmann::json& json);
+    std::expected<LayoutProperties, engine::Error> LoadLayout(const nlohmann::json& json, engine::EntityID parentID);
 
-    std::expected<SceneConfig, engine::Error> LoadSceneConfig(const nlohmann::json& json);
+    std::expected<SceneProperties, engine::Error> LoadScene(const nlohmann::json& json);
+
+    std::expected<engine::EntityID, engine::Error> ExtractWidgetID(const nlohmann::json& json,
+                                                                   std::string_view typeName);
+
+    std::expected<Widget::Type, engine::Error> ExtractWidgetType(const nlohmann::json& json, engine::EntityID id);
+
+    std::expected<Menu::Type, engine::Error> ExtractMenuType(const nlohmann::json& json, engine::EntityID id);
+
+    std::expected<sf::Vector2i, engine::Error> ExtractRelativePosition(const nlohmann::json& json, engine::EntityID id);
+
+    std::expected<Orientation, engine::Error> ExtractOrientation(const nlohmann::json& json, engine::EntityID id);
+
+    std::expected<int, engine::Error> ExtractRelativeSpacing(const nlohmann::json& json, engine::EntityID id);
+
+    std::expected<ResourceID, engine::Error> ExtractFontID(const nlohmann::json& json, engine::EntityID id);
+
+    std::expected<ResourceID, engine::Error> ExtractTextureID(const nlohmann::json& json, engine::EntityID id);
+
+    std::expected<std::string, engine::Error> ExtractTextContents(const nlohmann::json& json, engine::EntityID id);
+
+    std::expected<engine::Event::Parameters, engine::Error> ExtractButtonEvent(
+        const nlohmann::json& json, engine::EntityID id);
+
+    std::expected<std::vector<ButtonProperties>, engine::Error> ExtractButtonProperties(
+        const nlohmann::json& json, const MenuProperties& menuProperties);
+
+    std::expected<std::vector<WidgetProperties>, engine::Error> ExtractRadioButtonProperties(
+        const nlohmann::json& json, engine::EntityID id);
+
+    std::expected<std::vector<std::pair<Button::Status, TextureProperties> >, engine::Error> ExtractButtonTextures(
+        const nlohmann::json& json, engine::EntityID id);
+
+    std::expected<std::vector<std::pair<RadioButton::Status, TextureProperties> >, engine::Error> ExtractRadioButtonTextures(
+        const nlohmann::json& json, engine::EntityID id);
+    std::expected<Layout::Layer::ID, engine::Error> ExtractLayerID(const nlohmann::json& json, engine::EntityID id);
 }
 
 #endif //UI_CONFIG_HPP

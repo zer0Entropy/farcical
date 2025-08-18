@@ -5,66 +5,31 @@
 #ifndef MENU_HPP
 #define MENU_HPP
 
+#include <variant>
 #include "text.hpp"
 #include "button.hpp"
 #include "container.hpp"
-#include "../engine/event.hpp"
-#include "../keyboard.hpp"
-#include "../mouse.hpp"
+#include "radio.hpp"
+#include "../engine/system/event.hpp"
+#include "../engine/keyboard.hpp"
+#include "../engine/mouse.hpp"
 
 namespace farcical::ui {
     class Button;
     class Text;
 
-    class MenuItem final : public Container {
-    public:
-        class Menu;
-
-        explicit MenuItem(engine::EntityID id,
-                          engine::Event::Type activationEventType,
-                          const std::vector<std::any>& activationEventArgs,
-                          Container* parent = nullptr);
-
-        ~MenuItem() override = default;
-
-        void AddChild(std::unique_ptr<Widget> child) override;
-
-        [[nodiscard]] engine::Event::Type GetActivationEventType() const;
-
-        [[nodiscard]] const std::vector<std::any>& GetActivationEventArgs() const;
-
-        [[nodiscard]] Button* GetButton() const;
-
-        [[nodiscard]] Text* GetLabel() const;
-
-        void DoAction(Action action) override;
-
-    private:
-        Button* button;
-        Text* label;
-        engine::Event::Type activationEventType;
-        std::vector<std::any> activationEventArgs;
-    };
-
     struct MenuLayout {
-        enum class Orientation {
-            Horizontal,
-            Vertical
-        };
 
         Orientation orientation;
         int relativeSpacing;
-        float actualSpacing;
         std::unordered_map<engine::EntityID, sf::Vector2f> positions;
 
         MenuLayout(): orientation{Orientation::Vertical},
-                      relativeSpacing{0},
-                      actualSpacing{0.0f} {
+                      relativeSpacing{0} {
         }
 
         explicit MenuLayout(Orientation orientation, int relativeSpacing): orientation{orientation},
-                                                                           relativeSpacing{relativeSpacing},
-                                                                           actualSpacing{0.0f} {
+                                                                           relativeSpacing{relativeSpacing} {
         }
 
         ~MenuLayout() = default;
@@ -96,36 +61,47 @@ namespace farcical::ui {
         }
     };
 
-    struct MenuItemCollection {
-        std::vector<engine::EntityID> ids;
-        std::vector<std::string> contents;
-        std::vector<engine::Event::Type> eventTypes;
-        std::vector<std::vector<std::any> > eventArgs;
-    };
-
     class Menu final : public Container {
     public:
-        explicit Menu(engine::EntityID id, const MenuLayout& layout, Container* parent = nullptr);
+        using Item = std::variant<Button*, RadioButton*, Menu*>;
+
+        enum class Type {
+            Button,
+            RadioButton,
+            SubMenu
+        };
+
+        explicit Menu(engine::EntityID id, Menu::Type type, const MenuLayout& layout, Container* parent = nullptr);
 
         ~Menu() override = default;
 
         void AddChild(std::unique_ptr<Widget> child) override;
 
-        [[nodiscard]] const std::vector<MenuItem*>& GetMenuItems() const;
+        [[nodiscard]] Menu::Type GetMenuType() const;
 
-        [[nodiscard]] int GetNumMenuItems() const;
+        [[nodiscard]] const std::vector<Button*>& GetButtons() const;
 
-        [[nodiscard]] MenuItem* GetMenuItemByID(engine::EntityID id) const;
+        [[nodiscard]] const std::vector<RadioButton*>& GetRadioButtons() const;
 
-        [[nodiscard]] MenuItem* GetMenuItemByIndex(int index) const;
+        [[nodiscard]] const std::vector<Menu*>& GetSubMenus() const;
 
-        [[nodiscard]] MenuItem* GetMenuItemUnderCursor(sf::Vector2i position) const;
+        [[nodiscard]] std::vector<Item> GetItems() const;
+
+        [[nodiscard]] std::optional<Item> GetItem(int index) const;
+
+        [[nodiscard]] Widget* GetWidget(int index) const;
+
+        std::optional<Item> GetSelectedItem() const;
 
         [[nodiscard]] int GetSelectedIndex() const;
 
-        [[nodiscard]] sf::Texture* GetButtonTexture(Button::Status state) const;
+        [[nodiscard]] sf::Texture* GetButtonTexture(Button::Status status) const;
 
-        void SetButtonTexture(Button::Status state, sf::Texture& texture);
+        [[nodiscard]] sf::Texture* GetRadioButtonTexture(RadioButton::Status status) const;
+
+        void AddButtonTexture(Button::Status status, sf::Texture& texture);
+
+        void AddRadioButtonTexture(RadioButton::Status status, sf::Texture& texture);
 
         void SetLabelFont(sf::Font& font);
 
@@ -133,20 +109,57 @@ namespace farcical::ui {
 
         void SetSelectedIndex(int index);
 
+        void SetSelectedItem(const Item& item);
+
         void DoAction(Action action) override;
+
+        static constexpr std::string_view GetTypeName(Menu::Type type) {
+            std::string_view typeName{"?"};
+            switch(type) {
+                case Menu::Type::Button: {
+                    typeName = "button";
+                }
+                break;
+                case Menu::Type::RadioButton: {
+                    typeName = "radioButton";
+                }
+                break;
+                case Menu::Type::SubMenu: {
+                    typeName = "subMenu";
+                }
+                break;
+            }
+            return typeName;
+        }
+
+        static constexpr Menu::Type GetTypeByName(std::string_view name) {
+            Menu::Type type;
+            if(name == "button" || name == "Button") {
+                type = Menu::Type::Button;
+            } // if Button
+            else if(name == "radioButton" || name == "RadioButton") {
+                type = Menu::Type::RadioButton;
+            } // else if RadioButton
+            else if(name == "subMenu" || name == "SubMenu") {
+                type = Menu::Type::SubMenu;
+            } // else if SubMenu
+            return type;
+        }
 
     private:
         MenuLayout layout;
-        std::vector<MenuItem*> items;
-        sf::Texture* buttonTextureNormal;
-        sf::Texture* buttonTextureHighlighted;
-        sf::Texture* buttonTexturePressed;
+        Menu::Type menuType;
+        std::vector<Button*> buttons;
+        std::vector<RadioButton*> radioButtons;
+        std::vector<Menu*> subMenus;
+        std::map<Button::Status, sf::Texture*> buttonTextures;
+        std::map<RadioButton::Status, sf::Texture*> radioButtonTextures;
         sf::Font* labelFont;
         sf::Font* titleFont;
         int selectedIndex;
     };
 
-    class MenuController final : public MouseInterface, public KeyboardInterface {
+    class MenuController final : public engine::Entity, public MouseInterface, public KeyboardInterface {
     public:
         MenuController(Menu* menu, engine::EventSystem& eventSystem);
 
@@ -154,11 +167,13 @@ namespace farcical::ui {
 
         void ReceiveMouseMovement(sf::Vector2i position) override;
 
-        void ReceiveMouseButtonPress(sf::Mouse::Button button, sf::Vector2i position) override;
+        void ReceiveMouseButtonPress(sf::Mouse::Button buttonPressed, sf::Vector2i position) override;
 
-        void ReceiveMouseButtonRelease(sf::Mouse::Button button, sf::Vector2i position) override;
+        void ReceiveMouseButtonRelease(sf::Mouse::Button buttonReleased, sf::Vector2i position) override;
 
         void ReceiveKeyboardInput(sf::Keyboard::Key input) override;
+
+        static constexpr std::string_view MenuControllerName{"Controller"};
 
     private:
         Menu* menu;

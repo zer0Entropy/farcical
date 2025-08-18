@@ -6,7 +6,7 @@
 #define ENTITY_HPP
 
 #include <array>
-#include "component.hpp"
+#include "component/component.hpp"
 
 namespace farcical::engine {
     using ComponentList = std::array<Component*, static_cast<int>(Component::Type::NumComponentTypes)>;
@@ -15,8 +15,8 @@ namespace farcical::engine {
     public:
         Entity() = delete;
 
-        explicit Entity(EntityID id): id{id},
-                                      components{nullptr} {
+        explicit Entity(EntityID id) : id{id},
+                                       components{nullptr} {
         }
 
         virtual ~Entity() = default;

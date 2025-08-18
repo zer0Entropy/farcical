@@ -590,7 +590,7 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
         if(!createBorderHandle.has_value()) {
             const std::string failMsg{"Failed to create ResourceHandle for Border (id=" + id + "\")."};
             return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
-        } // if createBorderHadle failed, return Error
+        } // if createBorderHandle failed, return Error
         borderHandle = createBorderHandle.value();
     } // if handle does not exist
 

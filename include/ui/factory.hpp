@@ -6,55 +6,50 @@
 #define FACTORY_HPP
 
 #include "config.hpp"
-#include "container.hpp"
 #include "decoration.hpp"
 #include "menu.hpp"
 #include "scene.hpp"
 #include "../engine/error.hpp"
-
-namespace farcical::game {
-    class Game;
-}
+#include "../engine/system/render.hpp"
+#include "../engine/system/input.hpp"
 
 namespace farcical::ui::factory {
     [[nodiscard]] std::expected<Decoration*, engine::Error> CreateDecoration(
-        const game::Game& game, const DecorationConfig& config, Container* parent);
+        engine::RenderSystem& renderSystem, Scene* scene, const DecorationProperties& properties);
 
-    std::optional<engine::Error> DestroyDecoration(const game::Game& game, Decoration* decoration);
+    std::optional<engine::Error> DestroyDecoration(engine::RenderSystem& renderSystem, Scene* scene,
+                                                   Decoration* decoration);
 
     [[nodiscard]] std::expected<Text*, engine::Error> CreateText(
-        const game::Game& game, const TextConfig& config, Container* parent);
+        engine::RenderSystem& renderSystem, Scene* scene, const WidgetProperties& properties,
+        sf::FloatRect bounds = sf::FloatRect{{0.0f, 0.0f}, {0.0f, 0.0f}});
 
-    std::optional<engine::Error> DestroyText(const game::Game& game, Text* text);
+    std::optional<engine::Error> DestroyText(engine::RenderSystem& renderSystem, Scene* scene, Text* text);
 
     [[nodiscard]] std::expected<Menu*, engine::Error> CreateMenu(
-        const game::Game& game, const MenuConfig& config, Container* parent);
+        engine::RenderSystem& renderSystem,
+        engine::InputSystem& inputSystem,
+        engine::EventSystem& eventSystem,
+        Scene* scene,
+        const MenuProperties& properties);
 
-    std::optional<engine::Error> DestroyMenu(const game::Game& game, Menu* menu);
-
-    [[nodiscard]] std::expected<MenuItem*, engine::Error> CreateMenuItem(
-        const game::Game& game,
-        const MenuConfig& menuConfig,
-        const MenuItemConfig& config,
+    std::optional<engine::Error> DestroyMenu(
+        engine::RenderSystem& renderSystem,
+        engine::InputSystem& inputSystem,
+        engine::EventSystem& eventSystem,
+        Scene* scene,
         Menu* menu);
 
-    std::optional<engine::Error> DestroyMenuItem(const game::Game& game, MenuItem* item);
+    [[nodiscard]] std::expected<Button*, engine::Error> CreateButton(
+        engine::RenderSystem& renderSystem,
+        Scene* scene,
+        Menu* menu,
+        const MenuProperties& menuProperties,
+        const ButtonProperties& buttonProperties);
 
-    [[nodiscard]] std::expected<Button*, engine::Error> CreateMenuButton(
-        const game::Game& game,
-        const MenuItemConfig& itemConfig,
-        const MenuConfig& menuConfig,
-        MenuItem* item);
+    [[nodiscard]] std::vector<sf::Texture*> GetButtonTextures(const Scene& scene, const MenuProperties& properties);
 
-    [[nodiscard]] std::expected<Text*, engine::Error> CreateMenuLabel(
-        const game::Game& game,
-        const MenuItemConfig& itemConfig,
-        const MenuConfig& menuConfig,
-        MenuItem* item);
+    [[nodiscard]] std::vector<sf::Texture*> GetRadioButtonTextures(const Scene& scene, const MenuProperties& properties);
 
-    [[nodiscard]] MenuItemCollection CreateMenuItemCollection(const MenuConfig& config);
-
-    [[nodiscard]] std::vector<sf::Texture*> GetButtonTextures(const Scene& scene, const ButtonConfig& config);
 }
-
 #endif //FACTORY_HPP

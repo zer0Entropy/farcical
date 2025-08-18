@@ -4,7 +4,7 @@
 
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Text.hpp>
-#include "../../include/engine/render.hpp"
+#include "../../../include/engine/system/render.hpp"
 
 farcical::engine::RenderSystem::RenderSystem(sf::RenderWindow& window, LogSystem& logSystem): System{
     ID::RenderSystem, logSystem
@@ -52,6 +52,10 @@ void farcical::engine::RenderSystem::Stop() {
     window.close();
     WriteToLog("RenderSystem successfully shut down.");
   }
+}
+
+sf::RenderWindow& farcical::engine::RenderSystem::GetWindow() const {
+  return const_cast<sf::RenderWindow&>(window);
 }
 
 std::expected<farcical::engine::RenderContext*, farcical::engine::Error>

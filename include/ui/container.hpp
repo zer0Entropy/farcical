@@ -13,20 +13,27 @@ namespace farcical::ui {
     class Container : public Widget {
     public:
         Container() = delete;
+
         Container(const Container&) = delete;
+
         Container(Container&) = delete;
+
         Container(Container&&) = delete;
+
         Container& operator=(const Container&) = delete;
-        explicit Container( engine::EntityID id,
-                            Type type,
-                            Container* parent = nullptr,
-                            bool receiveFocus = false): Widget(id, type, parent, receiveFocus) {
+
+        explicit Container(engine::EntityID id,
+                           Type type,
+                           Container* parent = nullptr,
+                           bool receiveFocus = false) : Widget(id, type, parent, receiveFocus) {
         }
+
         virtual ~Container() override = default;
 
         [[nodiscard]] bool IsContainer() const noexcept override { return true; }
         [[nodiscard]] unsigned int GetNumChildren() const { return static_cast<unsigned int>(children.size()); }
         [[nodiscard]] Widget* GetChild(unsigned int index) const { return children[index].get(); }
+
         [[nodiscard]] std::vector<Widget*> GetChildren() const {
             std::vector<Widget*> childList;
             for(const auto& child: children) {
@@ -37,6 +44,9 @@ namespace farcical::ui {
 
         [[nodiscard]] Widget* FindChild(engine::EntityID childID) const {
             Widget* childPtr{nullptr};
+            if(this->id == childID) {
+                return const_cast<Container*>(this);
+            }
             for(const auto& child: children) {
                 if(child->GetID() == childID) {
                     childPtr = child.get();
@@ -68,7 +78,6 @@ namespace farcical::ui {
     protected:
         std::vector<std::unique_ptr<Widget> > children;
     };
-
 }
 
 #endif //CONTAINER_HPP

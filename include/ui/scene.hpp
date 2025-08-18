@@ -7,11 +7,12 @@
 
 #include <nlohmann/json.hpp>
 
-#include "root.hpp"
+#include "container.hpp"
 #include "../resource/manager.hpp"
+#include "../ui/menu.hpp"
 
 namespace farcical::ui {
-    class Scene final {
+    class Scene final : public Container {
     public:
         Scene() = delete;
         Scene(const Scene&) = delete;
@@ -19,21 +20,11 @@ namespace farcical::ui {
         Scene(Scene&&) = delete;
         Scene& operator=(const Scene&) = delete;
 
-        explicit Scene(engine::EntityID id, game::Game& game);
+        explicit Scene(engine::EntityID id);
 
-        ~Scene() = default;
+        ~Scene() override = default;
 
-        [[nodiscard]] engine::EntityID GetID() const;
-
-        [[nodiscard]] RootContainer& GetRootContainer() const;
-
-        [[nodiscard]] std::vector<Widget*> GetTopLevelWidgets() const;
-
-        [[nodiscard]] Widget* FindWidget(engine::EntityID widgetID) const;
-
-        void AddWidget(std::unique_ptr<Widget> widget, Widget* parent = nullptr);
-
-        void RemoveWidget(engine::EntityID widgetID, Widget* parent = nullptr);
+        void DoAction(Action action) override;
 
         [[nodiscard]] sf::Font* GetCachedFont(ResourceID id) const;
 
@@ -51,17 +42,29 @@ namespace farcical::ui {
 
         void CacheTextureProperties(ResourceID id, const TextureProperties& textureProperties);
 
-    private:
-        engine::EntityID id;
-        std::unique_ptr<RootContainer> rootContainer;
+        void ClearFontCache();
 
+        void ClearFontPropertiesCache();
+
+        void ClearTextureCache();
+
+        void ClearTexturePropertiesCache();
+
+        [[nodiscard]] std::expected<MenuController*, engine::Error> CreateMenuController(
+            Menu* menu, engine::EventSystem& eventSystem);
+
+        std::optional<engine::Error> DestroyMenuController(Menu* menu, engine::EventSystem& eventSystem);
+
+        [[nodiscard]] MenuController* GetMenuController(engine::EntityID menuID);
+
+    private:
         std::unordered_map<ResourceID, sf::Font*> fontCache;
         std::unordered_map<ResourceID, FontProperties> fontPropertiesCache;
 
         std::unordered_map<ResourceID, sf::Texture*> textureCache;
         std::unordered_map<ResourceID, TextureProperties> texturePropertiesCache;
 
-        static constexpr std::string_view rootContainerID = "rootContainer";
+        std::unordered_map<engine::EntityID, std::unique_ptr<MenuController> > menuControllers;
     };
 
 }

@@ -9,7 +9,6 @@
 #include "../engine/logInterface.hpp"
 
 #include "../ui/config.hpp"
-#include "../ui/menu.hpp"
 #include "../ui/scene.hpp"
 
 #include "world.hpp"
@@ -19,7 +18,7 @@
 namespace farcical::game {
     class Game;
 
-    class GameController final : public engine::EventHandler, public engine::LogInterface {
+    class GameController final : public engine::Entity, public engine::EventHandler, public engine::LogInterface {
     public:
         GameController() = delete;
 
@@ -28,6 +27,8 @@ namespace farcical::game {
         ~GameController() override = default;
 
         void HandleEvent(const engine::Event& event) override;
+
+        static constexpr std::string_view GameControllerID{"GameController"};
 
     private:
         Game& game;
@@ -53,7 +54,7 @@ namespace farcical::game {
 
         engine::Engine& GetEngine() const;
 
-        std::optional<engine::Error> Init(const ResourceList& sceneResourceList);
+        std::optional<engine::Error> Init();
 
         std::optional<engine::Error> Update();
 
@@ -62,40 +63,11 @@ namespace farcical::game {
         std::unique_ptr<World> CreateWorld();
 
         std::unique_ptr<Player> CreatePlayer();
-
-        std::expected<ui::Scene*, engine::Error> CreateScene(ui::SceneConfig config);
-
-        std::optional<engine::Error> StartCurrentScene(ui::SceneConfig& config);
-
-        std::optional<engine::Error> StopCurrentScene();
-
-        ui::Scene* GetCurrentScene() const;
-
-        std::expected<ResourceParameters, engine::Error> FindSceneResource(engine::EntityID sceneID) const;
-
     private:
-        std::optional<engine::Error> CreateSceneLayout(const ui::LayoutConfig& layoutConfig);
-
-        std::optional<engine::Error> DestroySceneLayout(const ui::LayoutConfig& layoutConfig);
-
-        std::optional<engine::Error> CacheFonts(const std::vector<FontProperties>& fontPropertiesList);
-
-        std::optional<engine::Error> CacheTextures(const std::vector<TextureProperties>& texturePropertiesList);
-
-        std::optional<engine::Error> CacheRepeatingTextures(
-            const std::vector<RepeatingTextureProperties>& texturePropertiesList);
-
-        std::optional<engine::Error> CacheSegmentedTextures(
-            const std::vector<SegmentedTextureProperties>& texturePropertiesList);
-
-        std::optional<engine::Error> CacheBorderTexture(const BorderTextureProperties& borderProperties);
 
         Status status;
         engine::Engine& engine;
         std::unique_ptr<GameController> controller;
-        std::unique_ptr<ui::Scene> currentScene;
-        std::unordered_map<engine::EntityID, ui::SceneConfig> sceneConfigs;
-        std::unordered_map<engine::EntityID, ResourceParameters> sceneResources;
     };
 }
 

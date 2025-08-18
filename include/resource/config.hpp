@@ -195,7 +195,6 @@ namespace farcical {
         std::string path;
         float scale;
         sf::Vector2u percentSize;
-        sf::Vector2u outputSize;
         std::array<TextureProperties, static_cast<int>(Rectangle::Corner::NumCorners)> cornerTextures;
         std::array<TextureProperties, static_cast<int>(Rectangle::Edge::NumEdges)> edgeTextures;
         TextureProperties centerTexture;
