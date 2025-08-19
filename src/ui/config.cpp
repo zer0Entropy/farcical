@@ -597,8 +597,10 @@ farcical::ui::ExtractRadioButtonProperties(
     std::vector<WidgetProperties> propertiesList;
     const auto& findRadioButtons{json.find("radioButtons")};
     if(findRadioButtons == json.end()) {
-        const std::string failMsg{"Invalid configuration: RadioButtons could not be found for Menu with id=\"" +
-                                  menuProperties.id + "\"."};
+        const std::string failMsg{
+            "Invalid configuration: RadioButtons could not be found for Menu with id=\"" +
+            menuProperties.id + "\"."
+        };
         return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
     }
     const auto& radioButtonsJSON{findRadioButtons.value()};

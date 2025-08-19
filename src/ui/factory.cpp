@@ -230,9 +230,46 @@ std::expected<farcical::ui::Menu*, farcical::engine::Error> farcical::ui::factor
     else if(properties.menuType == Menu::Type::RadioButton) {
         for(auto radioButtonProperties: properties.radioButtonProperties) {
             radioButtonProperties.labelProperties.second = properties.labelProperties.second;
+            // Create RadioButton
             const auto& createRadioButtonResult{
                 CreateRadioButton(renderSystem, scene, menu, properties, radioButtonProperties)
             };
+            if(!createRadioButtonResult.has_value()) {
+                return std::unexpected(createRadioButtonResult.error());
+            } // if createRadioButton == failure
+            RadioButton* radioButton{createRadioButtonResult.value()};
+
+            // Create Label
+            const WidgetProperties labelProperties{
+                radioButtonProperties.id + "Label",
+                Widget::Type::Text,
+                properties.id,
+                Layout::Layer::ID::Foreground,
+                radioButtonProperties.relativePosition,
+                radioButtonProperties.labelProperties
+            };
+            sf::FloatRect radioButtonRect{
+                radioButton->GetPosition(),
+                {
+                    static_cast<float>(radioButton->GetSize().x),
+                    static_cast<float>(radioButton->GetSize().y)
+                }
+            };
+            const auto& createLabelResult{
+                CreateText(renderSystem, scene, labelProperties, radioButtonRect)
+            };
+            if(!createLabelResult.has_value()) {
+                return std::unexpected(createLabelResult.error());
+            } // if createLabelResult == failure
+            Text* label{createLabelResult.value()};
+            const sf::Vector2f labelPosition{
+                static_cast<float>(radioButton->GetPosition().x + 1.5f * static_cast<float>(radioButton->GetSize().x)),
+                static_cast<float>(radioButton->GetPosition().y + static_cast<float>(radioButton->GetSize().y) / 2.0f
+                    - static_cast<float>(label->GetSize().y) / 2.0f)
+            };
+            label->SetPosition(labelPosition);
+            engine::RenderComponent* renderCmp{dynamic_cast<engine::RenderComponent*>(label->GetComponent(engine::Component::Type::Render))};
+            renderCmp->position = labelPosition;
         } // for each RadioButton in Menu
     } // else if RadioButton Menu
 
