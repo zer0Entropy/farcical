@@ -155,7 +155,7 @@ namespace farcical::ui {
         const nlohmann::json& json, const MenuProperties& menuProperties);
 
     std::expected<std::vector<WidgetProperties>, engine::Error> ExtractRadioButtonProperties(
-        const nlohmann::json& json, engine::EntityID id);
+        const nlohmann::json& json, const MenuProperties& menuProperties);
 
     std::expected<std::vector<std::pair<Button::Status, TextureProperties> >, engine::Error> ExtractButtonTextures(
         const nlohmann::json& json, engine::EntityID id);

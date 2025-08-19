@@ -209,7 +209,7 @@ std::expected<farcical::ui::MenuProperties, farcical::engine::Error> farcical::u
         /**********************     radioButtonTextures      **********************/
 
         /**********************     radioButtonProperties      **********************/
-        const auto& extractPropertiesResult{ExtractRadioButtonProperties(json, properties.id)};
+        const auto& extractPropertiesResult{ExtractRadioButtonProperties(json, properties)};
         if(!extractPropertiesResult.has_value()) {
             return std::unexpected(extractPropertiesResult.error());
         } // if extractPropertiesResult == failure
@@ -587,14 +587,31 @@ farcical::ui::ExtractButtonProperties(
         buttonProperties.parentID = menuProperties.id;
         buttonProperties.relativePosition = menuProperties.relativePosition;
         propertiesList.push_back(buttonProperties);
-    } // for each Button in ButtonJSON
+    } // for each Button in ButtonsJSON
     return propertiesList;
 }
 
 std::expected<std::vector<farcical::ui::WidgetProperties>, farcical::engine::Error>
 farcical::ui::ExtractRadioButtonProperties(
-    const nlohmann::json& json, engine::EntityID id) {
+    const nlohmann::json& json, const MenuProperties& menuProperties) {
     std::vector<WidgetProperties> propertiesList;
+    const auto& findRadioButtons{json.find("radioButtons")};
+    if(findRadioButtons == json.end()) {
+        const std::string failMsg{"Invalid configuration: RadioButtons could not be found for Menu with id=\"" +
+                                  menuProperties.id + "\"."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    }
+    const auto& radioButtonsJSON{findRadioButtons.value()};
+    for(const auto& radioButtonJSON: radioButtonsJSON) {
+        const auto& loadRadioButtonResult{LoadRadioButton(radioButtonJSON, menuProperties.id)};
+        if(!loadRadioButtonResult.has_value()) {
+            return std::unexpected(loadRadioButtonResult.error());
+        } // if loadRadioButtonResult == failure
+        WidgetProperties radioButtonProperties{loadRadioButtonResult.value()};
+        radioButtonProperties.parentID = menuProperties.id;
+        radioButtonProperties.relativePosition = menuProperties.relativePosition;
+        propertiesList.push_back(radioButtonProperties);
+    } // for each RadioButton in RadioButtonsJSON
     return propertiesList;
 }
 

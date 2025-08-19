@@ -16,7 +16,10 @@ namespace farcical::ui {
             ReceiveFocus,
             LoseFocus,
             SetPressedTrue,
-            SetPressedFalse
+            SetPressedFalse,
+            // RadioButton
+            SetSelectedTrue,
+            SetSelectedFalse,
         };
 
         Type type;

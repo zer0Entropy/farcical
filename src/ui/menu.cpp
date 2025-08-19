@@ -301,7 +301,14 @@ void farcical::ui::MenuController::ReceiveMouseButtonRelease(sf::Mouse::Button b
       } // if Button status == Pressed
     } // if Button
     else if(radioButton) {
-    } // if radioButton
+      if(IsPointWithinRect(position, (*radioButton)->GetBounds())) {
+        menu->SetSelectedItem(item);
+        (*radioButton)->DoAction(Action{Action::Type::SetSelectedTrue});
+      } // if cursor is within RadioButton's bounds
+      else if(menu->GetSelectedIndex() >= 0 && (*radioButton) != menu->GetWidget(menu->GetSelectedIndex())) {
+        (*radioButton)->DoAction(Action{Action::Type::SetSelectedFalse});
+      } // else if radioButton.status == Selected
+    } // else if radioButton
     else if(subMenu) {
     } // if subMenu
     else {
