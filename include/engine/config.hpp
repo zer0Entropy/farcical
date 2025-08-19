@@ -18,6 +18,7 @@ namespace farcical::engine {
     };
 
     std::expected<Config, Error> LoadConfig(const nlohmann::json& json);
+    std::optional<Error> WriteConfig(const Config& config, std::string_view path);
 }
 
 #endif //ENGINE_CONFIG_HPP

@@ -24,6 +24,8 @@ namespace farcical {
 
         void AddLogSystem(engine::LogSystem* logSystem);
 
+        void Reset();
+
         ResourceHandle* GetResourceHandle(ResourceID id) const;
 
         std::expected<ResourceHandle*, engine::Error> CreateResourceHandle(

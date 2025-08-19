@@ -1,6 +1,7 @@
 //
 // Created by dgmuller on 7/6/25.
 //
+#include <fstream>
 #include "../../include/engine/config.hpp"
 #include "../../include/resource/parser.hpp"
 
@@ -12,9 +13,11 @@ std::expected<farcical::engine::Config, farcical::engine::Error> farcical::engin
             .sizeInPixels = {0, 0},
             .title = "",
             .position = {0, 0},
-            .fullscreen = false
+            .fullscreen = false,
+            .detectNativeResolution = false,
         },
-        .scenePath = {}
+        .scenePath = {},
+        .logPath = {}
     };
     const auto& findScenePath{json.find("scenePath")};
     if(findScenePath != json.end()) {
@@ -36,6 +39,7 @@ std::expected<farcical::engine::Config, farcical::engine::Error> farcical::engin
     const auto& findHeight{windowPropertiesJSON.find("height")};
     const auto& findTitle{windowPropertiesJSON.find("title")};
     const auto& findFullscreen{windowPropertiesJSON.find("fullscreen")};
+    const auto& findDetectNative{windowPropertiesJSON.find("detectNativeResolution")};
     const auto& findPosition{windowPropertiesJSON.find("position")};
     if(findWidth != windowPropertiesJSON.end()) {
         config.windowProperties.displayMode.x = findWidth.value().get<int>();
@@ -49,6 +53,9 @@ std::expected<farcical::engine::Config, farcical::engine::Error> farcical::engin
     if(findFullscreen != windowPropertiesJSON.end()) {
         config.windowProperties.fullscreen = findFullscreen.value().get<bool>();
     } // if fullscreen found
+    if(findDetectNative != windowPropertiesJSON.end()) {
+        config.windowProperties.detectNativeResolution = findDetectNative.value().get<bool>();
+    } // if detectNativeResolution found
     if(findPosition != windowPropertiesJSON.end()) {
         const auto position{jsonParser::ParsePosition(findPosition.value())};
         if(!position.has_value()) {
@@ -61,4 +68,25 @@ std::expected<farcical::engine::Config, farcical::engine::Error> farcical::engin
         };
     } // if position found
     return config;
+}
+
+std::optional<farcical::engine::Error> farcical::engine::WriteConfig(const Config& config, std::string_view path) {
+    const nlohmann::json configJSON{
+        {"window",{
+                {"width", config.windowProperties.displayMode.x},
+                {"height", config.windowProperties.displayMode.y},
+                {"title", config.windowProperties.title},
+                {"fullscreen", config.windowProperties.fullscreen},
+                {"position", {
+                    {"x", config.windowProperties.position.x},
+                    {"y", config.windowProperties.position.y}
+                }}
+            },
+            {"scenePath", config.scenePath},
+            {"logPath", config.logPath}
+        }
+    };
+    std::ofstream output{std::string{path}, std::ios_base::out};
+    output << configJSON << std::endl;
+    return std::nullopt;
 }

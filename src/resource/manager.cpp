@@ -14,13 +14,19 @@ void farcical::ResourceManager::AddLogSystem(engine::LogSystem* logSystem) {
     this->logSystem = logSystem;
 }
 
+void farcical::ResourceManager::Reset() {
+    registry.clear();
+    logs.clear();
+    jsonDocs.clear();
+    fonts.clear();
+    textures.clear();
+    logSystem = nullptr;
+}
+
 farcical::ResourceHandle* farcical::ResourceManager::GetResourceHandle(ResourceID id) const {
     const auto resourceIter{registry.find(id)};
     if(resourceIter != registry.end()) {
         return const_cast<ResourceHandle*>(&resourceIter->second);
-    }
-    if(logSystem) {
-        logSystem->AddMessage("Failed to find Resource with id=\"" + id + "\"!");
     }
     return nullptr;
 }
@@ -387,7 +393,7 @@ std::optional<farcical::engine::Error> farcical::ResourceManager::WriteLog(
         const std::string failMsg{"Resource not found: " + id + "."};
         return engine::Error{engine::Error::Signal::ResourceNotFound, failMsg};
     } // if ResourceHandle not found
-    std::ofstream outputFile{handle->path, std::ios_base::out};
+    std::ofstream outputFile{handle->path, std::ios_base::app};
     if(outputFile.good()) {
         for(const auto& message: messages) {
             outputFile << message << std::endl;

@@ -28,8 +28,32 @@ void farcical::game::GameController::HandleEvent(const engine::Event& event) {
     else if(event.type == engine::Event::Type::ApplyEngineConfig) {
         WriteToLog("GameController received 'ApplyEngineConfig' event.");
         const auto& createConfig{game.GetEngine().CreateConfig()};
+        engine::Config config{createConfig.value()};
         if(createConfig.has_value()) {
-            const auto& applyConfig{game.GetEngine().ApplyConfig(createConfig.value())};
+            engine::EntityID displayOptionsID{"displayOptions"};
+            ui::Widget* displayOptionsWidget{
+                game.GetEngine().GetSceneManager().GetCurrentScene()->FindChild(displayOptionsID)
+            };
+            if(displayOptionsWidget) {
+                ui::Menu* menu{dynamic_cast<ui::Menu*>(displayOptionsWidget)};
+                ui::Widget* selectedWidget{menu->GetWidget(menu->GetSelectedIndex())};
+                if(selectedWidget) {
+                    engine::EntityID selectedWidgetID{selectedWidget->GetID()};
+                    const std::string radioButtonString{"RadioButton"};
+                    engine::EntityID labelID{selectedWidgetID.substr(0, selectedWidgetID.length() - radioButtonString.length())};
+                    labelID += "Label";
+                    ui::Text* radioButtonLabel{dynamic_cast<ui::Text*>(menu->FindChild(labelID))};
+                    if(radioButtonLabel) {
+                        const std::string contents{radioButtonLabel->GetContents()};
+                        const auto& getWindowProperties{GetWindowProperties(contents)};
+                        if(getWindowProperties.has_value()) {
+                            const WindowProperties& windowProperties{getWindowProperties.value()};
+                            config.windowProperties = windowProperties;
+                        } // if getWindowProperties
+                    } // if radioButtonLabel
+                } // if selectedWidget
+            } //
+            const auto& applyConfig{game.GetEngine().ApplyConfig(config)};
         } // if
     } // else if event.type == ApplyEngineConfig
 
@@ -71,14 +95,14 @@ farcical::engine::Engine& farcical::game::Game::GetEngine() const {
 
 std::optional<farcical::engine::Error> farcical::game::Game::Init() {
     engine::LogSystem& logSystem{engine.GetLogSystem()};
-    if(status != Status::Uninitialized) {
-        if(status == Status::IsRunning) {
-            logSystem.AddMessage("Error: Game.Init() called, but Game is already initialized!");
-        } else if(status == Status::Error) {
-            logSystem.AddMessage("Unknown error occurred in game.Init() [game.status == Error]");
-        }
-        return std::nullopt;
+    if(status == Status::IsRunning) {
+        logSystem.AddMessage("Error: Game.Init() called, but Game is already initialized!");
+    } else if(status == Status::Error) {
+        logSystem.AddMessage("Unknown error occurred in game.Init() [game.status == Error]");
     }
+    if(status == Status::IsRunning || status == Status::Error) {
+        return std::nullopt;
+    } // if status == IsRunning || Error
     logSystem.AddMessage("Initializing game...");
 
 
@@ -90,7 +114,8 @@ std::optional<farcical::engine::Error> farcical::game::Game::Init() {
     engine::EventSystem& eventSystem{engine.GetEventSystem()};
     const std::vector<engine::Event::Type> handledTypes{
         engine::Event::Type::QuitGame,
-        engine::Event::Type::CreateScene,
+        engine::Event::Type::ApplyEngineConfig,
+        engine::Event::Type::CreateScene
     };
     const auto& createEventComponent{
         eventSystem.CreateEventComponent(handledTypes, controller.get(), controller->GetID())
@@ -115,7 +140,6 @@ std::optional<farcical::engine::Error> farcical::game::Game::Stop() {
             controller.reset();
         }
         status = Status::StoppedSuccessfully;
-        engine.Stop();
     }
     return std::nullopt;
 }

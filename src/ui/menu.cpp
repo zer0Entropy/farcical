@@ -315,7 +315,6 @@ void farcical::ui::MenuController::ReceiveMouseButtonRelease(sf::Mouse::Button b
       return;
     }
   } // for each Item in Menu
-  menu->SetSelectedIndex(-1);
 }
 
 void farcical::ui::MenuController::ReceiveKeyboardInput(sf::Keyboard::Key input) {

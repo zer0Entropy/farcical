@@ -25,7 +25,7 @@ void farcical::engine::EventSystem::Update() {
     for(const auto& event: queueCopy) {
         // Ensure EventType is valid
         const int eventIndex{static_cast<int>(event.type)};
-        if(eventIndex > 0 && eventIndex < static_cast<int>(Event::Type::NumEventTypes)) {
+        if(eventIndex >= 0 && eventIndex < static_cast<int>(Event::Type::NumEventTypes)) {
             const EventHandlerList& handlerList{GetEventHandlerList(event.type)};
             // Each EventHandler in the list handles the Event in sequence
             for(const auto& handler: handlerList) {

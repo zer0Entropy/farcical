@@ -68,6 +68,9 @@ std::expected<farcical::engine::Config, farcical::engine::Error> farcical::engin
 std::optional<farcical::engine::Error> farcical::engine::Engine::ApplyConfig(const Config& config) {
   this->config = config;
 
+  Stop();
+  status = Status::Uninitialized;
+
   const auto& createLogResult{CreateLogSystem()};
   if(createLogResult.has_value()) {
     return createLogResult.value();
@@ -76,6 +79,9 @@ std::optional<farcical::engine::Error> farcical::engine::Engine::ApplyConfig(con
   // LogSystem & ResourceManager need access to each other
   logSystem->AddResourceManager(&resourceManager);
   resourceManager.AddLogSystem(logSystem.get());
+
+  // Initialize LogSystem
+  logSystem->Init();
 
   const auto& createWindowResult{CreateWindow()};
   if(createWindowResult.has_value()) {
@@ -91,6 +97,23 @@ std::optional<farcical::engine::Error> farcical::engine::Engine::ApplyConfig(con
   if(initSystemsResult.has_value()) {
     return initSystemsResult.value();
   } // if initSystemsResult == failure
+
+  sceneManager = std::make_unique<ui::SceneManager>(*this);
+  const std::string indexPath{config.scenePath + "/index.json"};
+  sceneManager->LoadResourceIndex(indexPath);
+
+  game->Init();
+
+  const auto& initFirstScene{
+    sceneManager->SetCurrentScene(EntityID{ui::SceneManager::MainMenuSceneID})
+  };
+  if(!initFirstScene.has_value()) {
+    return initFirstScene.error();
+  } // if initFirstScene == failure
+
+  status = Status::IsRunning;
+  logSystem->AddMessage("Engine initialization completed successfully.");
+  logSystem->AddMessage("");
 
   return std::nullopt;
 }
@@ -109,23 +132,6 @@ std::optional<farcical::engine::Error> farcical::engine::Engine::Init(game::Game
     if(applyConfigResult.has_value()) {
       return applyConfigResult.value();
     } // if applyConfigResult == Error
-
-    sceneManager = std::make_unique<ui::SceneManager>(*this);
-    const std::string indexPath{config.scenePath + "/index.json"};
-    sceneManager->LoadResourceIndex(indexPath);
-
-    game->Init();
-
-    const auto& initFirstScene{
-      sceneManager->SetCurrentScene(EntityID{ui::SceneManager::MainMenuSceneID})
-    };
-    if(!initFirstScene.has_value()) {
-      return initFirstScene.error();
-    } // if initFirstScene == failure
-
-    status = Status::IsRunning;
-    logSystem->AddMessage("Engine initialization completed successfully.");
-    logSystem->AddMessage("");
   } // if Uninitialized
   return std::nullopt;
 }
@@ -167,14 +173,31 @@ void farcical::engine::Engine::Update() {
 }
 
 void farcical::engine::Engine::Stop() {
-  eventSystem->Stop();
-  inputSystem->Stop();
-  renderSystem->Stop();
-  logSystem->Stop();
+  game->Stop();
+  if(sceneManager) {
+    sceneManager->DestroyCurrentScene();
+    sceneManager.reset(nullptr);
+  }
+  if(eventSystem) {
+    eventSystem->Stop();
+    eventSystem.reset(nullptr);
+  } // if eventSystem
+  if(inputSystem) {
+    inputSystem->Stop();
+    inputSystem.reset(nullptr);
+  } // if inputSystem
+  if(renderSystem) {
+    renderSystem->Stop();
+    renderSystem.reset(nullptr);
+  } // if renderSystem
+  if(logSystem) {
+    logSystem->Stop();
+    logSystem.reset(nullptr);
+  } // if logSystem
+  resourceManager.Reset();
   if(status == Status::IsRunning) {
     status = Status::StoppedSuccessfully;
   }
-  return;
 }
 
 sf::RenderWindow& farcical::engine::Engine::GetWindow() const {
@@ -226,12 +249,22 @@ std::optional<farcical::engine::Error> farcical::engine::Engine::CreateLogSystem
 }
 
 std::optional<farcical::engine::Error> farcical::engine::Engine::CreateWindow() {
+  if(window) {
+    if(window->isOpen()) {
+      window->close();
+    } // if window.isOpen
+    window.reset(nullptr);
+  } // if window
   window = std::make_unique<sf::RenderWindow>();
   auto& windowProperties{config.windowProperties};
+  sf::VideoMode displayMode{windowProperties.displayMode};
+  if(windowProperties.detectNativeResolution) {
+    displayMode = sf::VideoMode::getDesktopMode();
+  } // if detectNativeResolution == true
   if(windowProperties.fullscreen) {
-    window->create(sf::VideoMode{windowProperties.displayMode}, windowProperties.title, sf::State::Fullscreen);
+    window->create(displayMode, windowProperties.title, sf::State::Fullscreen);
   } else {
-    window->create(sf::VideoMode{windowProperties.displayMode}, windowProperties.title);
+    window->create(displayMode, windowProperties.title, sf::Style::Close);
   }
   if(!window->isOpen()) {
     const std::string failMsg{"Invalid configuration: Failed to open window."};
@@ -266,7 +299,6 @@ std::optional<farcical::engine::Error> farcical::engine::Engine::CreateSystems()
 }
 
 std::optional<farcical::engine::Error> farcical::engine::Engine::InitSystems() {
-  logSystem->Init();
   renderSystem->Init();
   inputSystem->Init();
   eventSystem->Init();

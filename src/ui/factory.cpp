@@ -265,10 +265,12 @@ std::expected<farcical::ui::Menu*, farcical::engine::Error> farcical::ui::factor
             const sf::Vector2f labelPosition{
                 static_cast<float>(radioButton->GetPosition().x + 1.5f * static_cast<float>(radioButton->GetSize().x)),
                 static_cast<float>(radioButton->GetPosition().y + static_cast<float>(radioButton->GetSize().y) / 2.0f
-                    - static_cast<float>(label->GetSize().y) / 2.0f)
+                                   - static_cast<float>(label->GetSize().y) / 2.0f)
             };
             label->SetPosition(labelPosition);
-            engine::RenderComponent* renderCmp{dynamic_cast<engine::RenderComponent*>(label->GetComponent(engine::Component::Type::Render))};
+            engine::RenderComponent* renderCmp{
+                dynamic_cast<engine::RenderComponent*>(label->GetComponent(engine::Component::Type::Render))
+            };
             renderCmp->position = labelPosition;
         } // for each RadioButton in Menu
     } // else if RadioButton Menu
