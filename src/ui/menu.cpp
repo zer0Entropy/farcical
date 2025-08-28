@@ -204,14 +204,24 @@ void farcical::ui::Menu::SetSelectedItem(const Item& item) {
 }
 
 void farcical::ui::Menu::DoAction(Action action) {
+  int numItems{0};
+  if(menuType == Menu::Type::SubMenu) {
+    numItems = subMenus.size();
+  } // if subMenu
+  else if(menuType == Menu::Type::Button) {
+    numItems = buttons.size();
+  } // else if button
+  else if(menuType == Menu::Type::RadioButton) {
+    numItems = radioButtons.size();
+  } // else if radioButton
   if(action.type == Action::Type::MoveSelectionUp) {
     --selectedIndex;
     if(selectedIndex < 0) {
-      selectedIndex = static_cast<int>(children.size()) - 1;
+      selectedIndex = static_cast<int>(numItems) - 1;
     }
   } else if(action.type == Action::Type::MoveSelectionDown) {
     ++selectedIndex;
-    if(selectedIndex >= children.size()) {
+    if(selectedIndex >= numItems) {
       selectedIndex = 0;
     }
   }
@@ -318,6 +328,25 @@ void farcical::ui::MenuController::ReceiveMouseButtonRelease(sf::Mouse::Button b
 }
 
 void farcical::ui::MenuController::ReceiveKeyboardInput(sf::Keyboard::Key input) {
+  if(input == sf::Keyboard::Key::Up || input == sf::Keyboard::Key::Left) {
+    menu->DoAction(Action{Action::Type::MoveSelectionUp});
+  } // if input == Up || Left
+  else if(input == sf::Keyboard::Key::Down || input == sf::Keyboard::Key::Right) {
+    menu->DoAction(Action{Action::Type::MoveSelectionDown});
+  } // else if input == Down || Right
+  else if(input == sf::Keyboard::Key::Enter) {
+    if(menu->GetMenuType() == Menu::Type::Button) {
+      const auto& selectedItem{menu->GetSelectedItem()};
+      if(!selectedItem.has_value()) {
+        return;
+      } // if no MenuItem is selected
+      const auto& button{std::get_if<Button*>(&selectedItem.value())};
+      const engine::Event::Parameters& onPressEvent{(*button)->GetOnPressEvent()};
+      eventSystem.Enqueue(engine::Event{onPressEvent.type, onPressEvent.args});
+    } // if Button
+    return;
+  } // else if input == Enter
+
   const auto& getSelected{menu->GetSelectedItem()};
   const Menu::Item* selectedItem{nullptr};
   if(getSelected.has_value()) {
@@ -355,20 +384,6 @@ void farcical::ui::MenuController::ReceiveKeyboardInput(sf::Keyboard::Key input)
     if(selectedItem && isSelected) {
       widget->DoAction(Action{Action::Type::LoseFocus});
     } // if selectedItem
-
-    if(input == sf::Keyboard::Key::Up || input == sf::Keyboard::Key::Left) {
-      menu->DoAction(Action{Action::Type::MoveSelectionUp});
-    } // if input == Up || Left
-    else if(input == sf::Keyboard::Key::Down || input == sf::Keyboard::Key::Right) {
-      menu->DoAction(Action{Action::Type::MoveSelectionDown});
-    } // else if input == Down || Right
-    else if(input == sf::Keyboard::Key::Enter) {
-      if(button) {
-        const engine::Event::Parameters& onPressEvent{(*button)->GetOnPressEvent()};
-        eventSystem.Enqueue(engine::Event{onPressEvent.type, onPressEvent.args});
-      } // if Button
-      return;
-    } // else if input == Enter
 
     Widget* selectedWidget{menu->GetWidget(menu->GetSelectedIndex())};
     if(selectedWidget) {

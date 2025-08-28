@@ -182,8 +182,10 @@ std::expected<farcical::ui::Scene*, farcical::engine::Error> farcical::ui::Scene
 
     if(!properties.music.id.empty()) {
         engine::MusicSystem& musicSystem{engine.GetMusicSystem()};
-        musicSystem.SetCurrentMusic(properties.music.id);
-        musicSystem.PlayMusic();
+        if(musicSystem.GetCurrentMusic() != properties.music.id) {
+            musicSystem.SetCurrentMusic(properties.music.id);
+            musicSystem.PlayMusic();
+        } // if currentMusic does not match properties.music
     } // if Music
 
     WriteToLog("Scene (id=\"" + id + "\") successfully created.");
@@ -430,12 +432,22 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroyResour
 std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildMusicCache(
     const std::vector<MusicProperties>& musics) const {
     for(const auto& musicProperties: musics) {
-        const auto& createHandle{
-            resourceManager.CreateResourceHandle(musicProperties.id, ResourceHandle::Type::Music, musicProperties.path)
-        };
-        if(!createHandle.has_value()) {
-            return createHandle.error();
-        } // if createHandle == failure
+        ResourceHandle* handle{resourceManager.GetResourceHandle(musicProperties.id)};
+        if(handle) {
+            if(!musicProperties.persist) {
+                const std::string failMsg{"Error: Attempted to create Resource (id=\"" + musicProperties.id + "\"), but it already exists!"};
+                return engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg};
+            } // if persist flag is not set
+        } // if this ResourceHandle already exists
+        else {
+            const auto& createHandle{
+                resourceManager.CreateResourceHandle(musicProperties.id, ResourceHandle::Type::Music, musicProperties.path)
+            };
+            if(!createHandle.has_value()) {
+                return createHandle.error();
+            } // if createHandle == failure
+            handle = createHandle.value();
+        } // else if ResourceHandle does not already exist
         const auto& loadMusic{resourceManager.GetMusic(musicProperties.id)};
         if(!loadMusic.has_value()) {
             return loadMusic.error();
