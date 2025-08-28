@@ -65,6 +65,7 @@ namespace farcical::ui {
 
     struct SceneProperties {
         engine::EntityID id;
+        MusicProperties music;
         std::vector<FontProperties> fonts;
         std::vector<TextureProperties> textures;
         std::vector<RepeatingTextureProperties> repeatingTextures;

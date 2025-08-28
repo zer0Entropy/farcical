@@ -6,6 +6,43 @@
 #include "../../include/color.hpp"
 #include "../../include/resource/parser.hpp"
 
+std::expected<farcical::MusicProperties, farcical::engine::Error> farcical::LoadMusicProperties(
+    const nlohmann::json& json) {
+    MusicProperties properties;
+
+    const auto& findID{json.find("id")};
+    const auto& findPath{json.find("path")};
+    const auto& findLoop{json.find("loop")};
+    const auto& findVolume{json.find("volume")};
+    const auto& findPersist{json.find("persist")};
+
+    if(findID == json.end()) {
+        const std::string failMsg{"Invalid configuration: ResourceID not found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if "id" not found
+    properties.id = findID.value().get<std::string>();
+
+    if(findPath == json.end()) {
+        const std::string failMsg{"Invalid configuration: Path not found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if "path" not found
+    properties.path = findPath.value().get<std::string>();
+
+    if(findLoop != json.end()) {
+        properties.loop = findLoop.value().get<bool>();
+    } // if "loop" found
+
+    if(findVolume != json.end()) {
+        properties.volume = findVolume.value().get<float>();
+    } // if "volume" found
+
+    if(findPersist != json.end()) {
+        properties.persist = findPersist.value().get<bool>();
+    } // if "persist" found
+
+    return properties;
+}
+
 std::expected<farcical::FontProperties, farcical::engine::Error> farcical::LoadFontProperties(
     const nlohmann::json& json) {
     FontProperties properties;

@@ -40,7 +40,9 @@ void farcical::game::GameController::HandleEvent(const engine::Event& event) {
                 if(selectedWidget) {
                     engine::EntityID selectedWidgetID{selectedWidget->GetID()};
                     const std::string radioButtonString{"RadioButton"};
-                    engine::EntityID labelID{selectedWidgetID.substr(0, selectedWidgetID.length() - radioButtonString.length())};
+                    engine::EntityID labelID{
+                        selectedWidgetID.substr(0, selectedWidgetID.length() - radioButtonString.length())
+                    };
                     labelID += "Label";
                     ui::Text* radioButtonLabel{dynamic_cast<ui::Text*>(menu->FindChild(labelID))};
                     if(radioButtonLabel) {

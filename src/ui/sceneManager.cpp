@@ -5,6 +5,7 @@
 #include "../../include/ui/factory.hpp"
 #include "../../include/engine/engine.hpp"
 #include "../../include/engine/system/render.hpp"
+#include "../../include/engine/system/music.hpp"
 
 farcical::ui::SceneManager::SceneManager(engine::Engine& engine) : LogInterface(engine.GetLogSystem()),
                                                                    engine{engine},
@@ -179,6 +180,12 @@ std::expected<farcical::ui::Scene*, farcical::engine::Error> farcical::ui::Scene
         } // if createMenu == failure
     } // for each Layer
 
+    if(!properties.music.id.empty()) {
+        engine::MusicSystem& musicSystem{engine.GetMusicSystem()};
+        musicSystem.SetCurrentMusic(properties.music.id);
+        musicSystem.PlayMusic();
+    } // if Music
+
     WriteToLog("Scene (id=\"" + id + "\") successfully created.");
     return currentScene.get();
 }
@@ -262,6 +269,13 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroyCurren
         return destroyRenderContext.value();
     } // if destroyRenderContext == failure
 
+    if(!properties.music.id.empty()) {
+        if(!properties.music.persist) {
+            engine::MusicSystem& musicSystem{engine.GetMusicSystem()};
+            musicSystem.StopMusic();
+        } // if persist flag is false
+    } // if Music
+
     /*
         STEP TWO: Destroy Resource Caches
         (Fonts, Textures, RepeatingTextures, SegmentedTextures, BorderTexture)
@@ -313,6 +327,16 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildProperti
 
 std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildResourceCache(
     const SceneProperties& properties) const {
+    /* MUSIC */
+    if(!properties.music.id.empty()) {
+        const auto& buildMusicCache{
+            BuildMusicCache(std::vector{properties.music})
+        };
+        if(buildMusicCache.has_value()) {
+            return buildMusicCache.value();
+        } // if buildMusicCache == failure
+    } // if music
+
     /*  FONTS   */
     const auto& buildFontCache{
         BuildFontCache(properties.fonts)
@@ -358,6 +382,14 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildResource
 
 std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroyResourceCache(
     const SceneProperties& properties) const {
+    /* MUSICS */
+    currentScene->ClearMusicCache();
+    currentScene->ClearMusicPropertiesCache();
+    const auto& destroyMusicCache{DestroyMusicCache(std::vector{properties.music})};
+    if(destroyMusicCache.has_value()) {
+        return destroyMusicCache.value();
+    } // if destroyMusicCache == failure
+
     /* FONTS */
     currentScene->ClearFontCache();
     currentScene->ClearFontPropertiesCache();
@@ -395,6 +427,41 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroyResour
     return std::nullopt;
 }
 
+std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildMusicCache(
+    const std::vector<MusicProperties>& musics) const {
+    for(const auto& musicProperties: musics) {
+        const auto& createHandle{
+            resourceManager.CreateResourceHandle(musicProperties.id, ResourceHandle::Type::Music, musicProperties.path)
+        };
+        if(!createHandle.has_value()) {
+            return createHandle.error();
+        } // if createHandle == failure
+        const auto& loadMusic{resourceManager.GetMusic(musicProperties.id)};
+        if(!loadMusic.has_value()) {
+            return loadMusic.error();
+        } // if loadMusic == failure
+        currentScene->CacheMusic(musicProperties.id, loadMusic.value());
+        currentScene->CacheMusicProperties(musicProperties.id, musicProperties);
+    } // for each Music
+    return std::nullopt;
+}
+
+std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroyMusicCache(
+    const std::vector<MusicProperties>& musics) const {
+    for(const auto& musicProperties: musics) {
+        if(musicProperties.persist) {
+            continue;
+        } // skip any Music with (persist flag == true)
+        const auto& destroyHandle{
+            resourceManager.DestroyResourceHandle(musicProperties.id, ResourceHandle::Type::Music)
+        };
+        if(destroyHandle.has_value()) {
+            return destroyHandle.value();
+        } // if destroyHandle == failure
+    } // for each Music
+    return std::nullopt;
+}
+
 std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildFontCache(
     const std::vector<FontProperties>& fonts) const {
     for(const auto& fontProperties: fonts) {
@@ -417,6 +484,9 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildFontCach
 std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroyFontCache(
     const std::vector<FontProperties>& fonts) const {
     for(const auto& fontProperties: fonts) {
+        if(fontProperties.persist) {
+            continue;
+        } // skip any Font with (persist flag == true)
         const auto& destroyHandle{
             resourceManager.DestroyResourceHandle(fontProperties.id, ResourceHandle::Type::Font)
         };
@@ -450,6 +520,9 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildTextureC
 std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroyTextureCache(
     const std::vector<TextureProperties>& textures) const {
     for(const auto& textureProperties: textures) {
+        if(textureProperties.persist) {
+            continue;
+        } // skip any Texture with (persist flag == true)
         const auto& destroyHandle{
             resourceManager.DestroyResourceHandle(textureProperties.id, ResourceHandle::Type::Texture)
         };
@@ -498,6 +571,9 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildRepeatin
 std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroyRepeatingTextureCache(
     const std::vector<RepeatingTextureProperties>& textures) const {
     for(const auto& textureProperties: textures) {
+        if(textureProperties.persist) {
+            continue;
+        } // skip any Texture with (persist flag == true)
         const auto& destroyInputHandle{
             resourceManager.DestroyResourceHandle(textureProperties.inputID, ResourceHandle::Type::Texture)
         };
@@ -571,6 +647,9 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildSegmente
 std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroySegmentedTextureCache(
     const std::vector<SegmentedTextureProperties>& textures) const {
     for(const auto& textureProperties: textures) {
+        if(textureProperties.persist) {
+            continue;
+        } // skip any Texture with (persist flag == true)
         for(auto segmentProperties: textureProperties.segments) {
             ResourceID segmentID{textureProperties.id};
             segmentID += static_cast<char>(std::toupper(segmentProperties.id[0]));
@@ -697,6 +776,9 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildBorderTe
 
 std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroyBorderTextureCache(
     const BorderTextureProperties& properties) const {
+    if(properties.persist) {
+        return std::nullopt;
+    } // skip if (persist flag == true)
     for(const auto& corner: properties.cornerTextures) {
         const auto& destroyCornerHandle{
             resourceManager.DestroyResourceHandle(corner.id, ResourceHandle::Type::Texture)

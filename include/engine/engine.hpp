@@ -11,10 +11,11 @@
 
 #include "config.hpp"
 #include "error.hpp"
-#include "system/log.hpp"
-#include "system/render.hpp"
-#include "system/input.hpp"
 #include "system/event.hpp"
+#include "system/input.hpp"
+#include "system/log.hpp"
+#include "system/music.hpp"
+#include "system/render.hpp"
 #include "../resource/manager.hpp"
 #include "../ui/sceneManager.hpp"
 
@@ -67,13 +68,15 @@ namespace farcical {
 
             [[nodiscard]] ui::SceneManager& GetSceneManager() const;
 
-            [[nodiscard]] LogSystem& GetLogSystem() const;
-
-            [[nodiscard]] RenderSystem& GetRenderSystem() const;
+            [[nodiscard]] EventSystem& GetEventSystem() const;
 
             [[nodiscard]] InputSystem& GetInputSystem() const;
 
-            [[nodiscard]] EventSystem& GetEventSystem() const;
+            [[nodiscard]] LogSystem& GetLogSystem() const;
+
+            [[nodiscard]] MusicSystem& GetMusicSystem() const;
+
+            [[nodiscard]] RenderSystem& GetRenderSystem() const;
 
         private:
             Status status;
@@ -87,13 +90,15 @@ namespace farcical {
 
             std::unique_ptr<ui::SceneManager> sceneManager;
 
-            std::unique_ptr<LogSystem> logSystem;
-
-            std::unique_ptr<RenderSystem> renderSystem;
+            std::unique_ptr<EventSystem> eventSystem;
 
             std::unique_ptr<InputSystem> inputSystem;
 
-            std::unique_ptr<EventSystem> eventSystem;
+            std::unique_ptr<LogSystem> logSystem;
+
+            std::unique_ptr<MusicSystem> musicSystem;
+
+            std::unique_ptr<RenderSystem> renderSystem;
 
             game::Game* game;
 

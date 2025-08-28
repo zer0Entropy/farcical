@@ -26,6 +26,10 @@ namespace farcical::ui {
 
         void DoAction(Action action) override;
 
+        [[nodiscard]] sf::Music* GetCachedMusic(ResourceID id) const;
+
+        [[nodiscard]] MusicProperties GetCachedMusicProperties(ResourceID id) const;
+
         [[nodiscard]] sf::Font* GetCachedFont(ResourceID id) const;
 
         [[nodiscard]] FontProperties GetCachedFontProperties(ResourceID id) const;
@@ -34,6 +38,10 @@ namespace farcical::ui {
 
         [[nodiscard]] TextureProperties GetCachedTextureProperties(ResourceID id) const;
 
+        void CacheMusic(ResourceID id, sf::Music* music);
+
+        void CacheMusicProperties(ResourceID id, const MusicProperties& musicProperties);
+
         void CacheFont(ResourceID id, sf::Font* font);
 
         void CacheFontProperties(ResourceID id, const FontProperties& fontProperties);
@@ -41,6 +49,10 @@ namespace farcical::ui {
         void CacheTexture(ResourceID id, sf::Texture* texture);
 
         void CacheTextureProperties(ResourceID id, const TextureProperties& textureProperties);
+
+        void ClearMusicCache();
+
+        void ClearMusicPropertiesCache();
 
         void ClearFontCache();
 
@@ -58,6 +70,9 @@ namespace farcical::ui {
         [[nodiscard]] MenuController* GetMenuController(engine::EntityID menuID);
 
     private:
+        std::unordered_map<ResourceID, sf::Music*> musicCache;
+        std::unordered_map<ResourceID, MusicProperties> musicPropertiesCache;
+
         std::unordered_map<ResourceID, sf::Font*> fontCache;
         std::unordered_map<ResourceID, FontProperties> fontPropertiesCache;
 

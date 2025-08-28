@@ -72,15 +72,18 @@ std::expected<farcical::engine::Config, farcical::engine::Error> farcical::engin
 
 std::optional<farcical::engine::Error> farcical::engine::WriteConfig(const Config& config, std::string_view path) {
     const nlohmann::json configJSON{
-        {"window",{
+        {
+            "window", {
                 {"width", config.windowProperties.displayMode.x},
                 {"height", config.windowProperties.displayMode.y},
                 {"title", config.windowProperties.title},
                 {"fullscreen", config.windowProperties.fullscreen},
-                {"position", {
-                    {"x", config.windowProperties.position.x},
-                    {"y", config.windowProperties.position.y}
-                }}
+                {
+                    "position", {
+                        {"x", config.windowProperties.position.x},
+                        {"y", config.windowProperties.position.y}
+                    }
+                }
             },
             {"scenePath", config.scenePath},
             {"logPath", config.logPath}

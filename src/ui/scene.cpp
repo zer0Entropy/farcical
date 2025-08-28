@@ -9,6 +9,22 @@ void farcical::ui::Scene::DoAction(Action action) {
 farcical::ui::Scene::Scene(engine::EntityID id) : Container(id, Widget::Type::Scene, nullptr) {
 }
 
+sf::Music* farcical::ui::Scene::GetCachedMusic(ResourceID id) const {
+    const auto& findMusic{musicCache.find(id)};
+    if(findMusic != musicCache.end()) {
+        return findMusic->second;
+    }
+    return nullptr;
+}
+
+farcical::MusicProperties farcical::ui::Scene::GetCachedMusicProperties(ResourceID id) const {
+    const auto& findProperties{musicPropertiesCache.find(id)};
+    if(findProperties != musicPropertiesCache.end()) {
+        return findProperties->second;
+    }
+    return MusicProperties{};
+}
+
 sf::Font* farcical::ui::Scene::GetCachedFont(ResourceID id) const {
     const auto& findFont{fontCache.find(id)};
     if(findFont != fontCache.end()) {
@@ -41,20 +57,36 @@ farcical::TextureProperties farcical::ui::Scene::GetCachedTextureProperties(Reso
     return TextureProperties{};
 }
 
+void farcical::ui::Scene::CacheMusic(ResourceID id, sf::Music* music) {
+    musicCache.emplace(id, music);
+}
+
+void farcical::ui::Scene::CacheMusicProperties(ResourceID id, const MusicProperties& musicProperties) {
+    musicPropertiesCache.emplace(id, musicProperties);
+}
+
 void farcical::ui::Scene::CacheFont(ResourceID id, sf::Font* font) {
-    fontCache.insert(std::make_pair(id, font));
+    fontCache.emplace(id, font);
 }
 
 void farcical::ui::Scene::CacheFontProperties(ResourceID id, const FontProperties& fontProperties) {
-    fontPropertiesCache.insert(std::make_pair(id, fontProperties));
+    fontPropertiesCache.emplace(id, fontProperties);
 }
 
 void farcical::ui::Scene::CacheTexture(ResourceID id, sf::Texture* texture) {
-    textureCache.insert(std::make_pair(id, texture));
+    textureCache.emplace(id, texture);
 }
 
 void farcical::ui::Scene::CacheTextureProperties(ResourceID id, const TextureProperties& textureProperties) {
-    texturePropertiesCache.insert(std::make_pair(id, textureProperties));
+    texturePropertiesCache.emplace(id, textureProperties);
+}
+
+void farcical::ui::Scene::ClearMusicCache() {
+    musicCache.clear();
+}
+
+void farcical::ui::Scene::ClearMusicPropertiesCache() {
+    musicPropertiesCache.clear();
 }
 
 void farcical::ui::Scene::ClearFontCache() {

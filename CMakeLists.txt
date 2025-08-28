@@ -22,6 +22,7 @@ add_executable( main
         src/engine/system/event.cpp
         src/engine/system/input.cpp
         src/engine/system/log.cpp
+        src/engine/system/music.cpp
         src/engine/system/render.cpp
         src/game/game.cpp
         src/game/map.cpp
@@ -42,4 +43,4 @@ add_executable( main
         src/main.cpp
 )
 target_compile_features(main PRIVATE cxx_std_23)
-target_link_libraries(main PRIVATE SFML::Graphics nlohmann_json::nlohmann_json)
+target_link_libraries(main PRIVATE SFML::Audio SFML::Graphics nlohmann_json::nlohmann_json)

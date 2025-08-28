@@ -20,6 +20,7 @@ void farcical::ResourceManager::Reset() {
     jsonDocs.clear();
     fonts.clear();
     textures.clear();
+    musics.clear();
     logSystem = nullptr;
 }
 
@@ -74,7 +75,10 @@ std::optional<farcical::engine::Error> farcical::ResourceManager::DestroyResourc
 
         } break;
         case ResourceHandle::Type::Music: {
-
+            const auto& findMusic{musics.find(id)};
+            if(findMusic != musics.end()) {
+                musics.erase(findMusic);
+            }
         } break;
     }
     const auto& findResource{registry.find(id)};
@@ -206,6 +210,39 @@ std::expected<sf::Font*, farcical::engine::Error> farcical::ResourceManager::Get
         handle->status = ResourceHandle::Status::IsReady;
         return &fontResult.first->second;
     } // if ResourceHandle is marked Uninitialized
+
+    // If we reach this code path, an Error has occurred!
+    const std::string failMsg{"Resource not found: " + id};
+    return std::unexpected{engine::Error{engine::Error::Signal::ResourceNotFound, failMsg}};
+}
+
+std::expected<sf::Music*, farcical::engine::Error> farcical::ResourceManager::GetMusic(ResourceID id) {
+    ResourceHandle* handle{GetResourceHandle(id)};
+    if(!handle) {
+        const std::string failMsg{"Resource not found: " + id + "."};
+        return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+    } // if handle does not exist
+
+    if(handle->status == ResourceHandle::Status::IsReady) {
+        const auto& musicIter{musics.find(id)};
+        if(musicIter != musics.end()) {
+            return &musicIter->second;
+        } // if Music found
+        handle->status = ResourceHandle::Status::Error;
+        const std::string failMsg{"Resource not found: " + id + "."};
+        return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+    } // if status == IsReady
+
+    if(handle->status == ResourceHandle::Status::Uninitialized) {
+        // Create the Music and load it from file
+        const auto& musicResult{musics.emplace(id, sf::Music{handle->path})};
+        if(!musicResult.second) {
+            const std::string failMsg{"Invalid path: Could not open Music at " + handle->path + "."};
+            return std::unexpected(engine::Error{engine::Error::Signal::InvalidPath, failMsg});
+        } // if textureResult.second == false
+        handle->status = ResourceHandle::Status::IsReady;
+        return &musicResult.first->second;
+    } // if status == Uninitialized
 
     // If we reach this code path, an Error has occurred!
     const std::string failMsg{"Resource not found: " + id};

@@ -11,10 +11,11 @@ farcical::engine::Engine::Engine(std::string_view configPath) : status{Status::U
                                                                 configPath{configPath},
                                                                 window{nullptr},
                                                                 sceneManager{nullptr},
-                                                                logSystem{nullptr},
-                                                                renderSystem{nullptr},
-                                                                inputSystem{nullptr},
                                                                 eventSystem{nullptr},
+                                                                inputSystem{nullptr},
+                                                                logSystem{nullptr},
+                                                                musicSystem{nullptr},
+                                                                renderSystem{nullptr},
                                                                 game{nullptr} {
 }
 
@@ -160,6 +161,7 @@ void farcical::engine::Engine::Update() {
     renderSystem->Update();
     inputSystem->Update();
     eventSystem->Update();
+    musicSystem->Update();
     const auto& gameUpdateResult{game->Update()};
     if(gameUpdateResult.has_value()) {
       status = Status::Error;
@@ -167,7 +169,6 @@ void farcical::engine::Engine::Update() {
     }
     if(!window->isOpen()) {
       status = Status::StoppedSuccessfully;
-      return;
     }
   }
 }
@@ -178,6 +179,10 @@ void farcical::engine::Engine::Stop() {
     sceneManager->DestroyCurrentScene();
     sceneManager.reset(nullptr);
   }
+  if(musicSystem) {
+    musicSystem->Stop();
+    musicSystem.reset(nullptr);
+  } // if musicSystem
   if(eventSystem) {
     eventSystem->Stop();
     eventSystem.reset(nullptr);
@@ -214,14 +219,9 @@ farcical::ui::SceneManager& farcical::engine::Engine::GetSceneManager() const {
   return *sceneManager;
 }
 
-farcical::engine::LogSystem& farcical::engine::Engine::GetLogSystem() const {
-  assert(logSystem != nullptr && "Unexpected nullptr: logSystem");
-  return *logSystem;
-}
-
-farcical::engine::RenderSystem& farcical::engine::Engine::GetRenderSystem() const {
-  assert(renderSystem != nullptr && "Unexpected nullptr: renderSystem");
-  return *renderSystem;
+farcical::engine::EventSystem& farcical::engine::Engine::GetEventSystem() const {
+  assert(eventSystem != nullptr && "Unexpected nullptr: eventSystem");
+  return *eventSystem;
 }
 
 farcical::engine::InputSystem& farcical::engine::Engine::GetInputSystem() const {
@@ -229,9 +229,19 @@ farcical::engine::InputSystem& farcical::engine::Engine::GetInputSystem() const 
   return *inputSystem;
 }
 
-farcical::engine::EventSystem& farcical::engine::Engine::GetEventSystem() const {
-  assert(eventSystem != nullptr && "Unexpected nullptr: eventSystem");
-  return *eventSystem;
+farcical::engine::LogSystem& farcical::engine::Engine::GetLogSystem() const {
+  assert(logSystem != nullptr && "Unexpected nullptr: logSystem");
+  return *logSystem;
+}
+
+farcical::engine::MusicSystem& farcical::engine::Engine::GetMusicSystem() const {
+  assert(musicSystem != nullptr && "Unexpected nullptr: musicSystem");
+  return *musicSystem;
+}
+
+farcical::engine::RenderSystem& farcical::engine::Engine::GetRenderSystem() const {
+  assert(renderSystem != nullptr && "Unexpected nullptr: renderSystem");
+  return *renderSystem;
 }
 
 std::optional<farcical::engine::Error> farcical::engine::Engine::CreateLogSystem() {
@@ -284,23 +294,31 @@ std::optional<farcical::engine::Error> farcical::engine::Engine::CreateSystems()
   } // if EventSystem already exists
   eventSystem = std::make_unique<EventSystem>(*game, *this);
 
+  if(inputSystem) {
+    inputSystem->Stop();
+    inputSystem.reset();
+  } // if inputSystem already exists
+  inputSystem = std::make_unique<InputSystem>(*window, *logSystem);
+
+  if(musicSystem) {
+    musicSystem->Stop();
+    musicSystem.reset();
+  } // if musicSystem already exists
+  musicSystem = std::make_unique<MusicSystem>(resourceManager, *logSystem);
+
   if(renderSystem) {
     renderSystem->Stop();
     renderSystem.reset();
   } // if renderSystem already exists
   renderSystem = std::make_unique<RenderSystem>(*window, *logSystem);
 
-  if(inputSystem) {
-    inputSystem->Stop();
-    inputSystem.reset();
-  } // if inputSystem already exists
-  inputSystem = std::make_unique<InputSystem>(*window, *logSystem);
   return std::nullopt;
 }
 
 std::optional<farcical::engine::Error> farcical::engine::Engine::InitSystems() {
-  renderSystem->Init();
-  inputSystem->Init();
   eventSystem->Init();
+  inputSystem->Init();
+  musicSystem->Init();
+  renderSystem->Init();
   return std::nullopt;
 }

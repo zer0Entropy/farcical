@@ -6,7 +6,8 @@
 
 farcical::engine::EventSystem::EventSystem(game::Game& game, Engine& engine) : System(ID::EventSystem,
                                                                                    engine.GetLogSystem()),
-                                                                               game{game}, engine{engine} {
+                                                                               game{game},
+                                                                               engine{engine} {
 }
 
 void farcical::engine::EventSystem::Enqueue(const Event& event) {

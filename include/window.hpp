@@ -6,14 +6,13 @@
 #include <SFML/System/Vector2.hpp>
 
 namespace farcical {
-
     struct WindowProperties {
-        sf::Vector2u        displayMode;
-        sf::Vector2u        sizeInPixels;
-        std::string         title;
-        sf::Vector2i        position;
-        bool                fullscreen;
-        bool                detectNativeResolution;
+        sf::Vector2u displayMode;
+        sf::Vector2u sizeInPixels;
+        std::string title;
+        sf::Vector2i position;
+        bool fullscreen;
+        bool detectNativeResolution;
     };
 
     static constexpr std::expected<WindowProperties, engine::Error> GetWindowProperties(std::string_view description) {
@@ -42,11 +41,13 @@ namespace farcical {
             windowProperties.fullscreen = false;
         } // if windowedCap
 
-        if(     findFullscreen == std::string::npos
-            &&  findFullscreenCap == std::string::npos
-            &&  findWindowed == std::string::npos
-            &&  findWindowedCap == std::string::npos) {
-            const std::string failMsg{"Invalid configuration: Neither windowed nor fullscreen mode specified in display settings."};
+        if(findFullscreen == std::string::npos
+           && findFullscreenCap == std::string::npos
+           && findWindowed == std::string::npos
+           && findWindowedCap == std::string::npos) {
+            const std::string failMsg{
+                "Invalid configuration: Neither windowed nor fullscreen mode specified in display settings."
+            };
             return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
         } // if !fullscreen && !windowed
 
@@ -69,17 +70,18 @@ namespace farcical {
             windowProperties.displayMode.y = 1024;
         } // if 1280 x 1024
 
-        if(     findNative == std::string::npos
-            &&  findNativeCap == std::string::npos
-            &&  find1920x1280 == std::string::npos
-            &&  find1280x1024 == std::string::npos) {
-            const std::string failMsg{"Invalid configuration: No valid window resolution was specified in the display settings."};
+        if(findNative == std::string::npos
+           && findNativeCap == std::string::npos
+           && find1920x1280 == std::string::npos
+           && find1280x1024 == std::string::npos) {
+            const std::string failMsg{
+                "Invalid configuration: No valid window resolution was specified in the display settings."
+            };
             return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
         } // !native && !1920x1280 && !1280x1024
 
         return windowProperties;
     }
-
 };
 
 #endif

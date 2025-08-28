@@ -51,6 +51,10 @@ namespace farcical::ui {
 
         std::optional<engine::Error> DestroyResourceCache(const SceneProperties& properties) const;
 
+        std::optional<engine::Error> BuildMusicCache(const std::vector<MusicProperties>& musics) const;
+
+        std::optional<engine::Error> DestroyMusicCache(const std::vector<MusicProperties>& musics) const;
+
         std::optional<engine::Error> BuildFontCache(const std::vector<FontProperties>& fonts) const;
 
         std::optional<engine::Error> DestroyFontCache(const std::vector<FontProperties>& fonts) const;

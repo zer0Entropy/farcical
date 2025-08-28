@@ -8,11 +8,12 @@
 #include <expected>
 #include <unordered_map>
 #include <nlohmann/json.hpp>
+#include <SFML/Audio/Music.hpp>
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Texture.hpp>
+#include "config.hpp"
 #include "resource.hpp"
 #include "../engine/error.hpp"
-#include "config.hpp"
 #include "../engine/system/log.hpp"
 
 namespace farcical {
@@ -40,6 +41,8 @@ namespace farcical {
         std::expected<nlohmann::json*, engine::Error> GetJSONDoc(ResourceID id);
 
         std::expected<sf::Font*, engine::Error> GetFont(ResourceID id);
+
+        std::expected<sf::Music*, engine::Error> GetMusic(ResourceID id);
 
         std::expected<sf::Texture*, engine::Error> GetTexture(ResourceID id);
 
@@ -83,6 +86,7 @@ namespace farcical {
         std::unordered_map<ResourceID, nlohmann::json> jsonDocs;
         std::unordered_map<ResourceID, sf::Font> fonts;
         std::unordered_map<ResourceID, sf::Texture> textures;
+        std::unordered_map<ResourceID, sf::Music> musics;
 
         engine::LogSystem* logSystem;
     };

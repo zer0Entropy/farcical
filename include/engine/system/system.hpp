@@ -10,18 +10,18 @@
 namespace farcical::engine {
     class System : public LogInterface {
     public:
-
         enum class ID {
             LogSystem,
             RenderSystem,
             InputSystem,
-            EventSystem
+            EventSystem,
+            MusicSystem
         };
 
         System() = delete;
 
-        explicit System(const System::ID id, LogSystem& logSystem): LogInterface(logSystem),
-                                                                    id{id} {
+        explicit System(const System::ID id, LogSystem& logSystem) : LogInterface(logSystem),
+                                                                     id{id} {
         }
 
         virtual ~System() = default;

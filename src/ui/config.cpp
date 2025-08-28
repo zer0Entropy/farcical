@@ -335,6 +335,18 @@ std::expected<farcical::ui::SceneProperties, farcical::engine::Error> farcical::
     properties.id = findID.value().get<std::string>();
     /**********************     ID      **********************/
 
+    /**********************     Music      **********************/
+    const auto& findMusic{json.find("music")};
+    if(findMusic != json.end()) {
+        const auto& musicJSON{findMusic.value()};
+        const auto& loadMusicResult{LoadMusicProperties(musicJSON)};
+        if(!loadMusicResult.has_value()) {
+            return std::unexpected(loadMusicResult.error());
+        } // if loadMusicResult == failure
+        properties.music = loadMusicResult.value();
+    } // if Music found
+    /**********************     Music      **********************/
+
     /**********************     Fonts      **********************/
     const auto& findFonts{json.find("fonts")};
     if(findFonts != json.end()) {

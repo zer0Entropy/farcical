@@ -30,7 +30,8 @@ namespace farcical {
             Font,
             Texture,
             Sound,
-            Music
+            Music,
+            NumResourceTypes
         };
 
         ResourceID          id;
