@@ -6,7 +6,7 @@
 #include "../../include/engine/system/render.hpp"
 
 farcical::ui::Button::Button(engine::EntityID id, const engine::Event::Parameters& onPress, Container* parent)
-    : Widget(id, Widget::Type::Button, parent, false),
+    : Widget(id, Widget::Type::Button, parent, true),
       textures{nullptr},
       status{Status::Normal},
       onPressEvent{onPress} {

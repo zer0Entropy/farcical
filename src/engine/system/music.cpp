@@ -28,6 +28,12 @@ void farcical::engine::MusicSystem::StopMusic() {
     } // if currentMusic
 }
 
+void farcical::engine::MusicSystem::SetLoop(bool loop) {
+    if(currentMusic) {
+        currentMusic->setLooping(loop);
+    } // if currentMusic
+}
+
 farcical::ResourceID farcical::engine::MusicSystem::GetCurrentMusic() const {
     if(currentMusicHandle) {
         return currentMusicHandle->id;

@@ -79,6 +79,8 @@ namespace farcical::ui {
 
         [[nodiscard]] Menu::Type GetMenuType() const;
 
+        [[nodiscard]] std::vector<Widget*> GetFocusList() const;
+
         [[nodiscard]] const std::vector<Button*>& GetButtons() const;
 
         [[nodiscard]] const std::vector<RadioButton*>& GetRadioButtons() const;

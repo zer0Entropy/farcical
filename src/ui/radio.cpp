@@ -4,7 +4,8 @@
 #include "../../include/ui/radio.hpp"
 #include "../../include/engine/component/render.hpp"
 
-farcical::ui::RadioButton::RadioButton(engine::EntityID id, Container* parent) : Widget(id, Type::RadioButton, parent),
+farcical::ui::RadioButton::RadioButton(engine::EntityID id, Container* parent):
+    Widget(id, Type::RadioButton, parent, true),
     textures{nullptr},
     status{Status::Unselected} {
 }

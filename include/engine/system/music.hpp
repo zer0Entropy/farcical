@@ -25,6 +25,8 @@ namespace farcical::engine {
 
         void StopMusic();
 
+        void SetLoop(bool loop);
+
         ResourceID GetCurrentMusic() const;
 
         void SetCurrentMusic(ResourceID musicID);

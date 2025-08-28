@@ -49,6 +49,26 @@ farcical::ui::Menu::Type farcical::ui::Menu::GetMenuType() const {
   return menuType;
 }
 
+std::vector<farcical::ui::Widget*> farcical::ui::Menu::GetFocusList() const {
+  std::vector<Widget*> focusList;
+  if(menuType == Menu::Type::SubMenu) {
+    for(const auto& subMenu: subMenus) {
+      const auto& subFocusList{subMenu->GetFocusList()};
+      for(const auto& focusable: subFocusList) {
+        focusList.push_back(focusable);
+      } // for each focusable Widget in subFocusList
+    } // for each subMenu
+  } // if this Menu is composed of SubMenus, concatenate their focusLists together
+  else {
+    for(const auto& widget: children) {
+      if(widget->CanReceiveFocus()) {
+        focusList.push_back(widget.get());
+      } // if widget canReceiveFocus
+    } // for each Widget in children
+  }
+  return focusList;
+}
+
 const std::vector<farcical::ui::Button*>& farcical::ui::Menu::GetButtons() const {
   return buttons;
 }
@@ -236,103 +256,73 @@ farcical::ui::MenuController::MenuController(Menu* menu, engine::EventSystem& ev
 }
 
 void farcical::ui::MenuController::ReceiveMouseMovement(sf::Vector2i position) {
-  const auto& itemList{menu->GetItems()};
-  for(const auto& item: itemList) {
-    const auto& button{std::get_if<Button*>(&item)};
-    const auto& radioButton{std::get_if<RadioButton*>(&item)};
-    const auto& subMenu{std::get_if<Menu*>(&item)};
-    Widget* widget{nullptr};
-    if(button) {
-      widget = *button;
-    } // if Button
-    else if(radioButton) {
-      widget = *radioButton;
-    } // if radioButton
-    else if(subMenu) {
-      widget = *subMenu;
-    } // if subMenu
-    else {
-      return;
-    }
-
+  const auto& focusList{menu->GetFocusList()};
+  for(const auto& widget: focusList) {
     if(IsPointWithinRect(position, widget->GetBounds())) {
       widget->DoAction(Action{Action::Type::ReceiveFocus});
-    } // if this Item is under the cursor
+    } // if cursor position intersects this Widget's bounds
     else {
-      // if(menu->GetSelectedItem() == item) {
       widget->DoAction(Action{Action::Type::LoseFocus});
-    } // else if selectedItem == item
-  } // for each Item in Menu
+    } // else cursor position does not intersect this Widget's bounds
+  } // for each focusable Widget in focusList
 }
 
 void farcical::ui::MenuController::ReceiveMouseButtonPress(sf::Mouse::Button buttonPressed, sf::Vector2i position) {
-  const auto& itemList{menu->GetItems()};
-  for(const auto& item: itemList) {
-    const auto& button{std::get_if<Button*>(&item)};
-    const auto& radioButton{std::get_if<RadioButton*>(&item)};
-    const auto& subMenu{std::get_if<Menu*>(&item)};
-    Widget* widget{nullptr};
-    if(button) {
-      widget = *button;
-    } // if Button
-    else if(radioButton) {
-      widget = *radioButton;
-    } // if radioButton
-    else if(subMenu) {
-      widget = *subMenu;
-    } // if subMenu
-    else {
-      return;
-    }
-
+  const auto& focusList{menu->GetFocusList()};
+  int index = 0;
+  for(const auto& widget: focusList) {
     if(IsPointWithinRect(position, widget->GetBounds())) {
-      menu->SetSelectedItem(item);
+      menu->SetSelectedIndex(index);
       widget->DoAction(Action{Action::Type::SetPressedTrue});
-    } // if this Item is under the cursor
-    else if(menu->GetSelectedItem() == item) {
+    } // if cursor position intersects this Widget's bounds
+    else if(menu->GetSelectedIndex() == index) {
       widget->DoAction(Action{Action::Type::LoseFocus});
-    } // else if selectedItem == item
-  } // for each Item in Menu
+    } // else if cursor does not intersect the bounds of currently selected Widget, that Widget loses focus
+    ++index;
+  } // for each focusable Widget in focusList
 }
 
 void farcical::ui::MenuController::ReceiveMouseButtonRelease(sf::Mouse::Button buttonReleased, sf::Vector2i position) {
-  const auto& itemList{menu->GetItems()};
-  for(const auto& item: itemList) {
-    const auto& button{std::get_if<Button*>(&item)};
-    const auto& radioButton{std::get_if<RadioButton*>(&item)};
-    const auto& subMenu{std::get_if<Menu*>(&item)};
-    if(button) {
-      if((*button)->GetStatus() == Button::Status::Pressed) {
-        (*button)->DoAction(Action{Action::Type::SetPressedFalse});
-        if(IsPointWithinRect(position, (*button)->GetBounds())) {
-          const engine::Event::Parameters& eventParams{(*button)->GetOnPressEvent()};
+  const auto& focusList{menu->GetFocusList()};
+  int index = 0;
+  for(const auto& widget: focusList) {
+    if(widget->GetType() == Widget::Type::Button) {
+      Button* button{dynamic_cast<Button*>(widget)};
+      if(button->GetStatus() == Button::Status::Pressed) {
+        button->DoAction(Action{Action::Type::SetPressedFalse});
+        if(IsPointWithinRect(position, button->GetBounds())) {
+          const engine::Event::Parameters& eventParams{button->GetOnPressEvent()};
           eventSystem.Enqueue(engine::Event{eventParams.type, eventParams.args});
-        } // if cursor is within Button's bounds
-      } // if Button status == Pressed
+        } // if cursor position intersects with this Button's bounds
+      } // if buttonStatus == Pressed
     } // if Button
-    else if(radioButton) {
-      if(IsPointWithinRect(position, (*radioButton)->GetBounds())) {
-        menu->SetSelectedItem(item);
-        (*radioButton)->DoAction(Action{Action::Type::SetSelectedTrue});
-      } // if cursor is within RadioButton's bounds
-      else if(menu->GetSelectedIndex() >= 0 && (*radioButton) != menu->GetWidget(menu->GetSelectedIndex())) {
-        (*radioButton)->DoAction(Action{Action::Type::SetSelectedFalse});
-      } // else if radioButton.status == Selected
-    } // else if radioButton
-    else if(subMenu) {
-    } // if subMenu
-    else {
-      return;
-    }
-  } // for each Item in Menu
+
+    else if(widget->GetType() == Widget::Type::RadioButton) {
+      RadioButton* radioButton{dynamic_cast<RadioButton*>(widget)};
+      if(IsPointWithinRect(position, radioButton->GetBounds())) {
+        menu->SetSelectedIndex(index);
+        radioButton->DoAction(Action{Action::Type::SetSelectedTrue});
+      } // if cursor position intersects with this RadioButton's bounds
+      else if(menu->GetSelectedIndex() != index) {
+        radioButton->DoAction(Action{Action::Type::SetSelectedFalse});
+      } // else if cursor does not intersect the bounds of currently selected RadioButton, that RadioButton is unselected
+    } // else if RadioButton
+
+    ++index;
+  } // for each focusable Widget in focusList
 }
 
 void farcical::ui::MenuController::ReceiveKeyboardInput(sf::Keyboard::Key input) {
+  bool selectionMoved{false};
+  int selectedIndex{menu->GetSelectedIndex()};
+
   if(input == sf::Keyboard::Key::Up || input == sf::Keyboard::Key::Left) {
     menu->DoAction(Action{Action::Type::MoveSelectionUp});
+    selectionMoved = true;
   } // if input == Up || Left
   else if(input == sf::Keyboard::Key::Down || input == sf::Keyboard::Key::Right) {
     menu->DoAction(Action{Action::Type::MoveSelectionDown});
+    selectionMoved = true;
   } // else if input == Down || Right
   else if(input == sf::Keyboard::Key::Enter) {
     if(menu->GetMenuType() == Menu::Type::Button) {
@@ -344,50 +334,17 @@ void farcical::ui::MenuController::ReceiveKeyboardInput(sf::Keyboard::Key input)
       const engine::Event::Parameters& onPressEvent{(*button)->GetOnPressEvent()};
       eventSystem.Enqueue(engine::Event{onPressEvent.type, onPressEvent.args});
     } // if Button
-    return;
   } // else if input == Enter
 
-  const auto& getSelected{menu->GetSelectedItem()};
-  const Menu::Item* selectedItem{nullptr};
-  if(getSelected.has_value()) {
-    selectedItem = &getSelected.value();
-  }
-  const auto& itemList{menu->GetItems()};
-  for(const auto& item: itemList) {
-    const auto& button{std::get_if<Button*>(&item)};
-    const auto& radioButton{std::get_if<RadioButton*>(&item)};
-    const auto& subMenu{std::get_if<Menu*>(&item)};
-    Widget* widget{nullptr};
-    bool isSelected{false};
-    if(button) {
-      widget = *button;
-      if(auto selectedButton = std::get_if<Button*>(selectedItem)) {
-        isSelected = true;
-      } // if this Button is selected
-    } // if Button
-    else if(radioButton) {
-      widget = *radioButton;
-      if(auto selectedRadio = std::get_if<RadioButton*>(selectedItem)) {
-        isSelected = true;
-      } // if this RadioButton is selected
-    } // if radioButton
-    else if(subMenu) {
-      widget = *subMenu;
-      if(auto selectedMenu = std::get_if<Menu*>(selectedItem)) {
-        isSelected = true;
-      } // if this Menu is selected
-    } // if subMenu
-    else {
-      return;
-    } // else widgetType is invalid
-
-    if(selectedItem && isSelected) {
-      widget->DoAction(Action{Action::Type::LoseFocus});
-    } // if selectedItem
-
-    Widget* selectedWidget{menu->GetWidget(menu->GetSelectedIndex())};
-    if(selectedWidget) {
-      selectedWidget->DoAction(Action{Action::Type::ReceiveFocus});
-    } // if selectedWidget
-  } // for each Item
+  if(selectionMoved) {
+    Widget* previouslySelected{menu->GetWidget(selectedIndex)};
+    if(previouslySelected) {
+      previouslySelected->DoAction(Action{Action::Type::LoseFocus});
+    } // if previouslySelected
+    selectedIndex = menu->GetSelectedIndex();
+    Widget* currentlySelected{menu->GetWidget(selectedIndex)};
+    if(currentlySelected) {
+      currentlySelected->DoAction(Action{Action::Type::ReceiveFocus});
+    } // if currentlySelected
+  } // if selectionMoved
 }

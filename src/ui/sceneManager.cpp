@@ -185,6 +185,7 @@ std::expected<farcical::ui::Scene*, farcical::engine::Error> farcical::ui::Scene
         if(musicSystem.GetCurrentMusic() != properties.music.id) {
             musicSystem.SetCurrentMusic(properties.music.id);
             musicSystem.PlayMusic();
+            musicSystem.SetLoop(properties.music.loop);
         } // if currentMusic does not match properties.music
     } // if Music
 
@@ -435,13 +436,16 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildMusicCac
         ResourceHandle* handle{resourceManager.GetResourceHandle(musicProperties.id)};
         if(handle) {
             if(!musicProperties.persist) {
-                const std::string failMsg{"Error: Attempted to create Resource (id=\"" + musicProperties.id + "\"), but it already exists!"};
+                const std::string failMsg{
+                    "Error: Attempted to create Resource (id=\"" + musicProperties.id + "\"), but it already exists!"
+                };
                 return engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg};
             } // if persist flag is not set
         } // if this ResourceHandle already exists
         else {
             const auto& createHandle{
-                resourceManager.CreateResourceHandle(musicProperties.id, ResourceHandle::Type::Music, musicProperties.path)
+                resourceManager.CreateResourceHandle(musicProperties.id, ResourceHandle::Type::Music,
+                                                     musicProperties.path)
             };
             if(!createHandle.has_value()) {
                 return createHandle.error();
