@@ -4,8 +4,8 @@
 #include "../../include/ui/radio.hpp"
 #include "../../include/engine/component/render.hpp"
 
-farcical::ui::RadioButton::Controller::Controller(RadioButton* radioButton, engine::EventSystem& eventSystem):
-    KeyboardInterface(),
+farcical::ui::RadioButton::Controller::Controller(RadioButton* radioButton,
+                                                  engine::EventSystem& eventSystem) : KeyboardInterface(),
     MouseInterface(),
     radioButton{radioButton},
     eventSystem{eventSystem} {

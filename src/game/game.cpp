@@ -27,39 +27,42 @@ void farcical::game::GameController::HandleEvent(const engine::Event& event) {
     } // if event.type == QuitGame
 
     else if(event.type == engine::Event::Type::ApplyEngineConfig) {
-
         WriteToLog("GameController received 'ApplyEngineConfig' event.");
-        const auto& createConfig{game.GetEngine().CreateConfig()};
-        engine::Config config{createConfig.value()};
-        if(createConfig.has_value()) {
-            engine::EntityID displayOptionsID{"displayOptions"};
-            ui::Widget* displayOptionsWidget{
-                game.GetEngine().GetSceneManager().GetCurrentScene()->FindChild(displayOptionsID)
-            };
-            if(displayOptionsWidget) {
-                ui::Menu* menu{dynamic_cast<ui::Menu*>(displayOptionsWidget)};
-                ui::Widget* focusedWidget{currentScene->GetFocusedWidget()};
-                if(focusedWidget) {
-                    engine::EntityID focusedWidgetID{focusedWidget->GetID()};
-                    const std::string radioButtonString{"RadioButton"};
-                    engine::EntityID labelID{
-                        focusedWidgetID.substr(0, focusedWidgetID.length() - radioButtonString.length())
-                    };
-                    labelID += "Label";
-                    ui::Text* radioButtonLabel{dynamic_cast<ui::Text*>(menu->FindChild(labelID))};
-                    if(radioButtonLabel) {
-                        const std::string contents{radioButtonLabel->GetContents()};
-                        const auto& getWindowProperties{GetWindowProperties(contents)};
-                        if(getWindowProperties.has_value()) {
-                            const WindowProperties& windowProperties{getWindowProperties.value()};
-                            config.windowProperties = windowProperties;
-                        } // if getWindowProperties
-                    } // if radioButtonLabel
-                } // if selectedWidget
-            } //
-            const auto& applyConfig{game.GetEngine().ApplyConfig(config)};
-        } // if
-
+        //const auto& createConfig{game.GetEngine().CreateConfig()};
+        //engine::Config config{createConfig.value()};
+        engine::Config currentConfig{game.GetEngine().GetConfig()};
+        engine::EntityID displayOptionsID{"displayOptions"};
+        ui::Widget* displayOptionsWidget{
+            game.GetEngine().GetSceneManager().GetCurrentScene()->FindChild(displayOptionsID)
+        };
+        if(displayOptionsWidget) {
+            ui::Menu* menu{dynamic_cast<ui::Menu*>(displayOptionsWidget)};
+            ui::Widget* focusedWidget{currentScene->GetFocusedWidget()};
+            if(focusedWidget) {
+                engine::EntityID focusedWidgetID{focusedWidget->GetID()};
+                const std::string radioButtonString{"RadioButton"};
+                engine::EntityID labelID{
+                    focusedWidgetID.substr(0, focusedWidgetID.length() - radioButtonString.length())
+                };
+                labelID += "Label";
+                ui::Text* radioButtonLabel{dynamic_cast<ui::Text*>(menu->FindChild(labelID))};
+                if(radioButtonLabel) {
+                    const std::string contents{radioButtonLabel->GetContents()};
+                    const auto& getWindowProperties{GetWindowProperties(contents)};
+                    bool changed{false};
+                    if(getWindowProperties.has_value()) {
+                        const WindowProperties& windowProperties{getWindowProperties.value()};
+                        if(currentConfig.windowProperties != windowProperties) {
+                            currentConfig.windowProperties = windowProperties;
+                            changed = true;
+                        } // if displayMode changed
+                    } // if getWindowProperties
+                    if(changed) {
+                        const auto& applyConfig{game.GetEngine().ApplyConfig(currentConfig)};
+                    }
+                } // if radioButtonLabel
+            } // if selectedWidget
+        } // if displayOptionsWidget
     } // else if event.type == ApplyEngineConfig
 
     else if(event.type == engine::Event::Type::CreateScene) {

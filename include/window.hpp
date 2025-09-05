@@ -13,6 +13,21 @@ namespace farcical {
         sf::Vector2i position;
         bool fullscreen;
         bool detectNativeResolution;
+
+        bool operator==(const WindowProperties& rhs) const {
+            bool equal{true};
+            if( displayMode.x != rhs.displayMode.x ||
+                displayMode.y != rhs.displayMode.y) {
+                equal = false;
+            } // if displayMode not equal
+            else if(fullscreen != rhs.fullscreen) {
+                equal = false;
+            } // else if fullscreen not equal
+            else if(detectNativeResolution != rhs.detectNativeResolution) {
+                equal = false;
+            } // else if detectNativeResolution not equal
+            return equal;
+        }
     };
 
     static constexpr std::expected<WindowProperties, engine::Error> GetWindowProperties(std::string_view description) {
@@ -59,10 +74,10 @@ namespace farcical {
         if(findNativeCap != std::string::npos) {
             windowProperties.detectNativeResolution = true;
         } // if Native
-        const auto& find1920x1280{displayString.find("1920 x 1280")};
-        if(find1920x1280 != std::string::npos) {
+        const auto& find1920x1080{displayString.find("1920 x 1080")};
+        if(find1920x1080 != std::string::npos) {
             windowProperties.displayMode.x = 1920;
-            windowProperties.displayMode.y = 1280;
+            windowProperties.displayMode.y = 1080;
         } // if 1920 x 1280
         const auto& find1280x1024{displayString.find("1280 x 1024")};
         if(find1280x1024 != std::string::npos) {
@@ -72,7 +87,7 @@ namespace farcical {
 
         if(findNative == std::string::npos
            && findNativeCap == std::string::npos
-           && find1920x1280 == std::string::npos
+           && find1920x1080 == std::string::npos
            && find1280x1024 == std::string::npos) {
             const std::string failMsg{
                 "Invalid configuration: No valid window resolution was specified in the display settings."
