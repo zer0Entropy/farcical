@@ -147,18 +147,6 @@ std::expected<farcical::ui::Text*, farcical::engine::Error> farcical::ui::factor
     return text;
 }
 
-std::optional<farcical::engine::Error> farcical::ui::factory::DestroyText(
-    engine::RenderSystem& renderSystem, Scene* scene, Text* text) {
-    const auto& destroyRenderComponent{
-        renderSystem.DestroyRenderComponent(scene->GetID(), text->GetID())
-    };
-    if(destroyRenderComponent.has_value()) {
-        return destroyRenderComponent.value();
-    } // if destroyRenderComponent == failure
-    text->GetParent()->RemoveChild(text->GetID());
-    return std::nullopt;
-}
-
 std::expected<farcical::ui::Menu*, farcical::engine::Error> farcical::ui::factory::CreateMenu(
     engine::RenderSystem& renderSystem,
     engine::InputSystem& inputSystem,
@@ -194,7 +182,7 @@ std::expected<farcical::ui::Menu*, farcical::engine::Error> farcical::ui::factor
             buttonProperties.labelProperties.second = properties.labelProperties.second;
             // Create Button
             const auto& createButtonResult{
-                CreateButton(renderSystem, scene, menu, properties, buttonProperties)
+                CreateButton(renderSystem, eventSystem, inputSystem, scene, menu, properties, buttonProperties)
             };
             if(!createButtonResult.has_value()) {
                 return std::unexpected(createButtonResult.error());
@@ -232,7 +220,7 @@ std::expected<farcical::ui::Menu*, farcical::engine::Error> farcical::ui::factor
             radioButtonProperties.labelProperties.second = properties.labelProperties.second;
             // Create RadioButton
             const auto& createRadioButtonResult{
-                CreateRadioButton(renderSystem, scene, menu, properties, radioButtonProperties)
+                CreateRadioButton(renderSystem, inputSystem, scene, menu, properties, radioButtonProperties)
             };
             if(!createRadioButtonResult.has_value()) {
                 return std::unexpected(createRadioButtonResult.error());
@@ -286,7 +274,7 @@ std::expected<farcical::ui::Menu*, farcical::engine::Error> farcical::ui::factor
             } // if createSubMenu == failure
         } // for each subMenu
     } // else if SubMenu Menu
-
+/*
     // Create MenuController for this Menu
     const auto& createMenuController{
         scene->CreateMenuController(menu, eventSystem)
@@ -301,7 +289,7 @@ std::expected<farcical::ui::Menu*, farcical::engine::Error> farcical::ui::factor
     if(!createInputComponent.has_value()) {
         return std::unexpected(createInputComponent.error());
     } // if createInputComponent == failure
-
+    */
     return menu;
 }
 
@@ -311,6 +299,7 @@ std::optional<farcical::engine::Error> farcical::ui::factory::DestroyMenu(
     engine::EventSystem& eventSystem,
     Scene* scene,
     Menu* menu) {
+    /*
     MenuController* controller{scene->GetMenuController(menu->GetID())};
     const auto& destroyInputCmp{
         inputSystem.DestroyInputComponent(controller->GetID())
@@ -324,37 +313,30 @@ std::optional<farcical::engine::Error> farcical::ui::factory::DestroyMenu(
     if(destroyMenuController.has_value()) {
         return destroyMenuController.value();
     } // if destroyMenuController == failure
-
-    const auto& itemList{menu->GetItems()};
-    for(const auto& item: itemList) {
-        Widget* widget{nullptr};
-        const auto getButtonPtr{std::get_if<Button*>(&item)};
-        const auto getRadioButtonPtr{std::get_if<RadioButton*>(&item)};
-        const auto getSubMenuPtr{std::get_if<Menu*>(&item)};
-        if(getButtonPtr) {
-            widget = *getButtonPtr;
-        } // if item.type == Button
-        else if(getRadioButtonPtr) {
-            widget = *getRadioButtonPtr;
-        } // else if item.type == RadioButton
-        else if(getSubMenuPtr) {
-            widget = *getSubMenuPtr;
-            DestroyMenu(renderSystem, inputSystem, eventSystem, scene, *getSubMenuPtr);
-        } // else if item.type == Menu
-        if(widget && menu->GetMenuType() != Menu::Type::SubMenu) {
+    */
+    for(const auto& child: menu->GetChildren()) {
+        if(child->HasComponent(engine::Component::Type::Render)) {
             const auto& destroyRenderCmp{
-                renderSystem.DestroyRenderComponent(scene->GetID(), widget->GetID())
+                renderSystem.DestroyRenderComponent(scene->GetID(), child->GetID())
             };
             if(destroyRenderCmp.has_value()) {
                 return destroyRenderCmp.value();
             } // if destroyRenderCmp == failure
-            menu->RemoveChild(widget->GetID());
-        } // if widget
-    } // for each MenuItem
-    for(const auto& child: menu->GetChildren()) {
-        if(child->GetType() == Widget::Type::Text) {
-            DestroyText(renderSystem, scene, dynamic_cast<Text*>(child));
-        } // if child->type == Text
+        } // if child has RenderComponent
+        if(child->HasComponent(engine::Component::Type::Input)) {
+            const auto& destroyInputCmp{
+                inputSystem.DestroyInputComponent(child->GetID())
+            };
+            if(destroyInputCmp.has_value()) {
+                return destroyInputCmp.value();
+            } // if destroyInputCmp == failure
+        } // if child has InputComponent
+        if(child->GetType() != Widget::Type::Menu) {
+            menu->RemoveChild(child->GetID());
+        } // if child is not a SubMenu
+        else {
+            DestroyMenu(renderSystem, inputSystem, eventSystem, scene, dynamic_cast<Menu*>(child));
+        } // else if child is a SubMenu
     } // for each child in Menu
 
     menu->GetParent()->RemoveChild(menu->GetID());
@@ -363,6 +345,8 @@ std::optional<farcical::engine::Error> farcical::ui::factory::DestroyMenu(
 
 std::expected<farcical::ui::Button*, farcical::engine::Error> farcical::ui::factory::CreateButton(
     engine::RenderSystem& renderSystem,
+    engine::EventSystem& eventSystem,
+    engine::InputSystem& inputSystem,
     Scene* scene,
     Menu* menu,
     const MenuProperties& menuProperties,
@@ -373,7 +357,7 @@ std::expected<farcical::ui::Button*, farcical::engine::Error> farcical::ui::fact
 
     // Create Button
     engine::EntityID buttonID{buttonProperties.id + "Button"};
-    menu->AddChild(std::make_unique<Button>(buttonID, buttonProperties.onPressEvent, menu));
+    menu->AddChild(std::make_unique<Button>(buttonID, buttonProperties.onPressEvent, eventSystem, menu));
     Button* button{dynamic_cast<Button*>(menu->FindChild(buttonID))};
 
     // Get Button index
@@ -445,12 +429,34 @@ std::expected<farcical::ui::Button*, farcical::engine::Error> farcical::ui::fact
         renderCmp->position = button->GetPosition();
         button->AddComponent(renderCmp);
     } // if createRenderCmp == success
+    else {
+        const std::string failMsg{
+            "Error: Failed to create RenderComponent for Button (id=\"" + button->GetID() + "\")."
+        };
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // else createRenderCmp == failure
+
+    Button::Controller* controller{button->GetController()};
+    const auto& createInputCmp{
+        inputSystem.CreateInputComponent(controller, controller, button->GetID())
+    };
+    if(createInputCmp.has_value()) {
+        engine::InputComponent* inputCmp{createInputCmp.value()};
+        button->AddComponent(inputCmp);
+    } // if createInputCmp == success
+    else {
+        const std::string failMsg{
+            "Error: Failed to create InputComponent for Button (id=\"" + button->GetID() + "\")."
+        };
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // else createInputCmp == failure
 
     return button;
 }
 
 std::expected<farcical::ui::RadioButton*, farcical::engine::Error> farcical::ui::factory::CreateRadioButton(
     engine::RenderSystem& renderSystem,
+    engine::InputSystem& inputSystem,
     Scene* scene,
     Menu* menu,
     const MenuProperties& menuProperties,
@@ -476,7 +482,7 @@ std::expected<farcical::ui::RadioButton*, farcical::engine::Error> farcical::ui:
     // Get Textures and TextureProperties
     const std::vector<sf::Texture*> radioButtonTextures{GetRadioButtonTextures(*scene, menuProperties)};
     const ResourceID textureID{
-        menuProperties.radioButtonTextures.at(static_cast<int>(RadioButton::Status::Unselected)).second.id + "Texture"
+        menuProperties.radioButtonTextures.at(static_cast<int>(RadioButton::Status::Off)).second.id + "Texture"
     };
     const TextureProperties& textureProperties{scene->GetCachedTextureProperties(textureID)};
     int textureIndex{0};
@@ -533,6 +539,21 @@ std::expected<farcical::ui::RadioButton*, farcical::engine::Error> farcical::ui:
         renderCmp->position = radioButton->GetPosition();
         radioButton->AddComponent(renderCmp);
     } // if createRenderCmp == success
+
+    RadioButton::Controller* controller{radioButton->GetController()};
+    const auto& createInputCmp{
+        inputSystem.CreateInputComponent(controller, controller, radioButton->GetID())
+    };
+    if(createInputCmp.has_value()) {
+        engine::InputComponent* inputCmp{createInputCmp.value()};
+        radioButton->AddComponent(inputCmp);
+    } // if createInputCmp == success
+    else {
+        const std::string failMsg{
+            "Error: Failed to create InputComponent for RadioButton (id=\"" + radioButton->GetID() + "\")."
+        };
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // else createInputCmp == failure
 
     return radioButton;
 }

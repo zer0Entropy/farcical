@@ -19,17 +19,16 @@ namespace farcical::ui {
     class Text;
 
     struct MenuLayout {
-
         Orientation orientation;
         int relativeSpacing;
         std::unordered_map<engine::EntityID, sf::Vector2f> positions;
 
-        MenuLayout(): orientation{Orientation::Vertical},
-                      relativeSpacing{0} {
+        MenuLayout() : orientation{Orientation::Vertical},
+                       relativeSpacing{0} {
         }
 
-        explicit MenuLayout(Orientation orientation, int relativeSpacing): orientation{orientation},
-                                                                           relativeSpacing{relativeSpacing} {
+        explicit MenuLayout(Orientation orientation, int relativeSpacing) : orientation{orientation},
+                                                                            relativeSpacing{relativeSpacing} {
         }
 
         ~MenuLayout() = default;
@@ -79,24 +78,6 @@ namespace farcical::ui {
 
         [[nodiscard]] Menu::Type GetMenuType() const;
 
-        [[nodiscard]] std::vector<Widget*> GetFocusList() const;
-
-        [[nodiscard]] const std::vector<Button*>& GetButtons() const;
-
-        [[nodiscard]] const std::vector<RadioButton*>& GetRadioButtons() const;
-
-        [[nodiscard]] const std::vector<Menu*>& GetSubMenus() const;
-
-        [[nodiscard]] std::vector<Item> GetItems() const;
-
-        [[nodiscard]] std::optional<Item> GetItem(int index) const;
-
-        [[nodiscard]] Widget* GetWidget(int index) const;
-
-        std::optional<Item> GetSelectedItem() const;
-
-        [[nodiscard]] int GetSelectedIndex() const;
-
         [[nodiscard]] sf::Texture* GetButtonTexture(Button::Status status) const;
 
         [[nodiscard]] sf::Texture* GetRadioButtonTexture(RadioButton::Status status) const;
@@ -108,10 +89,6 @@ namespace farcical::ui {
         void SetLabelFont(sf::Font& font);
 
         void SetTitleFont(sf::Font& font);
-
-        void SetSelectedIndex(int index);
-
-        void SetSelectedItem(const Item& item);
 
         void DoAction(Action action) override;
 
@@ -151,16 +128,19 @@ namespace farcical::ui {
     private:
         MenuLayout layout;
         Menu::Type menuType;
+
         std::vector<Button*> buttons;
         std::vector<RadioButton*> radioButtons;
         std::vector<Menu*> subMenus;
+
         std::map<Button::Status, sf::Texture*> buttonTextures;
         std::map<RadioButton::Status, sf::Texture*> radioButtonTextures;
+
         sf::Font* labelFont;
         sf::Font* titleFont;
-        int selectedIndex;
     };
 
+    /*
     class MenuController final : public engine::Entity, public MouseInterface, public KeyboardInterface {
     public:
         MenuController(Menu* menu, engine::EventSystem& eventSystem);
@@ -181,6 +161,7 @@ namespace farcical::ui {
         Menu* menu;
         engine::EventSystem& eventSystem;
     };
+*/
 }
 
 #endif //MENU_HPP

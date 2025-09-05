@@ -73,6 +73,23 @@ namespace farcical::ui {
             } // for each child in children
         }
 
+        [[nodiscard]] std::vector<Widget*> GetFocusList() const {
+            std::vector<Widget*> focusList;
+            for(const auto& child: children) {
+                if(child->CanReceiveFocus()) {
+                    focusList.push_back(child.get());
+                } // if child canReceiveFocus
+                if(child->IsContainer()) {
+                    const auto* container = dynamic_cast<Container*>(child.get());
+                    const auto& subList{container->GetFocusList()};
+                    for(const auto& subChild: subList) {
+                        focusList.push_back(subChild);
+                    } // for each subChild
+                } // if child isContainer
+            } // for each child
+            return focusList;
+        }
+
         virtual void DoAction(Action action) override = 0;
 
     protected:

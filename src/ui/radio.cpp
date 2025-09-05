@@ -4,10 +4,47 @@
 #include "../../include/ui/radio.hpp"
 #include "../../include/engine/component/render.hpp"
 
+farcical::ui::RadioButton::Controller::Controller(RadioButton* radioButton) : KeyboardInterface(),
+                                                                              MouseInterface(),
+                                                                              radioButton{radioButton} {
+}
+
+void farcical::ui::RadioButton::Controller::ReceiveMouseMovement(sf::Vector2i position) {
+    const auto& bounds{radioButton->GetBounds()};
+    if(IsPointWithinRect(position, bounds)) {
+        radioButton->DoAction(Action{Action::Type::ReceiveFocus});
+    } // if cursor position is within bounds
+    else {
+        radioButton->DoAction(Action{Action::Type::LoseFocus});
+    } // else if Button is not normal
+}
+
+void farcical::ui::RadioButton::Controller::ReceiveMouseButtonPress(sf::Mouse::Button mouseButton,
+                                                                    sf::Vector2i position) {
+}
+
+void farcical::ui::RadioButton::Controller::ReceiveMouseButtonRelease(sf::Mouse::Button mouseButton,
+                                                                      sf::Vector2i position) {
+    const auto& bounds{radioButton->GetBounds()};
+    if(mouseButton == sf::Mouse::Button::Left) {
+        if(IsPointWithinRect(position, bounds)) {
+            radioButton->DoAction(Action{Action::Type::SetPressedTrue});
+        } // if cursor position is within bounds
+        else {
+            radioButton->DoAction(Action{Action::Type::SetPressedFalse});
+        } // else
+    } // if Left-Click
+}
+
+void farcical::ui::RadioButton::Controller::ReceiveKeyboardInput(sf::Keyboard::Key input) {
+}
+
 farcical::ui::RadioButton::RadioButton(engine::EntityID id, Container* parent):
     Widget(id, Type::RadioButton, parent, true),
+    Focusable(),
     textures{nullptr},
-    status{Status::Unselected} {
+    status{Status::Off},
+    controller{std::make_unique<RadioButton::Controller>(this)} {
 }
 
 void farcical::ui::RadioButton::SetTexture(Status state, sf::Texture& texture) {
@@ -35,11 +72,51 @@ void farcical::ui::RadioButton::SetStatus(Status status) {
 }
 
 void farcical::ui::RadioButton::DoAction(Action action) {
-    if(action.type == Action::Type::SetSelectedTrue) {
-        SetStatus(Status::Selected);
+    if(action.type == Action::Type::SetPressedTrue) {
+        SetStatus(Status::On);
     } // if action == SetSelectedTrue
 
-    else if(action.type == Action::Type::SetSelectedFalse) {
-        SetStatus(Status::Unselected);
+    else if(action.type == Action::Type::SetPressedFalse) {
+        SetStatus(Status::Off);
     } // else if action == SetSelectedFalse
+
+    else if(action.type == Action::Type::ReceiveFocus) {
+        this->OnReceiveFocus();
+        focused = true;
+    } // else if action == ReceiveFocus
+
+    else if(action.type == Action::Type::LoseFocus) {
+        this->OnLoseFocus();
+        focused = false;
+    } // else if action == LoseFocus
+}
+
+void farcical::ui::RadioButton::OnReceiveFocus() {
+    // If this RadioButton already has focus, then there is nothing to do.
+    if(focused) {
+        return;
+    } // if focused
+    if(status == Status::Off) {
+        SetStatus(RadioButton::Status::OffHasFocus);
+    } // if status == Off
+    else if(status == Status::On) {
+        SetStatus(RadioButton::Status::OnHasFocus);
+    } // else if status == On
+}
+
+void farcical::ui::RadioButton::OnLoseFocus() {
+    // If this RadioButton doesn't have focus, then there is nothing to do.
+    if(!focused) {
+        return;
+    } // if !focused
+    if(status == Status::OffHasFocus) {
+        SetStatus(RadioButton::Status::Off);
+    } // if status == OffHasFocus
+    else if(status == Status::OnHasFocus) {
+        SetStatus(RadioButton::Status::On);
+    } // else if status == OnHasFocus
+}
+
+farcical::ui::RadioButton::Controller* farcical::ui::RadioButton::GetController() const {
+    return controller.get();
 }

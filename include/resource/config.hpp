@@ -236,6 +236,12 @@ namespace farcical {
         ~SegmentedTextureProperties() = default;
     };
 
+    struct OverlayTextureProperties : public ResourceProperties {
+        ResourceID baseTextureID;
+        ResourceID overlayTextureID;
+        float opacity;
+    };
+
     struct BorderTextureProperties: public ResourceProperties {
         float scale;
         sf::Vector2u percentSize;
@@ -279,6 +285,8 @@ namespace farcical {
     std::expected<TextureProperties, engine::Error> LoadTextureProperties(const nlohmann::json& json, bool isSegment = false, std::string_view path = "");
     std::expected<RepeatingTextureProperties, engine::Error> LoadRepeatingTextureProperties(const nlohmann::json& json);
     std::expected<SegmentedTextureProperties, engine::Error> LoadSegmentedTextureProperties(const nlohmann::json& json);
+
+    std::expected<OverlayTextureProperties, engine::Error> LoadOverlayTextureProperties(const nlohmann::json& json);
 
     std::expected<BorderTextureProperties, engine::Error> LoadBorderTextureProperties(const nlohmann::json& json);
 }

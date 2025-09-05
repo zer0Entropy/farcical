@@ -24,8 +24,6 @@ namespace farcical::ui::factory {
         engine::RenderSystem& renderSystem, Scene* scene, const WidgetProperties& properties,
         sf::FloatRect bounds = sf::FloatRect{{0.0f, 0.0f}, {0.0f, 0.0f}});
 
-    std::optional<engine::Error> DestroyText(engine::RenderSystem& renderSystem, Scene* scene, Text* text);
-
     [[nodiscard]] std::expected<Menu*, engine::Error> CreateMenu(
         engine::RenderSystem& renderSystem,
         engine::InputSystem& inputSystem,
@@ -42,6 +40,8 @@ namespace farcical::ui::factory {
 
     [[nodiscard]] std::expected<Button*, engine::Error> CreateButton(
         engine::RenderSystem& renderSystem,
+        engine::EventSystem& eventSystem,
+        engine::InputSystem& inputSystem,
         Scene* scene,
         Menu* menu,
         const MenuProperties& menuProperties,
@@ -49,6 +49,7 @@ namespace farcical::ui::factory {
 
     [[nodiscard]] std::expected<RadioButton*, engine::Error> CreateRadioButton(
         engine::RenderSystem& renderSystem,
+        engine::InputSystem& inputSystem,
         Scene* scene,
         Menu* menu,
         const MenuProperties& menuProperties,

@@ -4,6 +4,8 @@
 
 #include <fstream>
 #include <SFML/Graphics/Image.hpp>
+#include <SFML/Graphics/RenderTexture.hpp>
+#include <SFML/Graphics/Sprite.hpp>
 #include "../../include/resource/manager.hpp"
 #include "../../include/geometry.hpp"
 
@@ -618,6 +620,84 @@ std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::
     } // if createTextureResult.second
     const std::string failMsg{"Invalid configuration: Failed to create Texture " + id + "."};
     return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+}
+
+std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::CreateOverlayTexture(
+    ResourceID id, ResourceID baseTextureID, ResourceID overlayTextureID, float opacity) {
+    const ResourceID baseID{baseTextureID + "Texture"};
+    const ResourceID overlayID{overlayTextureID + "Texture"};
+    const ResourceID outputID{id + "Texture"};
+    ResourceHandle* baseHandle{GetResourceHandle(baseID)};
+    ResourceHandle* overlayHandle{GetResourceHandle(overlayID)};
+    if(!baseHandle) {
+        const std::string failMsg{"Resource not found: " + baseID + "."};
+        return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+    } // if !baseHandle
+    if(!overlayHandle) {
+        const std::string failMsg{"Resource not found: " + overlayID + "."};
+        return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+    } // if !overlayHandle
+    if(opacity < 0.0f || opacity > 1.0f) {
+        const std::string failMsg{"Error: Invalid opacity value provided (must be between 0.0 - 1.0)."};
+        return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+    } // if opacity out-of-range
+
+    if(baseHandle->status != ResourceHandle::Status::IsReady) {
+        const std::string failMsg{"Error: Resource failed to load: " + baseID + "."};
+        return std::unexpected(engine::Error{engine::Error::Signal::UnexpectedValue, failMsg});
+    } // if baseHandle.status != IsReady
+    const auto& getBaseTexture{GetTexture(baseID)};
+    if(!getBaseTexture.has_value()) {
+        const std::string failMsg{"Resource not found: " + baseID + "."};
+        return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+    } // if getBaseTexture == failure
+    sf::Texture* baseTexture{getBaseTexture.value()};
+
+    if(overlayHandle->status != ResourceHandle::Status::IsReady) {
+        const std::string failMsg{"Error: Resource failed to load: " + overlayID + "."};
+        return std::unexpected(engine::Error{engine::Error::Signal::UnexpectedValue, failMsg});
+    } // if overlayHAndle.status != IsReady
+    const auto& getOverlayTexture{GetTexture(overlayID)};
+    if(!getOverlayTexture.has_value()) {
+        const std::string failMsg{"Resource not found: " + overlayID + "."};
+        return std::unexpected(engine::Error{engine::Error::Signal::ResourceNotFound, failMsg});
+    } // if getOverlayTexture == failure
+    sf::Texture* overlayTexture{getOverlayTexture.value()};
+    sf::Texture overlayCopy{*overlayTexture};
+
+    // Create a semi-transparent copy of the overlayTexture (with the given opacity)
+    sf::Image overlayImage{overlayCopy.copyToImage()};
+
+    const auto& overlaySize{overlayImage.getSize()};
+    for(unsigned int y = 0; y < overlaySize.y; ++y) {
+        for(unsigned int x = 0; x < overlaySize.x; ++x) {
+            sf::Color overlayPixelColor{overlayImage.getPixel(sf::Vector2u{x, y})};
+            // next line is equivalent to pixelColor.a *= opacity
+            overlayPixelColor.a = static_cast<uint8_t>(static_cast<float>(overlayPixelColor.a) * opacity);
+            overlayImage.setPixel(sf::Vector2u{x, y}, overlayPixelColor);
+        } // for x
+    } // for y
+    overlayCopy.update(overlayImage);
+
+    sf::Sprite baseSprite{*baseTexture};
+    sf::Sprite overlaySprite{overlayCopy};
+    sf::RenderTexture outputTexture{baseTexture->getSize()};
+    outputTexture.draw(baseSprite);
+    outputTexture.draw(overlaySprite);
+
+    const auto& createHandle{CreateResourceHandle(outputID, ResourceHandle::Type::Texture, "")};
+    if(!createHandle.has_value()) {
+        const std::string failMsg{"Failed to create ResourceHandle for overlayTexture with ID=\"" + outputID + "\"."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if createHandle == failure
+    const auto& insertTexture{textures.emplace(outputID, outputTexture.getTexture())};
+    if(!insertTexture.second) {
+        const std::string failMsg{"ResourceManager failed to insert overlayTexture with ID=\"" + outputID + "\"."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if insertTexture == failure
+    ResourceHandle* handle{createHandle.value()};
+    handle->status = ResourceHandle::Status::IsReady;
+    return &insertTexture.first->second;
 }
 
 std::expected<sf::Texture*, farcical::engine::Error> farcical::ResourceManager::CreateBorderTexture(

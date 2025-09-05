@@ -5,11 +5,70 @@
 #include "../../include/ui/button.hpp"
 #include "../../include/engine/system/render.hpp"
 
-farcical::ui::Button::Button(engine::EntityID id, const engine::Event::Parameters& onPress, Container* parent)
-    : Widget(id, Widget::Type::Button, parent, true),
-      textures{nullptr},
-      status{Status::Normal},
-      onPressEvent{onPress} {
+farcical::ui::Button::Controller::Controller(Button* button, engine::EventSystem& eventSystem) : KeyboardInterface(),
+    MouseInterface(),
+    button{button},
+    eventSystem{eventSystem} {
+}
+
+void farcical::ui::Button::Controller::ReceiveMouseMovement(sf::Vector2i position) {
+    if(button->GetStatus() == Button::Status::Disabled) {
+        return;
+    } // if disabled
+    const auto& bounds{button->GetBounds()};
+    if(IsPointWithinRect(position, bounds)) {
+        button->DoAction(Action{Action::Type::ReceiveFocus});
+    } // if cursor position is within bounds
+    else if(button->GetStatus() != Button::Status::Normal) {
+        button->DoAction(Action{Action::Type::LoseFocus});
+    } // else if Button is not normal
+}
+
+void farcical::ui::Button::Controller::ReceiveMouseButtonPress(sf::Mouse::Button mouseButton, sf::Vector2i position) {
+    if(button->GetStatus() == Button::Status::Disabled) {
+        return;
+    } // if disabled
+    const auto& bounds{button->GetBounds()};
+    if(IsPointWithinRect(position, bounds)) {
+        button->DoAction(Action{Action::Type::SetPressedTrue});
+    } // if cursor position is within bounds
+    else if(button->GetStatus() != Button::Status::Normal) {
+        button->DoAction(Action{Action::Type::SetPressedFalse});
+        button->DoAction(Action{Action::Type::LoseFocus});
+    } // else if Button is not normal
+}
+
+void farcical::ui::Button::Controller::ReceiveMouseButtonRelease(sf::Mouse::Button mouseButton, sf::Vector2i position) {
+    if(button->GetStatus() == Button::Status::Disabled) {
+        return;
+    } // if disabled
+    if(button->GetStatus() == Button::Status::Pressed) {
+        button->DoAction(Action{Action::Type::SetPressedFalse});
+    } // if pressed
+    const auto& bounds{button->GetBounds()};
+    if(IsPointWithinRect(position, bounds)) {
+        const engine::Event::Parameters& eventParams{button->GetOnPressEvent()};
+        eventSystem.Enqueue(engine::Event{eventParams.type, eventParams.args});
+    } // if cursor position is within bounds
+}
+
+void farcical::ui::Button::Controller::ReceiveKeyboardInput(sf::Keyboard::Key input) {
+    if(button->GetStatus() == Button::Status::Disabled) {
+        return;
+    } // if disabled
+    if(input == sf::Keyboard::Key::Enter) {
+        const engine::Event::Parameters& eventParams{button->GetOnPressEvent()};
+        eventSystem.Enqueue(engine::Event{eventParams.type, eventParams.args});
+    } // if Enter
+}
+
+farcical::ui::Button::Button(
+    engine::EntityID id, const engine::Event::Parameters& onPress, engine::EventSystem& eventSystem,
+    Container* parent) : Widget(id, Widget::Type::Button, parent, true),
+                         textures{nullptr},
+                         status{Status::Normal},
+                         onPressEvent{onPress},
+                         controller{std::make_unique<Button::Controller>(this, eventSystem)} {
 }
 
 void farcical::ui::Button::SetStatus(Status status) {
@@ -42,6 +101,10 @@ sf::Texture* farcical::ui::Button::GetTexture() const {
 
 const farcical::engine::Event::Parameters& farcical::ui::Button::GetOnPressEvent() const {
     return onPressEvent;
+}
+
+farcical::ui::Button::Controller* farcical::ui::Button::GetController() const {
+    return controller.get();
 }
 
 void farcical::ui::Button::DoAction(Action action) {

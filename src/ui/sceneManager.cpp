@@ -109,6 +109,14 @@ std::expected<farcical::ui::Scene*, farcical::engine::Error> farcical::ui::Scene
     */
     WriteToLog("Creating Scene (id=\"" + id + "\")...");
     currentScene = std::make_unique<Scene>(id);
+
+    const auto& createEventCmp{
+        engine.GetEventSystem().CreateEventComponent(std::vector{engine::Event::Type::SetFocus}, currentScene.get(), id)
+    };
+    if(!createEventCmp.has_value()) {
+        return std::unexpected(createEventCmp.error());
+    } // if createEventCmp == failure
+
     const auto& getPropertiesResult{GetCurrentSceneProperties()};
     if(!getPropertiesResult.has_value()) {
         return std::unexpected(getPropertiesResult.error());
@@ -200,6 +208,13 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroyCurren
 
     WriteToLog("Destroying Scene (id=\"" + currentScene->GetID() + "\")...");
 
+    const auto& destroyEventCmp{
+        engine.GetEventSystem().DestroyEventComponent(currentScene->GetID())
+    };
+    if(destroyEventCmp.has_value()) {
+        return destroyEventCmp.value();
+    } // if destroyEventCmp == failure
+
     const auto& findProperties{GetCurrentSceneProperties()};
     if(!findProperties.has_value()) {
         return findProperties.error();
@@ -225,23 +240,23 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroyCurren
         if(!layer.titleProperties.id.empty()) {
             Text* title{dynamic_cast<Text*>(currentScene->FindChild(layer.titleProperties.id))};
             if(title) {
-                const auto& destroyTitle{
-                    factory::DestroyText(renderSystem, currentScene.get(), title)
+                const auto& destroyRenderCmp{
+                    renderSystem.DestroyRenderComponent(currentScene->GetID(), title->GetID())
                 };
-                if(destroyTitle.has_value()) {
-                    return destroyTitle.value();
-                } // if destroyTitle == failure
+                if(destroyRenderCmp.has_value()) {
+                    return destroyRenderCmp.value();
+                } // if destroyRenderCmp == failure
             } // if Title found
         } // if Title has valid ID
 
         for(const auto& heading: layer.headingProperties) {
             Text* headingText{dynamic_cast<Text*>(currentScene->FindChild(heading.id))};
-            const auto& destroyHeading{
-                factory::DestroyText(renderSystem, currentScene.get(), headingText)
+            const auto& destroyRenderCmp{
+                renderSystem.DestroyRenderComponent(currentScene->GetID(), headingText->GetID())
             };
-            if(destroyHeading.has_value()) {
-                return destroyHeading.value();
-            } // if destroyHeading == failure
+            if(destroyRenderCmp.has_value()) {
+                return destroyRenderCmp.value();
+            } // if destroyRenderCmp == failure
         } // for each heading
 
         if(!layer.menuProperties.id.empty()) {
@@ -372,6 +387,14 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildResource
         return buildSegmentedTextureCache.value();
     } // if buildSegmentedTextureCache == failure
 
+    /* OVERLAY TEXTURES */
+    const auto& buildOverlayTextureCache{
+        BuildOverlayTextureCache(properties.overlayTextures)
+    };
+    if(buildOverlayTextureCache.has_value()) {
+        return buildOverlayTextureCache.value();
+    } // if buildOverlayTextureCache == failure
+
     /* BORDER TEXTURES */
     const auto& buildBorderTextureCache{
         BuildBorderTextureCache(properties.borderTexture)
@@ -420,6 +443,12 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroyResour
     if(destroySegmentedTextureCache.has_value()) {
         return destroySegmentedTextureCache.value();
     } // if destroySegmentedTextureCache == failure
+
+    /* OVERLAY TEXTURES */
+    const auto& destroyOverlayTextureCache{DestroyOverlayTextureCache(properties.overlayTextures)};
+    if(destroyOverlayTextureCache.has_value()) {
+        return destroyOverlayTextureCache.value();
+    } // if destroyOverlayTextureCache == failure
 
     /* BORDER TEXTURES */
     const auto& destroyBorderTextureCache{DestroyBorderTextureCache(properties.borderTexture)};
@@ -687,6 +716,74 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroySegmen
             return destroyHandle.value();
         } // if destroyHandle == failure
     } // for each SegmentedTexture
+    return std::nullopt;
+}
+
+std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildOverlayTextureCache(
+    const std::vector<OverlayTextureProperties>& textures) const {
+    for(const auto& textureProperties: textures) {
+        const auto& createBaseHandle{
+            resourceManager.CreateResourceHandle(
+                textureProperties.baseTextureID, ResourceHandle::Type::Texture, textureProperties.path)
+        };
+        if(!createBaseHandle.has_value()) {
+            return createBaseHandle.error();
+        } // if createBaseHandle == failure
+        const auto& createOverlayHandle{
+            resourceManager.CreateResourceHandle(
+                textureProperties.overlayTextureID, ResourceHandle::Type::Texture, textureProperties.path)
+        };
+        if(!createOverlayHandle.has_value()) {
+            return createOverlayHandle.error();
+        } // if createOverlayHandle == failure
+        const ResourceID textureID{textureProperties.id + "Texture"};
+        const auto& createOverlayTexture{
+            resourceManager.CreateOverlayTexture(
+                textureID,
+                textureProperties.baseTextureID,
+                textureProperties.overlayTextureID,
+                textureProperties.opacity)
+        };
+        if(!createOverlayTexture.has_value()) {
+            return createOverlayTexture.error();
+        } // if createOverlayTexture == failure
+        currentScene->CacheTexture(textureID, createOverlayTexture.value());
+        currentScene->CacheTextureProperties(textureID,
+            TextureProperties{
+                textureID,
+                textureProperties.path,
+                1.0f,
+                sf::IntRect{{0, 0}, {0, 0}},
+                textureProperties.persist});
+    } // for each overlayTexture
+    return std::nullopt;
+}
+
+std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroyOverlayTextureCache(
+    const std::vector<OverlayTextureProperties>& textures) const {
+    for(const auto& textureProperties: textures) {
+        if(textureProperties.persist) {
+            continue;
+        } // skip any Texture with (persist flag == true)
+        const auto& destroyHandle{
+            resourceManager.DestroyResourceHandle(textureProperties.id, ResourceHandle::Type::Texture)
+        };
+        if(destroyHandle.has_value()) {
+            return destroyHandle.value();
+        } // if destroyHandle == failure
+        const auto& destroyBaseHandle{
+            resourceManager.DestroyResourceHandle(textureProperties.baseTextureID, ResourceHandle::Type::Texture)
+        };
+        if(destroyBaseHandle.has_value()) {
+            return destroyBaseHandle.value();
+        } // if destroyBaseHandle == failure
+        const auto& destroyOverlayHandle{
+            resourceManager.DestroyResourceHandle(textureProperties.overlayTextureID, ResourceHandle::Type::Texture)
+        };
+        if(destroyOverlayHandle.has_value()) {
+            return destroyOverlayHandle.value();
+        } // if destroyOverlayHandle == failure
+    } // for each overlayTexture
     return std::nullopt;
 }
 

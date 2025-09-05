@@ -67,6 +67,12 @@ namespace farcical {
             ResourceID inputID,
             sf::IntRect inputRect = {{0, 0}, {0, 0}});
 
+        std::expected<sf::Texture*, engine::Error> CreateOverlayTexture(
+            ResourceID id,
+            ResourceID baseTextureID,
+            ResourceID overlayTextureID,
+            float opacity);
+
         std::expected<sf::Texture*, engine::Error> CreateBorderTexture(
             ResourceID id,
             const sf::Vector2u& outputSize,

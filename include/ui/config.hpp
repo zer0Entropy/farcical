@@ -70,6 +70,7 @@ namespace farcical::ui {
         std::vector<TextureProperties> textures;
         std::vector<RepeatingTextureProperties> repeatingTextures;
         std::vector<SegmentedTextureProperties> segmentedTextures;
+        std::vector<OverlayTextureProperties> overlayTextures;
         BorderTextureProperties borderTexture;
         LayoutProperties layout;
 

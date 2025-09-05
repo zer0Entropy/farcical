@@ -8,18 +8,17 @@
 namespace farcical::ui {
     struct Action {
         enum class Type {
-            // Menu
-            MoveSelectionUp,
-            MoveSelectionDown,
+            MoveFocusUp,
+            MoveFocusDown,
+            MoveFocusLeft,
+            MoveFocusRight,
             ConfirmSelection,
-            // Button
+
             ReceiveFocus,
             LoseFocus,
+
             SetPressedTrue,
-            SetPressedFalse,
-            // RadioButton
-            SetSelectedTrue,
-            SetSelectedFalse,
+            SetPressedFalse
         };
 
         Type type;

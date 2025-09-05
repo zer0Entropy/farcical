@@ -403,6 +403,22 @@ std::expected<farcical::ui::SceneProperties, farcical::engine::Error> farcical::
     } // if segmentedTextures found
     /**********************     segmentedTextures      **********************/
 
+    /**********************     overlayTextures      **********************/
+    const auto& findOverlayTextures{json.find("overlayTextures")};
+    if(findOverlayTextures != json.end()) {
+        const auto& overlayTexturesJSON{findOverlayTextures.value()};
+        const std::string overlayTexturesDump{overlayTexturesJSON.dump()};
+        for(const auto& textureJSON: overlayTexturesJSON) {
+            const std::string textureJSONDump{textureJSON.dump()};
+            const auto& loadTextureResult{LoadOverlayTextureProperties(textureJSON)};
+            if(!loadTextureResult.has_value()) {
+                return std::unexpected(loadTextureResult.error());
+            } // if loadTextureResult == failure
+            properties.overlayTextures.push_back(loadTextureResult.value());
+        } // for each overlayTexture
+    } // if overlayTextures found
+    /**********************     overlayTextures      **********************/
+
     /**********************     borderTexture      **********************/
     const auto& findBorderTexture{json.find("borderTexture")};
     if(findBorderTexture != json.end()) {

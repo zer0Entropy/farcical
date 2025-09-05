@@ -26,6 +26,7 @@ void farcical::game::GameController::HandleEvent(const engine::Event& event) {
     } // if event.type == QuitGame
 
     else if(event.type == engine::Event::Type::ApplyEngineConfig) {
+        /*
         WriteToLog("GameController received 'ApplyEngineConfig' event.");
         const auto& createConfig{game.GetEngine().CreateConfig()};
         engine::Config config{createConfig.value()};
@@ -36,12 +37,12 @@ void farcical::game::GameController::HandleEvent(const engine::Event& event) {
             };
             if(displayOptionsWidget) {
                 ui::Menu* menu{dynamic_cast<ui::Menu*>(displayOptionsWidget)};
-                ui::Widget* selectedWidget{menu->GetWidget(menu->GetSelectedIndex())};
-                if(selectedWidget) {
-                    engine::EntityID selectedWidgetID{selectedWidget->GetID()};
+                ui::Widget* focusedWidget{menu->GetFocusedWidget()};
+                if(focusedWidget) {
+                    engine::EntityID focusedWidgetID{focusedWidget->GetID()};
                     const std::string radioButtonString{"RadioButton"};
                     engine::EntityID labelID{
-                        selectedWidgetID.substr(0, selectedWidgetID.length() - radioButtonString.length())
+                        focusedWidgetID.substr(0, focusedWidgetID.length() - radioButtonString.length())
                     };
                     labelID += "Label";
                     ui::Text* radioButtonLabel{dynamic_cast<ui::Text*>(menu->FindChild(labelID))};
@@ -57,6 +58,7 @@ void farcical::game::GameController::HandleEvent(const engine::Event& event) {
             } //
             const auto& applyConfig{game.GetEngine().ApplyConfig(config)};
         } // if
+        */
     } // else if event.type == ApplyEngineConfig
 
     else if(event.type == engine::Event::Type::CreateScene) {

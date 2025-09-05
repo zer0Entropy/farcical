@@ -284,6 +284,39 @@ std::expected<farcical::SegmentedTextureProperties, farcical::engine::Error> far
     return properties;
 }
 
+std::expected<farcical::OverlayTextureProperties, farcical::engine::Error> farcical::LoadOverlayTextureProperties(
+    const nlohmann::json& json) {
+    OverlayTextureProperties properties;
+    const auto& findID{json.find("id")};
+    const auto& findBaseTexture{json.find("baseTexture")};
+    const auto& findOverlayTexture{json.find("overlayTexture")};
+    const auto& findOpacity{json.find("opacity")};
+    if(findID == json.end()) {
+        const std::string failMsg{"Invalid configuration: ResourceID not found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if ResourceID not found
+    properties.id = findID.value().get<std::string>();
+
+    if(findBaseTexture == json.end()) {
+        const std::string failMsg{"Invalid configuration: BaseTextureID not found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if !findBaseTexture
+    properties.baseTextureID = findBaseTexture.value().get<std::string>();
+
+    if(findOverlayTexture == json.end()) {
+        const std::string failMsg{"Invalid configuration: OverlayTextureID not found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // // if !findOverlayTexture
+    properties.overlayTextureID = findOverlayTexture.value().get<std::string>();
+
+    if(findOpacity == json.end()) {
+        const std::string failMsg{"Invalid configuration: Opacity not found."};
+        return std::unexpected(engine::Error{engine::Error::Signal::InvalidConfiguration, failMsg});
+    } // if !findOpacity
+    properties.opacity = findOpacity.value().get<float>();
+    return properties;
+}
+
 std::expected<farcical::BorderTextureProperties, farcical::engine::Error> farcical::LoadBorderTextureProperties(
     const nlohmann::json& json) {
     BorderTextureProperties properties;
