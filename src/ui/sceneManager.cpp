@@ -749,12 +749,13 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildOverlayT
         } // if createOverlayTexture == failure
         currentScene->CacheTexture(textureID, createOverlayTexture.value());
         currentScene->CacheTextureProperties(textureID,
-            TextureProperties{
-                textureID,
-                textureProperties.path,
-                1.0f,
-                sf::IntRect{{0, 0}, {0, 0}},
-                textureProperties.persist});
+                                             TextureProperties{
+                                                 textureID,
+                                                 textureProperties.path,
+                                                 1.0f,
+                                                 sf::IntRect{{0, 0}, {0, 0}},
+                                                 textureProperties.persist
+                                             });
     } // for each overlayTexture
     return std::nullopt;
 }

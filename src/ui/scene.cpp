@@ -3,9 +3,8 @@
 //
 #include "../../include/ui/scene.hpp"
 
-farcical::ui::Scene::Scene(engine::EntityID id):
-    Container(id, Widget::Type::Scene, nullptr),
-    focusedWidget{nullptr} {
+farcical::ui::Scene::Scene(engine::EntityID id) : Container(id, Widget::Type::Scene, nullptr),
+                                                  focusedWidget{nullptr} {
 }
 
 farcical::ui::Widget* farcical::ui::Scene::GetFocusedWidget() const {
@@ -60,17 +59,19 @@ void farcical::ui::Scene::DoAction(Action action) {
     } // if MoveFocusUp or MoveFocusDown
 
     else if(action.type == Action::Type::ConfirmSelection) {
-
     } // else if ConfirmSelection
 }
 
 void farcical::ui::Scene::HandleEvent(const engine::Event& event) {
     if(event.type == engine::Event::Type::SetFocus) {
-        const ResourceID widgetID{std::any_cast<std::string>(event.args.at(0))};
-        Widget* widget{this->FindChild(widgetID)};
-        if(widget) {
-            SetFocusedWidget(widget);
-        } // if widget
+        Widget* focus{nullptr};
+        if(!event.args.empty()) {
+            const ResourceID widgetID{std::any_cast<std::string>(event.args.at(0))};
+            focus = this->FindChild(widgetID);
+            if(focus) {
+                SetFocusedWidget(focus);
+            } // if widget
+        } // if args not empty
     } // if event.type == SetFocus
 }
 
@@ -169,6 +170,7 @@ void farcical::ui::Scene::ClearTextureCache() {
 void farcical::ui::Scene::ClearTexturePropertiesCache() {
     texturePropertiesCache.clear();
 }
+
 /*
 std::expected<farcical::ui::MenuController*, farcical::engine::Error> farcical::ui::Scene::CreateMenuController(
     Menu* menu, engine::EventSystem& eventSystem) {

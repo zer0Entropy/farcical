@@ -49,6 +49,7 @@ namespace farcical::ui::factory {
 
     [[nodiscard]] std::expected<RadioButton*, engine::Error> CreateRadioButton(
         engine::RenderSystem& renderSystem,
+        engine::EventSystem& eventSystem,
         engine::InputSystem& inputSystem,
         Scene* scene,
         Menu* menu,

@@ -220,7 +220,8 @@ std::expected<farcical::ui::Menu*, farcical::engine::Error> farcical::ui::factor
             radioButtonProperties.labelProperties.second = properties.labelProperties.second;
             // Create RadioButton
             const auto& createRadioButtonResult{
-                CreateRadioButton(renderSystem, inputSystem, scene, menu, properties, radioButtonProperties)
+                CreateRadioButton(renderSystem, eventSystem, inputSystem, scene, menu, properties,
+                                  radioButtonProperties)
             };
             if(!createRadioButtonResult.has_value()) {
                 return std::unexpected(createRadioButtonResult.error());
@@ -456,6 +457,7 @@ std::expected<farcical::ui::Button*, farcical::engine::Error> farcical::ui::fact
 
 std::expected<farcical::ui::RadioButton*, farcical::engine::Error> farcical::ui::factory::CreateRadioButton(
     engine::RenderSystem& renderSystem,
+    engine::EventSystem& eventSystem,
     engine::InputSystem& inputSystem,
     Scene* scene,
     Menu* menu,
@@ -467,7 +469,7 @@ std::expected<farcical::ui::RadioButton*, farcical::engine::Error> farcical::ui:
 
     // Create RadioButton
     engine::EntityID radioButtonID{radioButtonProperties.id + "RadioButton"};
-    menu->AddChild(std::make_unique<RadioButton>(radioButtonID, menu));
+    menu->AddChild(std::make_unique<RadioButton>(radioButtonID, eventSystem, menu));
     RadioButton* radioButton{dynamic_cast<RadioButton*>(menu->FindChild(radioButtonID))};
 
     // Get RadioButton index

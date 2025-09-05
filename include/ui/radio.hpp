@@ -10,6 +10,7 @@
 #include "focusable.hpp"
 #include "../engine/keyboard.hpp"
 #include "../engine/mouse.hpp"
+#include "../engine/system/event.hpp"
 
 namespace farcical::ui {
     class RadioButton final : public Widget, public Focusable {
@@ -22,13 +23,18 @@ namespace farcical::ui {
             NumStates
         };
 
-        class Controller final: public KeyboardInterface, public MouseInterface {
+        class Controller final : public KeyboardInterface, public MouseInterface {
         public:
             Controller() = delete;
-            explicit Controller(RadioButton* radioButton);
+
+            explicit Controller(RadioButton* radioButton, engine::EventSystem& eventSystem);
+
             Controller(const Controller&) = delete;
+
             Controller(Controller&) = delete;
+
             Controller(Controller&&) = delete;
+
             ~Controller() override = default;
 
             void ReceiveMouseMovement(sf::Vector2i position) override;
@@ -38,11 +44,13 @@ namespace farcical::ui {
             void ReceiveMouseButtonRelease(sf::Mouse::Button mouseButton, sf::Vector2i position) override;
 
             void ReceiveKeyboardInput(sf::Keyboard::Key input) override;
+
         private:
             RadioButton* radioButton;
+            engine::EventSystem& eventSystem;
         };
 
-        explicit RadioButton(engine::EntityID id, Container* parent);
+        explicit RadioButton(engine::EntityID id, engine::EventSystem& eventSystem, Container* parent);
 
         ~RadioButton() override = default;
 
@@ -59,6 +67,7 @@ namespace farcical::ui {
         void DoAction(Action action) override;
 
         void OnReceiveFocus() override;
+
         void OnLoseFocus() override;
 
         [[nodiscard]] RadioButton::Controller* GetController() const;

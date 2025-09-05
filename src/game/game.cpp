@@ -19,6 +19,7 @@ farcical::game::GameController::GameController(Game& game) : Entity(engine::Enti
 void farcical::game::GameController::HandleEvent(const engine::Event& event) {
     ui::SceneManager& sceneManager{game.GetEngine().GetSceneManager()};
     ResourceManager& resourceManager{game.GetEngine().GetResourceManager()};
+    ui::Scene* currentScene{sceneManager.GetCurrentScene()};
 
     if(event.type == engine::Event::Type::QuitGame) {
         WriteToLog("GameController received 'QuitGame' event.");
@@ -26,7 +27,7 @@ void farcical::game::GameController::HandleEvent(const engine::Event& event) {
     } // if event.type == QuitGame
 
     else if(event.type == engine::Event::Type::ApplyEngineConfig) {
-        /*
+
         WriteToLog("GameController received 'ApplyEngineConfig' event.");
         const auto& createConfig{game.GetEngine().CreateConfig()};
         engine::Config config{createConfig.value()};
@@ -37,7 +38,7 @@ void farcical::game::GameController::HandleEvent(const engine::Event& event) {
             };
             if(displayOptionsWidget) {
                 ui::Menu* menu{dynamic_cast<ui::Menu*>(displayOptionsWidget)};
-                ui::Widget* focusedWidget{menu->GetFocusedWidget()};
+                ui::Widget* focusedWidget{currentScene->GetFocusedWidget()};
                 if(focusedWidget) {
                     engine::EntityID focusedWidgetID{focusedWidget->GetID()};
                     const std::string radioButtonString{"RadioButton"};
@@ -58,7 +59,7 @@ void farcical::game::GameController::HandleEvent(const engine::Event& event) {
             } //
             const auto& applyConfig{game.GetEngine().ApplyConfig(config)};
         } // if
-        */
+
     } // else if event.type == ApplyEngineConfig
 
     else if(event.type == engine::Event::Type::CreateScene) {

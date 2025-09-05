@@ -78,7 +78,8 @@ namespace farcical::ui {
         std::optional<engine::Error> BuildOverlayTextureCache(
             const std::vector<OverlayTextureProperties>& textures) const;
 
-        std::optional<engine::Error> DestroyOverlayTextureCache(const std::vector<OverlayTextureProperties>& textures) const;
+        std::optional<engine::Error> DestroyOverlayTextureCache(
+            const std::vector<OverlayTextureProperties>& textures) const;
 
         std::optional<engine::Error> BuildBorderTextureCache(const BorderTextureProperties& properties) const;
 

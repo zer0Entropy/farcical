@@ -4,17 +4,21 @@
 #include "../../include/ui/radio.hpp"
 #include "../../include/engine/component/render.hpp"
 
-farcical::ui::RadioButton::Controller::Controller(RadioButton* radioButton) : KeyboardInterface(),
-                                                                              MouseInterface(),
-                                                                              radioButton{radioButton} {
+farcical::ui::RadioButton::Controller::Controller(RadioButton* radioButton, engine::EventSystem& eventSystem):
+    KeyboardInterface(),
+    MouseInterface(),
+    radioButton{radioButton},
+    eventSystem{eventSystem} {
 }
 
 void farcical::ui::RadioButton::Controller::ReceiveMouseMovement(sf::Vector2i position) {
     const auto& bounds{radioButton->GetBounds()};
     if(IsPointWithinRect(position, bounds)) {
+        eventSystem.Enqueue(engine::Event{engine::Event::Type::SetFocus, std::vector<std::any>{radioButton->GetID()}});
         radioButton->DoAction(Action{Action::Type::ReceiveFocus});
     } // if cursor position is within bounds
     else {
+        eventSystem.Enqueue(engine::Event{engine::Event::Type::SetFocus});
         radioButton->DoAction(Action{Action::Type::LoseFocus});
     } // else if Button is not normal
 }
@@ -39,12 +43,12 @@ void farcical::ui::RadioButton::Controller::ReceiveMouseButtonRelease(sf::Mouse:
 void farcical::ui::RadioButton::Controller::ReceiveKeyboardInput(sf::Keyboard::Key input) {
 }
 
-farcical::ui::RadioButton::RadioButton(engine::EntityID id, Container* parent):
+farcical::ui::RadioButton::RadioButton(engine::EntityID id, engine::EventSystem& eventSystem, Container* parent):
     Widget(id, Type::RadioButton, parent, true),
     Focusable(),
     textures{nullptr},
     status{Status::Off},
-    controller{std::make_unique<RadioButton::Controller>(this)} {
+    controller{std::make_unique<RadioButton::Controller>(this, eventSystem)} {
 }
 
 void farcical::ui::RadioButton::SetTexture(Status state, sf::Texture& texture) {
