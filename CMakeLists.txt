@@ -18,6 +18,7 @@ FetchContent_MakeAvailable(SFML json)
 add_executable( main
         src/engine/config.cpp
         src/engine/engine.cpp
+        src/engine/error.cpp
         src/engine/logInterface.cpp
         src/engine/system/event.cpp
         src/engine/system/input.cpp

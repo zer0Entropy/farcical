@@ -16,8 +16,8 @@ namespace farcical {
 
         bool operator==(const WindowProperties& rhs) const {
             bool equal{true};
-            if( displayMode.x != rhs.displayMode.x ||
-                displayMode.y != rhs.displayMode.y) {
+            if(displayMode.x != rhs.displayMode.x ||
+               displayMode.y != rhs.displayMode.y) {
                 equal = false;
             } // if displayMode not equal
             else if(fullscreen != rhs.fullscreen) {
@@ -97,6 +97,6 @@ namespace farcical {
 
         return windowProperties;
     }
-};
+}
 
 #endif

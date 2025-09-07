@@ -722,24 +722,9 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroySegmen
 std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildOverlayTextureCache(
     const std::vector<OverlayTextureProperties>& textures) const {
     for(const auto& textureProperties: textures) {
-        const auto& createBaseHandle{
-            resourceManager.CreateResourceHandle(
-                textureProperties.baseTextureID, ResourceHandle::Type::Texture, textureProperties.path)
-        };
-        if(!createBaseHandle.has_value()) {
-            return createBaseHandle.error();
-        } // if createBaseHandle == failure
-        const auto& createOverlayHandle{
-            resourceManager.CreateResourceHandle(
-                textureProperties.overlayTextureID, ResourceHandle::Type::Texture, textureProperties.path)
-        };
-        if(!createOverlayHandle.has_value()) {
-            return createOverlayHandle.error();
-        } // if createOverlayHandle == failure
-        const ResourceID textureID{textureProperties.id + "Texture"};
         const auto& createOverlayTexture{
             resourceManager.CreateOverlayTexture(
-                textureID,
+                textureProperties.id,
                 textureProperties.baseTextureID,
                 textureProperties.overlayTextureID,
                 textureProperties.opacity)
@@ -747,6 +732,7 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::BuildOverlayT
         if(!createOverlayTexture.has_value()) {
             return createOverlayTexture.error();
         } // if createOverlayTexture == failure
+        const ResourceID textureID{textureProperties.id + "Texture"};
         currentScene->CacheTexture(textureID, createOverlayTexture.value());
         currentScene->CacheTextureProperties(textureID,
                                              TextureProperties{
@@ -766,20 +752,23 @@ std::optional<farcical::engine::Error> farcical::ui::SceneManager::DestroyOverla
         if(textureProperties.persist) {
             continue;
         } // skip any Texture with (persist flag == true)
+        const ResourceID textureID{textureProperties.id + "Texture"};
         const auto& destroyHandle{
-            resourceManager.DestroyResourceHandle(textureProperties.id, ResourceHandle::Type::Texture)
+            resourceManager.DestroyResourceHandle(textureID, ResourceHandle::Type::Texture)
         };
         if(destroyHandle.has_value()) {
             return destroyHandle.value();
         } // if destroyHandle == failure
+        const ResourceID baseTextureID{textureProperties.baseTextureID + "Texture"};
         const auto& destroyBaseHandle{
-            resourceManager.DestroyResourceHandle(textureProperties.baseTextureID, ResourceHandle::Type::Texture)
+            resourceManager.DestroyResourceHandle(baseTextureID, ResourceHandle::Type::Texture)
         };
         if(destroyBaseHandle.has_value()) {
             return destroyBaseHandle.value();
         } // if destroyBaseHandle == failure
+        const ResourceID overlayTextureID{textureProperties.overlayTextureID + "Texture"};
         const auto& destroyOverlayHandle{
-            resourceManager.DestroyResourceHandle(textureProperties.overlayTextureID, ResourceHandle::Type::Texture)
+            resourceManager.DestroyResourceHandle(overlayTextureID, ResourceHandle::Type::Texture)
         };
         if(destroyOverlayHandle.has_value()) {
             return destroyOverlayHandle.value();
