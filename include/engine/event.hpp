@@ -12,8 +12,8 @@
 namespace farcical::engine {
     struct Event final {
         enum class Type {
-            Unknown = -1,
-            ApplyEngineConfig = 0,
+            NotifyErrorOccurred,
+            ApplyEngineConfig,
             CreateScene,
             SetFocus,
             QuitGame,
@@ -49,9 +49,8 @@ namespace farcical::engine {
         constexpr static std::string_view GetTypeName(Type type) {
             std::string_view name{"?"};
             switch(type) {
-                case Type::Unknown: {
-                    name = "?";
-                }
+                case Type::NumEventTypes: break;
+                case Type::NotifyErrorOccurred: { name = "NotifyErrorOccurred"; }
                 break;
                 case Type::ApplyEngineConfig: {
                     name = "ApplyEngineConfig";
@@ -60,6 +59,8 @@ namespace farcical::engine {
                 case Type::CreateScene: {
                     name = "CreateScene";
                 }
+                break;
+                case Type::SetFocus: { name = "SetFocus"; }
                 break;
                 case Type::QuitGame: {
                     name = "QuitGame";
@@ -70,7 +71,7 @@ namespace farcical::engine {
         }
 
         constexpr static Type GetTypeByName(std::string_view name) {
-            Type type{Type::Unknown};
+            Type type{Type::NumEventTypes};
             if(name == "ApplyEngineConfig") {
                 type = Type::ApplyEngineConfig;
             } // ApplyEngineConfig
@@ -80,8 +81,10 @@ namespace farcical::engine {
             else if(name == "QuitGame") {
                 type = Type::QuitGame;
             } // QuitGame
+            else if(name == "SetFocus") { type = Type::SetFocus; } // SetFocus
+            else if(name == "NotifyErrorOccurred") { type = Type::NotifyErrorOccurred; } // NotifyErrorOccurred
             else {
-                type = Type::Unknown;
+                type = Type::NumEventTypes;
             } // Unknown
             return type;
         }

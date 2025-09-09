@@ -5,12 +5,17 @@
 #include "../../../include/game/game.hpp"
 
 farcical::engine::EventSystem::EventSystem(game::Game& game, Engine& engine) : System(ID::EventSystem,
-                                                                                   engine.GetLogSystem()),
+                                                                                   engine.GetLogSystem(), nullptr),
                                                                                game{game},
-                                                                               engine{engine} {
-}
+                                                                               engine{engine} {}
 
 void farcical::engine::EventSystem::Enqueue(const Event& event) {
+    if(event.type == Event::Type::NotifyErrorOccurred) {
+        eventQueue.clear();
+        eventQueue.push_back(event);
+        Update();
+        return;
+    }
     eventQueue.push_back(event);
 }
 
@@ -30,7 +35,10 @@ void farcical::engine::EventSystem::Update() {
             const EventHandlerList& handlerList{GetEventHandlerList(event.type)};
             // Each EventHandler in the list handles the Event in sequence
             for(const auto& handler: handlerList) {
-                handler->HandleEvent(event);
+                if(game.GetStatus() == game::Game::Status::IsRunning
+                   && engine.GetStatus() == engine::Engine::Status::IsRunning) {
+                    handler->HandleEvent(event);
+                } // if Game and Engine are both running
             } // for each EventHandler* in HandlerList
         } // if EventType is a valid value
     } // for each Event in queueCopy

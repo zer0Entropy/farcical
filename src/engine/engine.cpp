@@ -46,7 +46,7 @@ std::expected<farcical::engine::Config, farcical::engine::Error> farcical::engin
     const auto& requestJSONDoc{resourceManager.GetJSONDoc(jsonDocHandle->id)};
     if(requestJSONDoc.has_value()) {
       //  Extract configuration from JSON
-      const auto& loadConfig{LoadConfig(*requestJSONDoc.value())};
+      const auto& loadConfig{LoadConfig(*requestJSONDoc.value(), configPath, &errorHandler)};
       if(loadConfig.has_value()) {
         return loadConfig.value();
       } // if loadConfig == success
@@ -83,6 +83,8 @@ std::optional<farcical::engine::Error> farcical::engine::Engine::ApplyConfig(con
 
   // Initialize LogSystem
   logSystem->Init();
+
+  errorHandler.SetLogSystemPtr(logSystem.get());
 
   const auto& createWindowResult{CreateWindow()};
   if(createWindowResult.has_value()) {
@@ -140,8 +142,7 @@ std::optional<farcical::engine::Error> farcical::engine::Engine::Init(game::Game
 void farcical::engine::Engine::Update() {
   game::Game::Status gameStatus{game->GetStatus()};
   if(gameStatus == game::Game::Status::StoppedSuccessfully) {
-    window->close();
-    status = Status::StoppedSuccessfully;
+    Stop();
     return;
   } // Game StoppedSuccessfully
   if(gameStatus == game::Game::Status::Error || gameStatus == game::Game::Status::Uninitialized) {
@@ -151,8 +152,7 @@ void farcical::engine::Engine::Update() {
   } // Game Error || Uninitialized
   while(const std::optional event = window->pollEvent()) {
     if(event->is<sf::Event::Closed>()) {
-      window->close();
-      status = Status::StoppedSuccessfully;
+      Stop();
       return;
     }
   }
@@ -200,9 +200,14 @@ void farcical::engine::Engine::Stop() {
     logSystem.reset(nullptr);
   } // if logSystem
   resourceManager.Reset();
+  if(window && window->isOpen()) { window->close(); } // if window is open
   if(status == Status::IsRunning) {
     status = Status::StoppedSuccessfully;
   }
+}
+
+farcical::engine::ErrorHandler& farcical::engine::Engine::GetErrorHandler() const {
+  return const_cast<ErrorHandler&>(errorHandler);
 }
 
 sf::RenderWindow& farcical::engine::Engine::GetWindow() const {
@@ -293,24 +298,28 @@ std::optional<farcical::engine::Error> farcical::engine::Engine::CreateSystems()
     eventSystem.reset();
   } // if EventSystem already exists
   eventSystem = std::make_unique<EventSystem>(*game, *this);
+  errorHandler.SetEventSystemPtr(eventSystem.get());
+
+  logSystem->UpdateErrorGenerator(&errorHandler);
+  eventSystem->UpdateErrorGenerator(&errorHandler);
 
   if(inputSystem) {
     inputSystem->Stop();
     inputSystem.reset();
   } // if inputSystem already exists
-  inputSystem = std::make_unique<InputSystem>(*window, *logSystem);
+  inputSystem = std::make_unique<InputSystem>(*window, *logSystem, &errorHandler);
 
   if(musicSystem) {
     musicSystem->Stop();
     musicSystem.reset();
   } // if musicSystem already exists
-  musicSystem = std::make_unique<MusicSystem>(resourceManager, *logSystem);
+  musicSystem = std::make_unique<MusicSystem>(resourceManager, *logSystem, &errorHandler);
 
   if(renderSystem) {
     renderSystem->Stop();
     renderSystem.reset();
   } // if renderSystem already exists
-  renderSystem = std::make_unique<RenderSystem>(*window, *logSystem);
+  renderSystem = std::make_unique<RenderSystem>(*window, *logSystem, &errorHandler);
 
   return std::nullopt;
 }

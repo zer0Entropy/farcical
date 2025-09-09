@@ -17,9 +17,11 @@ namespace farcical::engine {
         std::string logPath;
     };
 
-    std::expected<Config, Error> LoadConfig(const nlohmann::json& json);
+    std::expected<Config, Error> LoadConfig(const nlohmann::json& json,
+                                            std::string_view path,
+                                            ErrorGenerator* errorGenerator);
 
-    std::optional<Error> WriteConfig(const Config& config, std::string_view path);
+    std::optional<Error> WriteConfig(const Config& config, std::string_view path, ErrorGenerator* errorGenerator);
 }
 
 #endif //ENGINE_CONFIG_HPP

@@ -11,6 +11,7 @@
 
 #include "config.hpp"
 #include "error.hpp"
+#include "errorHandler.hpp"
 #include "system/event.hpp"
 #include "system/input.hpp"
 #include "system/log.hpp"
@@ -62,6 +63,8 @@ namespace farcical {
 
             void Stop();
 
+            [[nodiscard]] ErrorHandler& GetErrorHandler() const;
+
             [[nodiscard]] sf::RenderWindow& GetWindow() const;
 
             [[nodiscard]] ResourceManager& GetResourceManager() const;
@@ -83,6 +86,8 @@ namespace farcical {
 
             Config config;
             std::string configPath;
+
+            ErrorHandler errorHandler;
 
             std::unique_ptr<sf::RenderWindow> window;
 

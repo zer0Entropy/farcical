@@ -51,7 +51,7 @@ namespace farcical::engine {
 
         RenderSystem(const RenderSystem&) = delete;
 
-        explicit RenderSystem(sf::RenderWindow& window, LogSystem& logSystem);
+        explicit RenderSystem(sf::RenderWindow& window, LogSystem& logSystem, ErrorGenerator* errorGenerator);
 
         ~RenderSystem() override = default;
 

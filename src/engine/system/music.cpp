@@ -4,10 +4,12 @@
 #include "../../../include/engine/system/music.hpp"
 
 farcical::engine::MusicSystem::MusicSystem(ResourceManager& resourceManager,
-                                           LogSystem& logSystem) : System(System::ID::MusicSystem, logSystem),
-                                                                   resourceManager{resourceManager},
-                                                                   currentMusicHandle{nullptr},
-                                                                   currentMusic{nullptr} {
+                                           LogSystem& logSystem,
+                                           ErrorGenerator* errorGenerator):
+    System(System::ID::MusicSystem, logSystem, errorGenerator),
+    resourceManager{resourceManager},
+    currentMusicHandle{nullptr},
+    currentMusic{nullptr} {
 }
 
 void farcical::engine::MusicSystem::PlayMusic() {

@@ -5,6 +5,7 @@
 #ifndef SYSTEM_HPP
 #define SYSTEM_HPP
 
+#include "../error.hpp"
 #include "../logInterface.hpp"
 
 namespace farcical::engine {
@@ -20,11 +21,17 @@ namespace farcical::engine {
 
         System() = delete;
 
-        explicit System(const System::ID id, LogSystem& logSystem) : LogInterface(logSystem),
-                                                                     id{id} {
+        explicit System(const System::ID id, LogSystem& logSystem, ErrorGenerator* errorGenerator):
+            LogInterface(logSystem),
+            id{id},
+            errorGenerator{errorGenerator} {
         }
 
-        virtual ~System() = default;
+        ~System() override = default;
+
+        void UpdateErrorGenerator(ErrorGenerator* errorGenerator) {
+            this->errorGenerator = errorGenerator;
+        }
 
         [[nodiscard]] System::ID GetID() const { return id; }
 
@@ -36,6 +43,7 @@ namespace farcical::engine {
 
     protected:
         System::ID id;
+        ErrorGenerator* errorGenerator;
     };
 }
 

@@ -21,7 +21,10 @@ void farcical::game::GameController::HandleEvent(const engine::Event& event) {
     ResourceManager& resourceManager{game.GetEngine().GetResourceManager()};
     ui::Scene* currentScene{sceneManager.GetCurrentScene()};
 
-    if(event.type == engine::Event::Type::QuitGame) {
+    if(event.type == engine::Event::Type::NotifyErrorOccurred) {
+        WriteToLog("GameController received 'NotifyErrorOccurred' event.");
+        game.Stop();
+    } else if(event.type == engine::Event::Type::QuitGame) {
         WriteToLog("GameController received 'QuitGame' event.");
         game.Stop();
     } // if event.type == QuitGame
@@ -121,6 +124,7 @@ std::optional<farcical::engine::Error> farcical::game::Game::Init() {
     logSystem.AddMessage("Registering EventHandlers...");
     engine::EventSystem& eventSystem{engine.GetEventSystem()};
     const std::vector<engine::Event::Type> handledTypes{
+        engine::Event::Type::NotifyErrorOccurred,
         engine::Event::Type::QuitGame,
         engine::Event::Type::ApplyEngineConfig,
         engine::Event::Type::CreateScene

@@ -5,7 +5,7 @@
 #include "../../../include/resource/manager.hpp"
 
 farcical::engine::LogSystem::LogSystem(ResourceID logID,
-                                       std::string_view logPath) : System(System::ID::LogSystem, *this),
+                                       std::string_view logPath) : System(System::ID::LogSystem, *this, nullptr),
                                                                    logParams{logID, logPath},
                                                                    resourceManager{nullptr},
                                                                    log{nullptr} {

@@ -5,6 +5,7 @@
 #ifndef ERROR_HPP
 #define ERROR_HPP
 
+
 #include <any>
 #include <string>
 #include <vector>
@@ -38,7 +39,14 @@ namespace farcical::engine {
         static const std::string WriteFailureMessage;
     };
 
-    Error GenerateError(Error::Signal signal, std::vector<std::any> args);
+    class ErrorGenerator {
+    public:
+        ErrorGenerator() = default;
+
+        virtual ~ErrorGenerator() = default;
+
+        virtual engine::Error GenerateError(Error::Signal signal, std::vector<std::any> args) = 0;
+    };
 }
 
 #endif //ERROR_HPP

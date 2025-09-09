@@ -12,6 +12,6 @@ int main()
 
     while(engine.GetStatus() == farcical::engine::Engine::Status::IsRunning) {
         engine.Update();
-    };
+    }
     return 0;
 }

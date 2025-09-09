@@ -6,7 +6,9 @@
 #include "../../include/resource/parser.hpp"
 
 std::expected<farcical::engine::Config, farcical::engine::Error> farcical::engine::LoadConfig(
-    const nlohmann::json& json) {
+    const nlohmann::json& json,
+    std::string_view path,
+    ErrorGenerator* errorGenerator) {
     Config config{
         .windowProperties = {
             .displayMode = {0, 0},
@@ -31,8 +33,13 @@ std::expected<farcical::engine::Config, farcical::engine::Error> farcical::engin
 
     const auto& findWindow{json.find("window")};
     if(findWindow == json.end()) {
-        const std::string failMsg{"Invalid configuration: Window could not be found."};
-        return std::unexpected(Error{Error::Signal::InvalidConfiguration, failMsg});
+        const std::string errorDetails{
+            "Window could not be found in engine config document loaded from " + std::string{path} + "."
+        };
+        const std::string contextString{"engine::LoadConfig"};
+        return std::unexpected{
+            errorGenerator->GenerateError(Error::Signal::InvalidConfiguration,
+                                          std::vector<std::any>{errorDetails, contextString})};
     } // if window not found
     const auto& windowPropertiesJSON{findWindow.value()};
     const auto& findWidth{windowPropertiesJSON.find("width")};
@@ -70,7 +77,7 @@ std::expected<farcical::engine::Config, farcical::engine::Error> farcical::engin
     return config;
 }
 
-std::optional<farcical::engine::Error> farcical::engine::WriteConfig(const Config& config, std::string_view path) {
+std::optional<farcical::engine::Error> farcical::engine::WriteConfig(const Config& config, std::string_view path, ErrorGenerator* errorGenerator) {
     const nlohmann::json configJSON{
         {
             "window", {

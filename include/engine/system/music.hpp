@@ -15,7 +15,7 @@ namespace farcical::engine {
     public:
         MusicSystem() = delete;
 
-        explicit MusicSystem(ResourceManager& resourceManager, LogSystem& logSystem);
+        explicit MusicSystem(ResourceManager& resourceManager, LogSystem& logSystem, ErrorGenerator* errorGenerator);
 
         ~MusicSystem() override = default;
 

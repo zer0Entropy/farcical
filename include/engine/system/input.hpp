@@ -23,7 +23,7 @@ namespace farcical::engine {
 
         InputSystem(const InputSystem&) = delete;
 
-        explicit InputSystem(sf::RenderWindow& window, LogSystem& logSystem);
+        explicit InputSystem(sf::RenderWindow& window, LogSystem& logSystem, ErrorGenerator* errorGenerator);
 
         ~InputSystem() override = default;
 

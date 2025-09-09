@@ -19,6 +19,7 @@ add_executable( main
         src/engine/config.cpp
         src/engine/engine.cpp
         src/engine/error.cpp
+        src/engine/errorHandler.cpp
         src/engine/logInterface.cpp
         src/engine/system/event.cpp
         src/engine/system/input.cpp
@@ -42,6 +43,7 @@ add_executable( main
         src/color.cpp
         src/geometry.cpp
         src/main.cpp
+        src/engine/errorHandler.cpp
 )
 target_compile_features(main PRIVATE cxx_std_23)
 target_link_libraries(main PRIVATE SFML::Audio SFML::Graphics nlohmann_json::nlohmann_json)
